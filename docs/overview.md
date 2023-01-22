@@ -145,3 +145,15 @@ Each operation consumes values from the bus (into `TEMPA/B`), and stores the out
 3. Increment X
 4. Transfer `e[7:4]` to `M(X)` (now X+1)
 5. Increment X. Increment PC
+
+## `ACPX MX, r` (Add with carry contents of reg to M(X))
+
+### TODO: Why is this 7 cycles?
+
+1. Decode instruction
+2. Transfer `M(X)` to `TEMPA`
+3. Tranfer contents of `r` to `TEMPB`
+4. Perform ALU `ADD` with carry. Transfer `ALU OUT` to `M(X)`
+5. Increment X
+6. NOP
+7. NOP. Increment PC
