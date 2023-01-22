@@ -30,6 +30,7 @@ Note: `PCP` and `PCS` are denoted in the docs as being "counter"s, not registers
 Split into high 4 bits (`XP`), and lower 8 bits (`XHL`). `XHL` is divided into high (`XH`) and low (`XL`).
 
 * `XHL` can be incremented by 1 or 2 using a post-increment instruction (`LDPX`, etc...). This wraps without affecting `XP`
+  * This appears to use dedicated hardware
 
 ### MX
 
@@ -43,6 +44,7 @@ Split into high 4 bits (`XP`), and lower 8 bits (`XHL`). `XHL` is divided into h
 Split into high 4 bits (`YP`), and lower 8 bits (`YHL`). `YHL` is divided into high (`YH`) and low (`YL`).
 
 * `YHL` can be incremented by 1 using a post-increment instruction (`LDPY`, etc...). This wraps without affecting `YP`
+  * This appears to use dedicated hardware
 
 ### MY
 
@@ -67,6 +69,79 @@ When used (i.e. this is optional), the first 16 words of memory can be reserved 
 
 4 bit
 
-Internal to the ALU, the `A`/`B` registers are used as accumulators, for intermediate results to be transferred to the instruction's result register
+Internal to the ALU, the `A`/`B` registers are used as accumulators
+
+Usage:
+* Most instructions reference them as the `r[1:0]` or `q[1:0]` immediate
+  | R/Q | Reg |
+  |-----|-----|
+  | 0   | A   |
+  | 1   | B   |
+  | 2   | MX  |
+  | 3   | MY  |
 
 * The `A` and `B` registers can be used in conjunction for a jump using `JPBA`
+
+# ALU
+
+Contains the `TEMPA` and `TEMPB` registers. They appear to only be used to store the input value on the ALU bus (so the contents of some register that's feeding into the ALU). Diagram shows the carry output from the ALU feeding into `TEMPB`, so maybe there's some scenario where the carry value is used in an accumlator like fashion; instruction performs some operation, takes the result (with carry), and uses it for another operation, then the instruction ends
+
+## Operations
+
+Each operation consumes values from the bus (into `TEMPA/B`), and stores the output into a bus register (including `TEMPA/B`). Multiple operations may occur per instruction
+
+* `ADD` - Can add with/without carry
+* `SUB` - Can sub with/without borrow (carry)
+* `AND`
+* `OR`
+* `XOR`
+* `CP` - Comparison
+* `FAN` - `AND` without store (for setting flags)
+* `RRC` - Rotate right with carry
+* `RLC` - Rotate left with carry
+* `NOT` - Invert
+
+# Examples
+
+## `LD X, e` (Load X (low 8 bits) with 8 bit immediate)
+
+1. Decode instruction
+2. Transfer `e[7:4]` to `XH`
+3. Transfer `e[3:0]` to `XL`
+4. NOP
+5. NOP. Increment PC
+
+## `LD XP, r` (Load X (high 4 bits) with contents of reg)
+
+1. Decode instruction
+2. Transfer contents of `r` to `XP`. This could be a memory fetch, which will take 1 cycle (mux memory address to be IX (for example), feed into memory, mux memory output onto bus)
+3. NOP
+4. NOP
+5. NOP. Increment PC
+
+## `ADC XH, i` (Add 4 bit immediate with carry to XL)
+
+1. Decode instruction
+2. Transfer `XH` to `TEMPA`
+3. Transfer `i[3:0]` to `TEMPB`
+4. Perform ALU `ADD` with carry. Transfer `ALU OUT` to `XL`
+5. Copy flags
+   * Couldn't this be part of the ALU instruction?
+6. NOP
+7. NOP. Increment PC
+
+## `LDPX MX, i` (Load M(X) with 4 bit immediate, post increment X)
+
+1. Decode instruction
+2. Transfer immediate to `M(X)`
+3. Increment X
+4. NOP
+5. NOP. Increment PC
+
+## `LBPX MX, e` (Load M(X) with 8 bit immediate, post increment X)
+
+1. Decode instruction
+2. Transfer `e[3:0]` to `M(X)`
+3. Increment X
+4. Transfer `e[7:4]` to `M(X)` (now X+1)
+5. Increment X. Increment PC
