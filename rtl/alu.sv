@@ -59,11 +59,13 @@ module alu (
       end
       ALU_RRC: begin
         // Carry becomes highest bit, lowest bit becomes carry
-        {out, flag_carry_out} = {flag_carry_in, out};
+        // TODO: Documentation conflicts on whether or not zero is set. I think it makes more sense that it is
+        {out, flag_carry_out} = {flag_carry_in, temp_a};
       end
       ALU_RLC: begin
         // Carry becomes lowest bit, highest bit becomes carry
-        {flag_carry_out, out} = {out, flag_carry_in};
+        // TODO: Documentation conflicts on whether or not zero is set. I think it makes more sense that it is
+        {flag_carry_out, out} = {temp_a, flag_carry_in};
       end
       ALU_NOT: begin
         out = ~temp_a;
