@@ -30,7 +30,8 @@ package types;
     REG_MY,
     REG_MSP,
     REG_Mn,
-    REG_IMM
+    REG_IMM,
+    REG_HARDCODED_1
   } reg_type;
 
   typedef enum {

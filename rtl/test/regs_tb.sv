@@ -198,6 +198,11 @@ module regs_tb;
     assert (regs_uut.sp == 8'hF7)
     else $error("SP was not set to 0xF7");
 
+    // Hardcoded 1
+    transfer(REG_HARDCODED_1, REG_A);
+
+    assert_reg_value(REG_A, 4'h1);
+
     // Memory Reads
     // ------------
     // Load 0x1 from MX

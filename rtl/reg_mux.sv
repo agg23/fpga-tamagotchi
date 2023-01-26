@@ -71,6 +71,7 @@ module reg_mux (
       end
 
       REG_IMM: out = immed;
+      REG_HARDCODED_1: out = 4'h1;
     endcase
   end
 
