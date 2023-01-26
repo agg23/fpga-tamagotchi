@@ -4,6 +4,7 @@ module reg_mux (
     input reg_type selector,
 
     input wire [3:0] alu,
+    input wire [3:0] flags,
 
     input wire [3:0] a,
     input wire [3:0] b,
@@ -30,7 +31,8 @@ module reg_mux (
     use_memory = 0;
 
     case (selector)
-      REG_ALU: out = alu;
+      REG_ALU, REG_ALU_WITH_FLAGS: out = alu;
+      REG_FLAGS: out = flags;
 
       REG_A: out = a;
       REG_B: out = b;

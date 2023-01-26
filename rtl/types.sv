@@ -14,6 +14,8 @@ package types;
 
   typedef enum {
     REG_ALU,
+    REG_ALU_WITH_FLAGS,
+    REG_FLAGS,
     REG_A,
     REG_B,
     REG_TEMPA,

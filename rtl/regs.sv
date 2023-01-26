@@ -9,6 +9,8 @@ module regs (
     input reg_inc_type increment_selector,
 
     input wire [3:0] alu,
+    input wire alu_zero,
+    input wire alu_carry,
     input wire [3:0] immed,
 
     output reg memory_write_en,
@@ -28,6 +30,14 @@ module regs (
 
   reg [7:0] sp;
 
+  // Flags
+  reg carry;
+  reg zero;
+  reg decimal;
+  reg interrupt;
+
+  wire [3:0] flags_in = {interrupt, decimal, zero, carry};
+
   // Increment
   wire [7:0] x_inc = x[7:0] + 1;
   wire [7:0] y_inc = y[7:0] + 1;
@@ -45,7 +55,8 @@ module regs (
   reg_mux bus_input_mux (
       .selector(bus_input_selector),
 
-      .alu(alu),
+      .alu  (alu),
+      .flags(flags_in),
 
       .a(a),
       .b(b),
@@ -79,10 +90,14 @@ module regs (
       {
         REG_ALU, 2'hX
       }, {
+        REG_ALU_WITH_FLAGS, 2'hX
+      }, {
         REG_IMM, 2'hX
       } : begin
         // Do nothing, these are invalid write targets
       end
+
+      {REG_FLAGS, CYCLE_REG_WRITE} : {interrupt, decimal, zero, carry} <= bus_input;
 
       // Grab address and data in fetch cycle
       {
@@ -131,6 +146,12 @@ module regs (
       {REG_SPL, CYCLE_REG_WRITE} : sp[3:0] <= bus_input;
       {REG_SPH, CYCLE_REG_WRITE} : sp[7:4] <= bus_input;
     endcase
+
+    if (bus_input_selector == REG_ALU_WITH_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
+      // On write, using value from REG_ALU_WITH_FLAGS, set flags
+      carry <= alu_carry;
+      zero  <= alu_zero;
+    end
   end
 
   // Post-increment

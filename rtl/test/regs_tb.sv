@@ -9,6 +9,8 @@ module regs_tb;
   reg_inc_type increment_selector;
 
   reg [3:0] alu_out = 0;
+  reg alu_zero = 0;
+  reg alu_carry = 0;
   reg [3:0] immed_out = 0;
 
   wire memory_write_en;
@@ -24,7 +26,9 @@ module regs_tb;
       .bus_output_selector(bus_output_selector),
       .increment_selector (increment_selector),
 
-      .alu  (alu_out),
+      .alu(alu_out),
+      .alu_zero(alu_zero),
+      .alu_carry(alu_carry),
       .immed(immed_out),
 
       .memory_write_en(memory_write_en),
@@ -148,6 +152,26 @@ module regs_tb;
     else $error("Incorrect written data: %h. Expected: %h", written_memory_data, expected);
   endfunction
 
+  function assert_carry(reg expected);
+    assert (regs_uut.carry == expected)
+    else $error("Carry was not set to %d", expected);
+  endfunction
+
+  function assert_zero(reg expected);
+    assert (regs_uut.zero == expected)
+    else $error("Zero was not set to %d", expected);
+  endfunction
+
+  function assert_decimal(reg expected);
+    assert (regs_uut.decimal == expected)
+    else $error("Decimal was not set to %d", expected);
+  endfunction
+
+  function assert_interrupt(reg expected);
+    assert (regs_uut.interrupt == expected)
+    else $error("Interrupt was not set to %d", expected);
+  endfunction
+
   initial begin
     cycle = CYCLE_NONE;
     bus_input_selector = REG_ALU;
@@ -249,6 +273,7 @@ module regs_tb;
     assert_mem_addr(12'hF7);
 
     // Post-increment
+    // --------------
     // Write 0x4 to MX and post-increment X
     increment_selector = REG_XHL;
     transfer(REG_TEMPA, REG_MX);
@@ -282,5 +307,53 @@ module regs_tb;
     assert_reg_value(REG_A, 4'h7);
     assert (regs_uut.sp == 8'hF8)
     else $error("SP was not set to 0xF8");
+
+    increment_selector = REG_NONE;
+
+    // Flags
+    // -----
+    // Set all flags
+    ld_immed(REG_FLAGS, 4'hF);
+
+    assert_carry(1);
+    assert_zero(1);
+    assert_decimal(1);
+    assert_interrupt(1);
+
+    // AND flags with 0x5
+    transfer(REG_FLAGS, REG_TEMPA);
+
+    assert_reg_value(REG_TEMPA, 4'hF);
+    alu_out = 4'h5;  // 0xF & 0x5
+    transfer(REG_ALU, REG_FLAGS);
+
+    assert_carry(1);
+    assert_zero(0);
+    assert_decimal(1);
+    assert_interrupt(0);
+
+    // REG_ALU_WITH_FLAGS should copy ALU flags
+    alu_out   = 4'h8;
+    alu_zero  = 1;
+    alu_carry = 0;
+    transfer(REG_ALU_WITH_FLAGS, REG_A);
+
+    assert_reg_value(REG_A, 4'h8);
+    assert_carry(0);
+    assert_zero(1);
+    assert_decimal(1);
+    assert_interrupt(0);
+
+    // REG_ALU should not copy flags
+    alu_out   = 4'hF;
+    alu_zero  = 1;
+    alu_carry = 1;
+    transfer(REG_ALU, REG_B);
+
+    assert_reg_value(REG_B, 4'hF);
+    assert_carry(0);
+    assert_zero(1);
+    assert_decimal(1);
+    assert_interrupt(0);
   end
 endmodule
