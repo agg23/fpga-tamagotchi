@@ -6,6 +6,7 @@ module regs (
 
     input reg_type bus_input_selector,
     input reg_type bus_output_selector,
+    input reg_inc_type increment_selector,
 
     input wire [3:0] alu,
     input wire [3:0] immed,
@@ -27,6 +28,12 @@ module regs (
 
   reg [7:0] sp;
 
+  // Increment
+  wire [7:0] x_inc = x[7:0] + 1;
+  wire [7:0] y_inc = y[7:0] + 1;
+  wire [7:0] sp_inc = sp + 1;
+
+  // Bus
   wire [3:0] bus_input;
 
   wire use_bus_input_memory_addr;
@@ -124,5 +131,20 @@ module regs (
       {REG_SPL, CYCLE_REG_WRITE} : sp[3:0] <= bus_input;
       {REG_SPH, CYCLE_REG_WRITE} : sp[7:4] <= bus_input;
     endcase
+  end
+
+  // Post-increment
+  always @(posedge clk) begin
+    if (current_cycle == CYCLE_REG_WRITE) begin
+      // Increment any configured post-increment reg
+      case (increment_selector)
+        REG_NONE: begin
+          // Do nothing
+        end
+        REG_XHL: x[7:0] <= x_inc;
+        REG_YHL: y[7:0] <= y_inc;
+        REG_SP:  sp <= sp_inc;
+      endcase
+    end
   end
 endmodule

@@ -34,6 +34,13 @@ package types;
   } reg_type;
 
   typedef enum {
+    REG_NONE,
+    REG_XHL,
+    REG_YHL,
+    REG_SP
+  } reg_inc_type;
+
+  typedef enum {
     CYCLE_NONE,
     CYCLE_REG_FETCH,
     CYCLE_REG_WRITE

@@ -6,6 +6,7 @@ module regs_tb;
 
   reg_type bus_input_selector;
   reg_type bus_output_selector;
+  reg_inc_type increment_selector;
 
   reg [3:0] alu_out = 0;
   reg [3:0] immed_out = 0;
@@ -21,6 +22,7 @@ module regs_tb;
 
       .bus_input_selector (bus_input_selector),
       .bus_output_selector(bus_output_selector),
+      .increment_selector (increment_selector),
 
       .alu  (alu_out),
       .immed(immed_out),
@@ -150,6 +152,7 @@ module regs_tb;
     cycle = CYCLE_NONE;
     bus_input_selector = REG_ALU;
     bus_output_selector = REG_ALU;
+    increment_selector = REG_NONE;
 
     #1 clk = ~clk;
     #1 clk = ~clk;
@@ -239,5 +242,40 @@ module regs_tb;
 
     assert_written_mem_data(4'hC);
     assert_mem_addr(12'hF7);
+
+    // Post-increment
+    // Write 0x4 to MX and post-increment X
+    increment_selector = REG_XHL;
+    transfer(REG_TEMPA, REG_MX);
+
+    assert_written_mem_data(4'h4);
+    assert_mem_addr(12'h345);
+
+    assert (regs_uut.x == 12'h346)
+    else $error("X was not set to 0x346");
+
+    // Test Y post-increment wrapping
+    increment_selector = REG_NONE;
+    assert_ld_immed(REG_YL, 4'hF);
+    assert_ld_immed(REG_YH, 4'hF);
+    assert_ld_immed(REG_YP, 4'h2);
+
+    increment_selector = REG_YHL;
+    // Write 0xF to MX and post-increment Y
+    transfer(REG_YL, REG_MY);
+
+    assert_written_mem_data(4'hF);
+    assert_mem_addr(12'h2FF);
+
+    assert (regs_uut.y == 12'h200)
+    else $error("Y was not set to 0x200");
+
+    // Copy SPL (0x7) and post-increment SP
+    increment_selector = REG_SP;
+    transfer(REG_SPL, REG_A);
+
+    assert_reg_value(REG_A, 4'h7);
+    assert (regs_uut.sp == 8'hF8)
+    else $error("SP was not set to 0xF8");
   end
 endmodule
