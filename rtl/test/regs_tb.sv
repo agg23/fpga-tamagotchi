@@ -10,8 +10,10 @@ module regs_tb;
   reg [3:0] alu_out = 0;
   reg [3:0] immed_out = 0;
 
+  wire memory_write_en;
   wire [11:0] memory_addr;
-  reg [3:0] memory_data;
+  wire [3:0] memory_write_data;
+  reg [3:0] memory_read_data;
 
   regs regs_uut (
       .clk(clk),
@@ -23,8 +25,10 @@ module regs_tb;
       .alu  (alu_out),
       .immed(immed_out),
 
+      .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),
-      .memory_data(memory_data)
+      .memory_write_data(memory_write_data),
+      .memory_read_data(memory_read_data)
   );
 
   reg begin_cycle = 0;
@@ -40,6 +44,34 @@ module regs_tb;
     end
   end
 
+  reg [11:0] last_read_memory_addr = 0;
+  reg [3:0] future_memory_read_data;
+  reg awaiting_read_data = 0;
+
+  always @(posedge clk) begin
+    if (memory_addr != last_read_memory_addr) begin
+      last_read_memory_addr <= memory_addr;
+      awaiting_read_data <= 1;
+    end
+
+    if (awaiting_read_data) begin
+      memory_read_data <= future_memory_read_data;
+    end
+  end
+
+  reg [3:0] written_memory_data;
+
+  always @(posedge clk) begin
+    if (memory_write_en) begin
+      written_memory_data <= memory_write_data;
+    end
+  end
+
+  task clk_cycle();
+    #1 clk = ~clk;
+    #1 clk = ~clk;
+  endtask
+
   task perform_microinstruction();
     if (clk) begin
       #1 clk = ~clk;
@@ -48,15 +80,12 @@ module regs_tb;
     // Enter with clk = 0
     begin_cycle = 1;
 
-    #1 clk = ~clk;
-    #1 clk = ~clk;
+    clk_cycle();
 
     begin_cycle = 0;
-    #1 clk = ~clk;
-    #1 clk = ~clk;
+    clk_cycle();
 
-    #1 clk = ~clk;
-    #1 clk = ~clk;
+    clk_cycle();
   endtask
 
   task ld_immed(reg_type destination, reg [3:0] immed);
@@ -107,6 +136,16 @@ module regs_tb;
     else $error("%s was not set to %d", destination, value);
   endfunction
 
+  function assert_mem_addr(reg [11:0] expected);
+    assert (memory_addr == expected)
+    else $error("Unexpected memory address: %h. Expected: %h", memory_addr, expected);
+  endfunction
+
+  function assert_written_mem_data(reg [3:0] expected);
+    assert (written_memory_data == expected)
+    else $error("Incorrect written data: %h. Expected: %h", written_memory_data, expected);
+  endfunction
+
   initial begin
     cycle = CYCLE_NONE;
     bus_input_selector = REG_ALU;
@@ -148,13 +187,57 @@ module regs_tb;
     assert (regs_uut.y == 12'hFED)
     else $error("Y was not set to 0xFED");
 
-    // Load 0xFD into SP
-    transfer(REG_A, REG_SPL);
+    // Load 0xF7 into SP
+    alu_out = 4'h7;
+    transfer(REG_ALU, REG_SPL);
     transfer(REG_TEMPA, REG_SPH);
 
-    assert (regs_uut.sp == 8'hFD)
-    else $error("SP was not set to 0xFD");
+    assert (regs_uut.sp == 8'hF7)
+    else $error("SP was not set to 0xF7");
 
-    // TODO: Test memory
+    // Memory Reads
+    // ------------
+    // Load 0x1 from MX
+    future_memory_read_data = 4'h1;
+    transfer(REG_MX, REG_A);
+
+    assert_reg_value(REG_A, 4'h1);
+    assert_mem_addr(12'h345);
+
+    // Load 0xC from MY
+    future_memory_read_data = 4'hC;
+    transfer(REG_MY, REG_B);
+
+    assert_reg_value(REG_B, 4'hC);
+    assert_mem_addr(12'hFED);
+
+    // Load 0x4 from M(7)
+    future_memory_read_data = 4'h4;
+    immed_out = 4'h7;
+    transfer(REG_Mn, REG_TEMPA);
+
+    assert_reg_value(REG_TEMPA, 4'h4);
+    assert_mem_addr(12'h7);
+
+    // Load 0xF from MSP
+    future_memory_read_data = 4'hF;
+    transfer(REG_MSP, REG_TEMPB);
+
+    assert_reg_value(REG_TEMPB, 4'hF);
+    assert_mem_addr(12'hF7);
+
+    // Memory Writes
+    // -------------
+    // Write 0xF to MX
+    transfer(REG_TEMPB, REG_MX);
+
+    assert_written_mem_data(4'hF);
+    assert_mem_addr(12'h345);
+
+    // Write 0xC to MSP
+    transfer(REG_B, REG_MSP);
+
+    assert_written_mem_data(4'hC);
+    assert_mem_addr(12'hF7);
   end
 endmodule

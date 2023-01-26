@@ -18,6 +18,7 @@ module reg_mux (
 
     input wire [3:0] immed,
 
+    input wire [3:0] memory_read_data,
     output reg use_memory,
     output reg [11:0] memory_addr,
     output reg [3:0] out
@@ -49,20 +50,24 @@ module reg_mux (
       REG_SPH: out = sp[7:4];
 
       REG_MX: begin
+        out = memory_read_data;
         memory_addr = x;
-        use_memory  = 1;
+        use_memory = 1;
       end
       REG_MY: begin
+        out = memory_read_data;
         memory_addr = y;
-        use_memory  = 1;
+        use_memory = 1;
       end
       REG_MSP: begin
+        out = memory_read_data;
         memory_addr = sp;  // TODO: This might not work due to adjustments on SP
-        use_memory  = 1;
+        use_memory = 1;
       end
       REG_Mn: begin
+        out = memory_read_data;
         memory_addr = immed;
-        use_memory  = 1;
+        use_memory = 1;
       end
 
       REG_IMM: out = immed;

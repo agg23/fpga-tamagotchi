@@ -10,8 +10,10 @@ module regs (
     input wire [3:0] alu,
     input wire [3:0] immed,
 
+    output reg memory_write_en,
     output wire [11:0] memory_addr,
-    input  wire [ 3:0] memory_data
+    output reg [3:0] memory_write_data,
+    input wire [3:0] memory_read_data
 );
   // Registers
   reg [3:0] a;
@@ -51,6 +53,7 @@ module regs (
 
       .immed(immed),
 
+      .memory_read_data(memory_read_data),
       .use_memory(use_bus_input_memory_addr),
       .memory_addr(bus_input_memory_addr),
       .out(bus_input)
@@ -58,7 +61,11 @@ module regs (
 
   // Write bus output
   always @(posedge clk) begin
-    // Some registers are set only on write cycle, others do stuff on other cycles
+    if (current_cycle != CYCLE_REG_WRITE) begin
+      memory_write_en <= 0;
+    end
+
+    // Some registers are set only on WRITE cycle, others do stuff on other cycles
     casex ({
       bus_output_selector, current_cycle
     })
@@ -70,11 +77,35 @@ module regs (
         // Do nothing, these are invalid write targets
       end
 
-      // Grab address in fetch cycle
-      {REG_MX, CYCLE_REG_FETCH} :  bus_output_memory_addr <= x;
-      {REG_MY, CYCLE_REG_FETCH} :  bus_output_memory_addr <= y;
-      {REG_MSP, CYCLE_REG_FETCH} : bus_output_memory_addr <= sp;
-      {REG_Mn, CYCLE_REG_FETCH} :  bus_output_memory_addr <= immed;
+      // Grab address and data in fetch cycle
+      {
+        REG_MX, CYCLE_REG_FETCH
+      } : begin
+        bus_output_memory_addr <= x;
+        memory_write_data <= bus_input;
+        memory_write_en <= 1;
+      end
+      {
+        REG_MY, CYCLE_REG_FETCH
+      } : begin
+        bus_output_memory_addr <= y;
+        memory_write_data <= bus_input;
+        memory_write_en <= 1;
+      end
+      {
+        REG_MSP, CYCLE_REG_FETCH
+      } : begin
+        bus_output_memory_addr <= sp;
+        memory_write_data <= bus_input;
+        memory_write_en <= 1;
+      end
+      {
+        REG_Mn, CYCLE_REG_FETCH
+      } : begin
+        bus_output_memory_addr <= immed;
+        memory_write_data <= bus_input;
+        memory_write_en <= 1;
+      end
 
       {REG_A, CYCLE_REG_WRITE} : a <= bus_input;
       {REG_B, CYCLE_REG_WRITE} : b <= bus_input;
