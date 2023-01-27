@@ -108,7 +108,7 @@ Each operation consumes values from the bus (into `TEMPA/B`), and stores the out
 Global things that are set in decode, instead of being in the microcode
 
 * 1 bit for auto-increment PC
-* 4 bits for ALU instruction
+* ~~4 bits for ALU instruction~~
 
 Other things
 
@@ -119,6 +119,11 @@ Other things
 * `TRANSFER`
   * Transfers 4 bits from source to dest
   * 5 bits for source
+  * 5 bits for dest
+  * 3 bits for post-increment specification
+* `TRANSFER_ALU`
+  * Always has ALU as source
+  * 4 bits for ALU instruction
   * 5 bits for dest
   * 3 bits for post-increment specification
 * `NOP`

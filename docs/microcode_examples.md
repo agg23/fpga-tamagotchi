@@ -49,10 +49,10 @@ Split into deconstruction of single cycle, and two cycle stages
 
 ### Double Cycle
 
-1. Decode instruction. Set ALU to `ADD` with carry
+1. Decode instruction.
 2. Transfer `XH` to `TEMPA`
 3. Transfer `i[3:0]` to `TEMPB`
-4. Transfer `ALU OUT` to `XL` and copy flags. Increment PC
+4. Set ALU to `ADD` with carry. Transfer `ALU OUT` to `XL` and copy flags. Increment PC
 
 ## `LDPX MX, i` (Load M(X) with 4 bit immediate, post increment X)
 
@@ -102,10 +102,10 @@ Split into deconstruction of single cycle, and two cycle stages
 
 ### Double Cycle
 
-1. Decode instruction. Set ALU to `ADD` with carry
+1. Decode instruction.
 2. Transfer `M(X)` to `TEMPA`
 3. Tranfer contents of `r` to `TEMPB`
-4. Transfer `ALU OUT` to `M(X)` and copy flags. Increment X. Increment PC
+4. Set ALU to `ADD` with carry. Transfer `ALU OUT` to `M(X)` and copy flags. Increment X. Increment PC
 
 ## `INC Mn` (Increment memory `0x0-0xF` specified by `n`)
 
@@ -121,10 +121,10 @@ Split into deconstruction of single cycle, and two cycle stages
 
 ### Double Cycle
 
-1. Decode instruction. Set ALU to `ADD`
+1. Decode instruction.
 2. Transfer `M(n)` to `TEMPA`
 3. Set `TEMPB` to 1
-4. Transfer `ALU OUT` to `M(n)`. Increment PC
+4. Set ALU to `ADD`. Transfer `ALU OUT` to `M(n)`. Increment PC
 
 ## `RET` (Return to stack address)
 
@@ -170,10 +170,10 @@ Shares opcode prefix with all flag setters (they just hardcode the immediate)
 
 ### Double Cycle
 
-1. Decode instruction. Set `ALU` to `OR`
+1. Decode instruction.
 2. Transfer `i[3:0]` to `TEMPA`
 3. Transfer `F` to `TEMPB`
-4. Transfer `ALU OUT` to `F`. Increment PC
+4. Set `ALU` to `OR`. Transfer `ALU OUT` to `F`. Increment PC
 
 ## `JP C, s` (Jump to 8 bit immediate if carry set)
 
