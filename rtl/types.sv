@@ -32,7 +32,8 @@ package types;
     REG_MY,
     REG_MSP,
     REG_Mn,
-    REG_IMM,
+    REG_IMML,
+    REG_IMMH,
     REG_HARDCODED_1
   } reg_type;
 
@@ -48,4 +49,18 @@ package types;
     CYCLE_REG_FETCH,
     CYCLE_REG_WRITE
   } microcode_cycle;
+
+  typedef enum {
+    CYCLE5,
+    CYCLE7,
+    CYCLE12
+  } instr_length;
+
+  function [3:0] cycle_count_int(instr_length length);
+    case (length)
+      CYCLE5:  cycle_count_int = 5;
+      CYCLE7:  cycle_count_int = 7;
+      CYCLE12: cycle_count_int = 12;
+    endcase
+  endfunction
 endpackage

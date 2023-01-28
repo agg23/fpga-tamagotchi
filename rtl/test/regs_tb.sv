@@ -11,7 +11,7 @@ module regs_tb;
   reg [3:0] alu_out = 0;
   reg alu_zero = 0;
   reg alu_carry = 0;
-  reg [3:0] immed_out = 0;
+  reg [7:0] immed_out = 0;
 
   wire memory_write_en;
   wire [11:0] memory_addr;
@@ -94,9 +94,17 @@ module regs_tb;
     clk_cycle();
   endtask
 
-  task ld_immed(reg_type destination, reg [3:0] immed);
-    immed_out = immed;
-    bus_input_selector = REG_IMM;
+  task ld_immed_low(reg_type destination, reg [3:0] immed);
+    immed_out[3:0] = immed;
+    bus_input_selector = REG_IMML;
+    bus_output_selector = destination;
+
+    perform_microinstruction();
+  endtask
+
+  task ld_immed_high(reg_type destination, reg [3:0] immed);
+    immed_out[7:4] = immed;
+    bus_input_selector = REG_IMMH;
     bus_output_selector = destination;
 
     perform_microinstruction();
@@ -109,8 +117,8 @@ module regs_tb;
     perform_microinstruction();
   endtask
 
-  task assert_ld_immed(reg_type destination, reg [3:0] immed);
-    ld_immed(destination, immed);
+  task assert_ld_immed_low(reg_type destination, reg [3:0] immed);
+    ld_immed_low(destination, immed);
 
     assert_reg_value(destination, immed);
   endtask
@@ -184,10 +192,10 @@ module regs_tb;
     perform_microinstruction();
 
     // Load 0xF into A
-    assert_ld_immed(REG_A, 4'hF);
+    assert_ld_immed_low(REG_A, 4'hF);
 
     // Load 0xA into B
-    assert_ld_immed(REG_B, 4'hA);
+    ld_immed_high(REG_B, 4'hA);
 
     transfer(REG_A, REG_TEMPB);
     assert_reg_value(REG_TEMPB, 4'hF);
@@ -196,19 +204,19 @@ module regs_tb;
     assert_reg_value(REG_TEMPA, 4'hA);
 
     // Load 0x345 into X
-    assert_ld_immed(REG_XL, 4'h5);
-    assert_ld_immed(REG_XH, 4'h4);
-    assert_ld_immed(REG_XP, 4'h3);
+    assert_ld_immed_low(REG_XL, 4'h5);
+    assert_ld_immed_low(REG_XH, 4'h4);
+    assert_ld_immed_low(REG_XP, 4'h3);
 
     assert (regs_uut.x == 12'h345)
     else $error("X was not set to 0x345");
 
     // Load 0xFED into Y
-    assert_ld_immed(REG_TEMPA, 4'hF);
-    assert_ld_immed(REG_TEMPB, 4'hE);
+    assert_ld_immed_low(REG_TEMPA, 4'hF);
+    assert_ld_immed_low(REG_TEMPB, 4'hE);
     transfer(REG_TEMPA, REG_YP);
     transfer(REG_TEMPB, REG_YH);
-    assert_ld_immed(REG_A, 4'hD);
+    assert_ld_immed_low(REG_A, 4'hD);
     transfer(REG_A, REG_YL);
 
     assert (regs_uut.y == 12'hFED)
@@ -286,9 +294,9 @@ module regs_tb;
 
     // Test Y post-increment wrapping
     increment_selector = REG_NONE;
-    assert_ld_immed(REG_YL, 4'hF);
-    assert_ld_immed(REG_YH, 4'hF);
-    assert_ld_immed(REG_YP, 4'h2);
+    assert_ld_immed_low(REG_YL, 4'hF);
+    assert_ld_immed_low(REG_YH, 4'hF);
+    assert_ld_immed_low(REG_YP, 4'h2);
 
     increment_selector = REG_YHL;
     // Write 0xF to MX and post-increment Y
@@ -313,7 +321,7 @@ module regs_tb;
     // Flags
     // -----
     // Set all flags
-    ld_immed(REG_FLAGS, 4'hF);
+    ld_immed_low(REG_FLAGS, 4'hF);
 
     assert_carry(1);
     assert_zero(1);

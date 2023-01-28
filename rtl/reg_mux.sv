@@ -17,7 +17,7 @@ module reg_mux (
 
     input wire [7:0] sp,
 
-    input wire [3:0] immed,
+    input wire [7:0] immed,
 
     input wire [3:0] memory_read_data,
     output reg use_memory,
@@ -68,11 +68,12 @@ module reg_mux (
       end
       REG_Mn: begin
         out = memory_read_data;
-        memory_addr = immed;
+        memory_addr = immed[3:0];
         use_memory = 1;
       end
 
-      REG_IMM: out = immed;
+      REG_IMML: out = immed[3:0];
+      REG_IMMH: out = immed[7:4];
       REG_HARDCODED_1: out = 4'h1;
     endcase
   end

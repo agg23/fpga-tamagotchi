@@ -11,7 +11,7 @@ module regs (
     input wire [3:0] alu,
     input wire alu_zero,
     input wire alu_carry,
-    input wire [3:0] immed,
+    input wire [7:0] immed,
 
     output reg memory_write_en,
     output wire [11:0] memory_addr,
@@ -92,7 +92,9 @@ module regs (
       }, {
         REG_ALU_WITH_FLAGS, 2'hX
       }, {
-        REG_IMM, 2'hX
+        REG_IMML, 2'hX
+      }, {
+        REG_IMMH, 2'hX
       } : begin
         // Do nothing, these are invalid write targets
       end
@@ -124,7 +126,7 @@ module regs (
       {
         REG_Mn, CYCLE_REG_FETCH
       } : begin
-        bus_output_memory_addr <= immed;
+        bus_output_memory_addr <= immed[3:0];
         memory_write_data <= bus_input;
         memory_write_en <= 1;
       end
