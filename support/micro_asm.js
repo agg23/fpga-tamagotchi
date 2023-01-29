@@ -77,6 +77,10 @@ const matchRegex = (regex, line, closure) => {
 };
 
 const parseLine = (line, lineNumber) => {
+  const log = (message) => {
+    console.log(`ERROR (line ${lineNumber}): ${message}`);
+  };
+
   if (
     matchRegex(addressRegex, line, ([_, address]) => {
       // Assign address
@@ -97,7 +101,23 @@ const parseLine = (line, lineNumber) => {
         const sourceNum = regMap[source];
         const destNum = regMap[dest];
 
-        const inc = matches.length > 3 ? regIncMap[matches[3]] : 0;
+        const inc =
+          matches.length > 3 && matches[3] !== undefined
+            ? regIncMap[matches[3]]
+            : 0;
+
+        if (sourceNum === undefined) {
+          log(`Could not parse source "${source}"`);
+        }
+
+        if (destNum === undefined) {
+          log(`Could not parse dest "${dest}"`);
+        }
+
+        if (inc === undefined) {
+          console.log(matches);
+          log(`Could not parse inc "${matches[3]}"`);
+        }
 
         const opcode =
           numberAtBitOffset(1, 13) |
@@ -111,7 +131,7 @@ const parseLine = (line, lineNumber) => {
         );
       })
     ) {
-      console.log(`ERROR (${lineNumber}): Could not parse TRANSFER`);
+      log(`Could not parse TRANSFER`);
     }
   } else if (line.startsWith("jmp")) {
     if (
@@ -120,7 +140,7 @@ const parseLine = (line, lineNumber) => {
         // const opcode = numberAtBitOffset(4, 13) | numberAtBitOffset()
       })
     ) {
-      console.log(`ERROR (${lineNumber}): Could not parse JMP`);
+      console.log(`Could not parse JMP`);
     }
   }
 };
