@@ -1,0 +1,13 @@
+{
+  "name": "micro_asm",
+  "version": "1.0.0",
+  "description": "Assembles microcode for 6200",
+  "main": "index.js",
+  "scripts": {
+    "build": "node micro_asm.js microcode.asm microcode.rom"
+  },
+  "type": "module",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}

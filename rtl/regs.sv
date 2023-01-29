@@ -83,6 +83,8 @@ module regs (
       memory_write_en <= 0;
     end
 
+    // TODO: Handle setting PC
+
     // Some registers are set only on WRITE cycle, others do stuff on other cycles
     casex ({
       bus_output_selector, current_cycle

@@ -136,6 +136,7 @@ Other things
   * Cancels PC increment
   * `011_00000_00000_000`
 * `JMP`
+  * 1 bit for conditional. If 1, following two bits are used
   * 1 bit for flag. 0 for zero, 1 for carry
   * 1 bit for set. 0 for unset, 1 for set
   * `x` bits for jump address. If flag matches condition, jump to microaddress

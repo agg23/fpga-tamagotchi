@@ -32,6 +32,9 @@ package types;
     REG_MY,
     REG_MSP,
     REG_Mn,
+    REG_PCSL,
+    REG_PCSH,
+    REG_PCP,
     REG_IMML,
     REG_IMMH,
     REG_HARDCODED_1
