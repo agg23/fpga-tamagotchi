@@ -25,7 +25,9 @@ module decode (
     microcode_start_addr <= 0;
 
     casex (opcode)
-      12'h0XX: {microcode_start_addr, cycle_length} <= {0, CYCLE5};  // JP s
+      // TODO: Restore CYCLE5
+      // 12'h0XX: {microcode_start_addr, cycle_length} <= {0, CYCLE5};  // JP s
+      12'h0XX: {microcode_start_addr, cycle_length} <= {0, CYCLE7};  // Testing
       12'h1XX: begin  // RETD e
         {microcode_start_addr, cycle_length} <= {1, CYCLE12};
 

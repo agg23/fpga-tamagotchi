@@ -1,7 +1,10 @@
 import types::*;
 
 module cpu (
-    input wire clk
+    input wire clk,
+    input wire clk_2x,
+
+    input wire reset_n
 );
 
   reg [11:0] opcode = 0;
@@ -33,6 +36,9 @@ module cpu (
 
   microcode microcode (
       .clk(clk),
+      .clk_2x(clk_2x),
+
+      .reset_n(reset_n),
 
       // Control
       .skip_pc_increment(skip_pc_increment),
