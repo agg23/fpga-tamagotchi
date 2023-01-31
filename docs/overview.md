@@ -127,11 +127,11 @@ Other things
   * `001_[source 12:8][dest 7:3][inc 2:0]`
 * `TRANSALU`
   * Always has ALU as source
-  * 1 bit for whether or not to transfer flags
+  * ~~1 bit for whether or not to transfer flags~~
   * 4 bits for ALU instruction
   * 5 bits for dest
   * 3 bits for post-increment specification
-  * `010_[flag transfer 12:12][ALU 11:8][dest 7:3][inc 2:0]`
+  * `010_0[ALU 11:8][dest 7:3][inc 2:0]`
 * `SETPC`
   * Set 8 bits from immediate to `PCS`
   * 1 bit each to sets page and bank from `NBP` and `NPP`
@@ -142,4 +142,4 @@ Other things
   * 1 bit for flag. 0 for zero, 1 for carry
   * 1 bit for set. 0 for unset, 1 for set
   * `x` bits for jump address. If flag matches condition, jump to microaddress
-  * `100_[flag 12:12][set 11:11][jump addr 10:0]`
+  * `100_[conditional 12:12][flag 11:11][set 10:10][jump addr 9:0]`

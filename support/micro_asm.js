@@ -14,9 +14,12 @@ const inputFile = argv[2];
 const outputFile = argv[3];
 
 const addressRegex = /^#([0-9]+)/i;
-const transferRegex =
-  /^transfer\s+([a-z\(\)]+)\s+([a-z\(\)]+)(?:\s+inc\(([a-z]+)\))?/i;
-const jmpRegex = /^jmp #([0-9]+)/i;
+
+const transferRegexSuffix =
+  /\s+([a-z0-9\(\)_]+)\s+([a-z0-9\(\)_]+)(?:\s+inc\(([a-z0-9_]+)\))?/i;
+const transferRegex = new RegExp("^transfer" + transferRegexSuffix.source, "i");
+const transaluRegex = new RegExp("^transalu" + transferRegexSuffix.source, "i");
+const jmpRegex = /^jmp\s+(?:(n?(?:c|z))\s+)?#([0-9]+)/i;
 
 const regMap = {
   flags: 2,
@@ -44,7 +47,7 @@ const regMap = {
   npp: 24,
   imml: 25,
   immh: 26,
-  hardcoded1: 27,
+  hardcoded_1: 27,
   imm_addr_l: 28,
   imm_addr_h: 29,
   imm_addr_p: 30,
@@ -55,6 +58,22 @@ const regIncMap = {
   yhl: 2,
   sp_inc: 3,
   sp_dec: 4,
+};
+
+const aluMap = {
+  add: 0,
+  add_no_dec: 1,
+  adc: 2,
+  adc_no_dec: 3,
+  sub: 4,
+  sub_no_dec: 5,
+  sbc: 6,
+  and: 7,
+  or: 8,
+  xor: 9,
+  cp: 10,
+  rrc: 11,
+  rlc: 12,
 };
 
 const outputBuffer = Buffer.alloc(1024);
@@ -99,13 +118,12 @@ const parseLine = (line, lineNumber) => {
     matchRegex(addressRegex, line, ([_, address]) => {
       // Assign address
       currentAddress = address * 8;
-
-      console.log(`Setting address to ${address}`);
     })
   ) {
     return;
+  } else if (line.startsWith("nop")) {
+    writeWord(0, log);
   } else if (line.startsWith("setpc")) {
-    console.log(`Setting setpc ${line}`);
     writeWord(parseInt("6000", 16), log);
   } else if (line.startsWith("transfer")) {
     if (
@@ -129,29 +147,74 @@ const parseLine = (line, lineNumber) => {
         }
 
         if (inc === undefined) {
-          console.log(matches);
           log(`Could not parse inc "${matches[3]}"`);
         }
 
         const opcode =
-          numberAtBitOffset(1, 13) |
+          numberAtBitOffset(1, 13) | // Opcode
           numberAtBitOffset(sourceNum, 8) |
           numberAtBitOffset(destNum, 3) |
           inc;
 
         writeWord(opcode, log);
-        console.log(
-          `TRANSFER ${source} ${sourceNum} ${dest} ${destNum} ${matches[3]} inc(${inc})`
-        );
       })
     ) {
       log(`Could not parse TRANSFER`);
     }
+  } else if (line.startsWith("transalu")) {
+    if (
+      !matchRegex(transaluRegex, line, (matches) => {
+        let [_, aluOp, dest] = matches;
+
+        const aluOpNum = aluMap[aluOp];
+        const destNum = regMap[dest];
+
+        const inc =
+          matches.length > 3 && matches[3] !== undefined
+            ? regIncMap[matches[3]]
+            : 0;
+
+        if (aluOpNum === undefined) {
+          log(`Could not parse ALU "${aluOp}"`);
+        }
+
+        if (destNum === undefined) {
+          log(`Could not parse dest "${dest}"`);
+        }
+
+        if (inc === undefined) {
+          log(`Could not parse inc "${matches[3]}"`);
+        }
+
+        const opcode =
+          numberAtBitOffset(1, 14) | // Opcode
+          numberAtBitOffset(aluOpNum, 8) |
+          numberAtBitOffset(destNum, 3) |
+          inc;
+
+        writeWord(opcode, log);
+      })
+    ) {
+      log(`Could not parse TRANSALU`);
+    }
   } else if (line.startsWith("jmp")) {
     if (
-      !matchRegex(jmpRegex, line, ([_, address]) => {
-        // TODO
-        // const opcode = numberAtBitOffset(4, 13) | numberAtBitOffset()
+      !matchRegex(jmpRegex, line, ([_, condition, address]) => {
+        const conditional = !!condition;
+        const conditionSet = conditional && !condition.startsWith("n");
+
+        const isCarry = conditional && condition.endsWith("c");
+
+        const actualAddress = address * 4;
+
+        const opcode =
+          numberAtBitOffset(1, 15) | // Opcode
+          numberAtBitOffset(conditional, 12) |
+          numberAtBitOffset(isCarry, 11) |
+          numberAtBitOffset(conditionSet, 10) |
+          actualAddress;
+
+        writeWord(opcode, log);
       })
     ) {
       console.log(`Could not parse JMP`);
@@ -170,8 +233,6 @@ const parse = async () => {
   rl.on("line", (line) => parseLine(line.toLowerCase(), ++lineNumber));
 
   await events.once(rl, "close");
-
-  console.log(outputBuffer[0], outputBuffer[1]);
 
   writeFileSync(outputFile, outputBuffer, { flag: "w" });
 };
