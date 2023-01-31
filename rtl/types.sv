@@ -1,9 +1,11 @@
 package types;
   typedef enum {
     ALU_ADD,
+    ALU_ADD_NO_DEC,
     ALU_ADC,
     ALU_ADC_NO_DEC,
     ALU_SUB,
+    ALU_SUB_NO_DEC,
     ALU_SBC,
     ALU_AND,
     ALU_OR,
@@ -34,10 +36,13 @@ package types;
     REG_MX,
     REG_MY,
     REG_MSP,
+    REG_MSP_DEC,  // M(SP - 1)
     REG_Mn,
     REG_PCSL,
     REG_PCSH,
     REG_PCP,
+    REG_NBP,
+    REG_NPP,
     REG_IMML,
     REG_IMMH,
     REG_HARDCODED_1,
@@ -50,7 +55,8 @@ package types;
     REG_NONE,
     REG_XHL,
     REG_YHL,
-    REG_SP
+    REG_SP_INC,
+    REG_SP_DEC
   } reg_inc_type;
 
   typedef enum {

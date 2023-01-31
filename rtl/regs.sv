@@ -42,6 +42,7 @@ module regs (
   wire [7:0] x_inc = x[7:0] + 1;
   wire [7:0] y_inc = y[7:0] + 1;
   wire [7:0] sp_inc = sp + 1;
+  wire [7:0] sp_dec = sp - 1;
 
   // Bus
   wire [3:0] bus_input;
@@ -92,6 +93,7 @@ module regs (
     end
 
     // TODO: Handle setting PC
+    // TODO: Handle NBP and NPP
 
     // Some registers are set only on WRITE cycle, others do stuff on other cycles
     casex ({
@@ -130,6 +132,13 @@ module regs (
         REG_MSP, CYCLE_REG_FETCH
       } : begin
         bus_output_memory_addr <= sp;
+        memory_write_data <= bus_input;
+        memory_write_en <= 1;
+      end
+      {
+        REG_MSP_DEC, CYCLE_REG_FETCH
+      } : begin
+        bus_output_memory_addr <= sp_dec;
         memory_write_data <= bus_input;
         memory_write_en <= 1;
       end
@@ -176,7 +185,8 @@ module regs (
         end
         REG_XHL: x[7:0] <= x_inc;
         REG_YHL: y[7:0] <= y_inc;
-        REG_SP:  sp <= sp_inc;
+        REG_SP_INC: sp <= sp_inc;
+        REG_SP_DEC: sp <= sp_dec;
       endcase
     end
   end

@@ -191,13 +191,13 @@ module decode (
 
       12'hFFX: begin
         case (opcode[3:0])
-          4'b00XX: {microcode_start_addr, cycle_length} <= {91, CYCLE5};  // LD SPL, r
-          4'b01XX: {microcode_start_addr, cycle_length} <= {92, CYCLE5};  // LD r, SPL
+          4'b00XX: {microcode_start_addr, cycle_length} <= {92, CYCLE5};  // LD SPL, r
+          4'b01XX: {microcode_start_addr, cycle_length} <= {93, CYCLE5};  // LD r, SPL
 
-          4'b1000: {microcode_start_addr, cycle_length} <= {93, CYCLE5};  // HALT
-          4'b1001: {microcode_start_addr, cycle_length} <= {94, CYCLE5};  // SLP
-          4'b1011: {microcode_start_addr, cycle_length} <= {95, CYCLE5};  // NOP5
-          4'b1111: {microcode_start_addr, cycle_length} <= {96, CYCLE7};  // NOP7
+          4'b1000: {microcode_start_addr, cycle_length} <= {94, CYCLE5};  // HALT
+          4'b1001: {microcode_start_addr, cycle_length} <= {95, CYCLE5};  // SLP
+          4'b1011: {microcode_start_addr, cycle_length} <= {96, CYCLE5};  // NOP5
+          4'b1111: {microcode_start_addr, cycle_length} <= {97, CYCLE7};  // NOP7
         endcase
       end
     endcase

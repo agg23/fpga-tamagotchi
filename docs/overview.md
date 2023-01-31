@@ -125,7 +125,7 @@ Other things
   * 5 bits for dest
   * 3 bits for post-increment specification
   * `001_[source 12:8][dest 7:3][inc 2:0]`
-* `TRANSFER_ALU`
+* `TRANSALU`
   * Always has ALU as source
   * 1 bit for whether or not to transfer flags
   * 4 bits for ALU instruction

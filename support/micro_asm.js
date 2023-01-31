@@ -35,27 +35,41 @@ const regMap = {
   mx: 15,
   my: 16,
   msp: 17,
-  mn: 18,
-  pcsl: 19,
-  pcsh: 20,
-  pcp: 21,
-  imml: 22,
-  immh: 23,
-  hardcoded1: 24,
+  msp_dec: 18,
+  mn: 19,
+  pcsl: 20,
+  pcsh: 21,
+  pcp: 22,
+  nbp: 23,
+  npp: 24,
+  imml: 25,
+  immh: 26,
+  hardcoded1: 27,
+  imm_addr_l: 28,
+  imm_addr_h: 29,
+  imm_addr_p: 30,
 };
 
 const regIncMap = {
   xhl: 1,
   yhl: 2,
-  sp: 3,
+  sp_inc: 3,
+  sp_dec: 4,
 };
 
 const outputBuffer = Buffer.alloc(1024);
 let currentAddress = 0;
 
-const writeWord = (word) => {
+const writeWord = (word, log) => {
   const lower = word & 255;
   const upper = (word >> 8) & 255;
+
+  if (
+    outputBuffer[currentAddress] != 0 ||
+    outputBuffer[currentAddress + 1] != 0
+  ) {
+    log(`Data overflowed at address 0x${currentAddress.toString(16)}`);
+  }
 
   outputBuffer[currentAddress] = lower;
   outputBuffer[currentAddress + 1] = upper;
@@ -92,7 +106,7 @@ const parseLine = (line, lineNumber) => {
     return;
   } else if (line.startsWith("setpc")) {
     console.log(`Setting setpc ${line}`);
-    writeWord(parseInt("6000", 16));
+    writeWord(parseInt("6000", 16), log);
   } else if (line.startsWith("transfer")) {
     if (
       !matchRegex(transferRegex, line, (matches) => {
@@ -125,7 +139,7 @@ const parseLine = (line, lineNumber) => {
           numberAtBitOffset(destNum, 3) |
           inc;
 
-        writeWord(opcode);
+        writeWord(opcode, log);
         console.log(
           `TRANSFER ${source} ${sourceNum} ${dest} ${destNum} ${matches[3]} inc(${inc})`
         );

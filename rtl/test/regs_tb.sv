@@ -324,12 +324,23 @@ module regs_tb;
     else $error("Y was not set to 0x200");
 
     // Copy SPL (0x7) and post-increment SP
-    increment_selector = REG_SP;
+    increment_selector = REG_POSTINC_SP;
     transfer(REG_SPL, REG_A);
 
     assert_reg_value(REG_A, 4'h7);
     assert (regs_uut.sp == 8'hF8)
     else $error("SP was not set to 0xF8");
+
+    // Pre-increment
+    // -------------
+    // Write SPL (0x8) to M(SP - 1)
+    increment_selector = REG_SP_DEC;
+    transfer(REG_SPL, REG_MSP_DEC);
+
+    assert_written_mem_data(4'h8);
+    assert_mem_addr(8'hF7);
+    assert (regs_uut.sp == 8'hF7)
+    else $error("SP was not set to 0xF7");
 
     increment_selector = REG_NONE;
 

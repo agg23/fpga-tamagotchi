@@ -19,7 +19,7 @@ module alu (
     flag_carry_out = flag_carry_in;
 
     case (op)
-      ALU_ADD, ALU_ADC, ALU_ADC_NO_DEC: begin
+      ALU_ADD, ALU_ADD_NO_DEC, ALU_ADC, ALU_ADC_NO_DEC: begin
         reg [4:0] add_result;
         reg op_use_carry;
 
@@ -27,7 +27,7 @@ module alu (
         // Highest bit is the carry
         add_result   = temp_a + temp_b + {4'b0, op_use_carry && flag_carry_in};
 
-        if (op != ALU_ADC_NO_DEC && flag_decimal_in && add_result >= 10) begin
+        if (op != ALU_ADD_NO_DEC && op != ALU_ADC_NO_DEC && flag_decimal_in && add_result >= 10) begin
           add_result = (add_result - 10);
           out = add_result[3:0];
           flag_carry_out = 1;
@@ -35,14 +35,14 @@ module alu (
           {flag_carry_out, out} = add_result;
         end
       end
-      ALU_SUB, ALU_SBC, ALU_CP: begin
+      ALU_SUB, ALU_SUB_NO_DEC, ALU_SBC, ALU_CP: begin
         reg [4:0] sub_result;
 
         // Only include carry if ALU_SBC
         sub_result = temp_a - temp_b - {4'b0, op == ALU_SBC && flag_carry_in};
 
         // Decimal mode isn't used for CP
-        if (op != ALU_CP && flag_decimal_in && sub_result[4]) begin
+        if (op != ALU_CP && op != ALU_SUB_NO_DEC && flag_decimal_in && sub_result[4]) begin
           // Carry is set
           sub_result = (sub_result - 6);
           out = sub_result[3:0];
