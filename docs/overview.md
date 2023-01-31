@@ -127,14 +127,16 @@ Other things
   * `001_[source 12:8][dest 7:3][inc 2:0]`
 * `TRANSFER_ALU`
   * Always has ALU as source
+  * 1 bit for whether or not to transfer flags
   * 4 bits for ALU instruction
   * 5 bits for dest
   * 3 bits for post-increment specification
-  * `010_0[ALU 11:8][dest 7:3][inc 2:0]`
+  * `010_[flag transfer 12:12][ALU 11:8][dest 7:3][inc 2:0]`
 * `SETPC`
   * Set 8 bits from immediate to `PCS`
+  * 1 bit each to sets page and bank from `NBP` and `NPP`
   * Cancels PC increment
-  * `011_00000_00000_000`
+  * `011_00000_00000_0[set NPP 1:1][set NBP 0:0]`
 * `JMP`
   * 1 bit for conditional. If 1, following two bits are used
   * 1 bit for flag. 0 for zero, 1 for carry
