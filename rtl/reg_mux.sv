@@ -26,11 +26,19 @@ module reg_mux (
 );
 
   always_comb begin
+    reg_type modified_selector;
+
     out = 0;
     memory_addr = 0;
     use_memory = 0;
 
-    case (selector)
+    if (selector == REG_IMM_ADDR_L || selector == REG_IMM_ADDR_H || selector == REG_IMM_ADDR_P) begin
+      modified_selector = imm_addressed_reg(selector, immed[5:0]);
+    end else begin
+      modified_selector = selector;
+    end
+
+    case (modified_selector)
       REG_ALU, REG_ALU_WITH_FLAGS: out = alu;
       REG_FLAGS: out = flags;
 

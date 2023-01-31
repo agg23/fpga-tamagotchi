@@ -235,6 +235,21 @@ module regs_tb;
 
     assert_reg_value(REG_A, 4'h1);
 
+    // Transfer immediate addressed reg A to B
+    immed_out = 8'b0000_01_00;
+    transfer(REG_IMM_ADDR_L, REG_IMM_ADDR_H);
+
+    assert_reg_value(REG_A, 4'h1);
+    assert_reg_value(REG_B, 4'h1);
+
+    // Transfer immediate addressed MY to A
+    future_memory_read_data = 4'h4;
+    immed_out = 8'b0100_11_10;
+    transfer(REG_IMM_ADDR_H, REG_IMM_ADDR_P);
+
+    assert_reg_value(REG_A, 4'h4);
+    assert_reg_value(REG_B, 4'h1);
+
     // Memory Reads
     // ------------
     // Load 0x1 from MX

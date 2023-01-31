@@ -37,7 +37,10 @@ package types;
     REG_PCP,
     REG_IMML,
     REG_IMMH,
-    REG_HARDCODED_1
+    REG_HARDCODED_1,
+    REG_IMM_ADDR_L,  // r or q used in position 1:0
+    REG_IMM_ADDR_H,  // r or q used in position 3:2
+    REG_IMM_ADDR_P  // r or q used in position 5:4
   } reg_type;
 
   typedef enum {
@@ -64,6 +67,25 @@ package types;
       CYCLE5:  cycle_count_int = 5;
       CYCLE7:  cycle_count_int = 7;
       CYCLE12: cycle_count_int = 12;
+    endcase
+  endfunction
+
+  function reg_type imm_addressed_reg(reg_type input_reg, reg [5:0] immed);
+    reg [1:0] selected_imm;
+
+    selected_imm = 0;
+
+    case (input_reg)
+      REG_IMM_ADDR_L: selected_imm = immed[1:0];
+      REG_IMM_ADDR_H: selected_imm = immed[3:2];
+      REG_IMM_ADDR_P: selected_imm = immed[5:4];
+    endcase
+
+    case (selected_imm)
+      2'b00: imm_addressed_reg = REG_A;
+      2'b01: imm_addressed_reg = REG_B;
+      2'b10: imm_addressed_reg = REG_MX;
+      2'b11: imm_addressed_reg = REG_MY;
     endcase
   endfunction
 endpackage

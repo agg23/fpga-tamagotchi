@@ -79,15 +79,23 @@ module regs (
 
   // Write bus output
   always @(posedge clk) begin
+    reg_type modified_selector;
+
     if (current_cycle != CYCLE_REG_WRITE) begin
       memory_write_en <= 0;
+    end
+
+    if (bus_output_selector == REG_IMM_ADDR_L || bus_output_selector == REG_IMM_ADDR_H || bus_output_selector == REG_IMM_ADDR_P) begin
+      modified_selector = imm_addressed_reg(bus_output_selector, immed[5:0]);
+    end else begin
+      modified_selector = bus_output_selector;
     end
 
     // TODO: Handle setting PC
 
     // Some registers are set only on WRITE cycle, others do stuff on other cycles
     casex ({
-      bus_output_selector, current_cycle
+      modified_selector, current_cycle
     })
       {
         REG_ALU, 2'hX
