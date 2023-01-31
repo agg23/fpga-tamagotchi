@@ -1,7 +1,10 @@
 package types;
   typedef enum {
     ALU_ADD,
+    ALU_ADC,
+    ALU_ADC_NO_DEC,
     ALU_SUB,
+    ALU_SBC,
     ALU_AND,
     ALU_OR,
     ALU_XOR,
