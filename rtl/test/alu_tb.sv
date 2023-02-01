@@ -314,16 +314,16 @@ module alu_tb;
     // Test NOT
     // --------
     // 58: ~F = 0
-    assert_not(4'hF, 0, 0, 4'h0, 0);
+    // assert_not(4'hF, 0, 0, 4'h0, 0);
 
-    // 59: ~0 = F
-    assert_not(4'h0, 3, 1, 4'hF, 1);
+    // // 59: ~0 = F
+    // assert_not(4'h0, 3, 1, 4'hF, 1);
 
-    // 60: ~3 = C
-    assert_not(4'h3, 3, 1, 4'hC, 1);
+    // // 60: ~3 = C
+    // assert_not(4'h3, 3, 1, 4'hC, 1);
 
-    // 61: ~E = 1
-    assert_not(4'hE, 0, 0, 4'h1, 0);
+    // // 61: ~E = 1
+    // assert_not(4'hE, 0, 0, 4'h1, 0);
 
 
     // Test CP

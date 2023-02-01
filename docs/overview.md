@@ -99,7 +99,7 @@ Each operation consumes values from the bus (into `TEMPA/B`), and stores the out
 * `FAN` - `AND` without store (for setting flags)
 * `RRC` - Rotate right with carry
 * `RLC` - Rotate left with carry
-* `NOT` - Invert
+* ~~`NOT` - Invert~~
 * ~~`INC` - Increment by one. Added by me (is this needed?)~~
 
 # Microcode

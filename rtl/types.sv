@@ -13,8 +13,8 @@ package types;
     ALU_CP,
     // ALU_FAN
     ALU_RRC,
-    ALU_RLC,
-    ALU_NOT
+    ALU_RLC
+    // ALU_NOT
   } alu_op;
 
   typedef enum {

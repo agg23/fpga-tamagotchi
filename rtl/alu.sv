@@ -70,9 +70,9 @@ module alu (
         // TODO: Documentation conflicts on whether or not zero is set. I think it makes more sense that it is
         {flag_carry_out, out} = {temp_a, flag_carry_in};
       end
-      ALU_NOT: begin
-        out = ~temp_a;
-      end
+      // ALU_NOT: begin
+      //   out = ~temp_a;
+      // end
     endcase
 
     flag_zero_out = out == 0;
