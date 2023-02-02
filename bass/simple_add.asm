@@ -1,7 +1,11 @@
 architecture 6200
 output "simple_add.rom", create
 
-ld A, 0x5
+// Set all instructions to nop7
+fill 8192, 0xFF
+origin 0
+
+ld A, 0x7
 ld B, 0xB
 add A, B
 

@@ -324,7 +324,7 @@ module regs_tb;
     else $error("Y was not set to 0x200");
 
     // Copy SPL (0x7) and post-increment SP
-    increment_selector = REG_POSTINC_SP;
+    increment_selector = REG_SP_INC;
     transfer(REG_SPL, REG_A);
 
     assert_reg_value(REG_A, 4'h7);

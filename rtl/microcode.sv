@@ -7,7 +7,7 @@ module microcode (
     input wire reset_n,
 
     // Control
-    input wire skip_pc_increment,
+    output wire increment_pc,
 
     input wire [6:0] microcode_start_addr,
     input instr_length cycle_length,
@@ -17,7 +17,8 @@ module microcode (
 
     output reg_type bus_input_selector,
     output reg_type bus_output_selector,
-    output reg_inc_type increment_selector
+    output reg_inc_type increment_selector,
+    output alu_op alu_operation
 );
   typedef enum {
     DECODE,   // Single cycle
@@ -35,15 +36,21 @@ module microcode (
   } microcode_stage;
 
   (* ram_init_file = "rom/microcode.mif" *)
-  // reg [15:0] rom[1024];
-  reg [15:0] rom[3] = '{16'h2338, 16'h2340, 16'h2729};
+  reg [15:0] rom[1024];
+
+  // TODO: ModelSim only
+  initial $readmemh("C:/Users/adam/code/fpga/tamagotchi/rtl/rom/microcode.hex", rom);
 
   microcode_stage stage = STEP6_2;
 
-  reg [15:0] instruction = 0;
+  reg [15:0] instruction_big_endian = 0;
   reg [9:0] micro_pc = 0;
 
+  wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
+
   wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
+
+  assign increment_pc = stage + 2 == cycle_count_int(cycle_length);
 
   always @(posedge clk) begin
     if (~reset_n) begin
@@ -67,6 +74,7 @@ module microcode (
     reg_type temp_source;
     reg_type temp_dest;
     reg_inc_type temp_inc;
+    alu_op temp_op;
 
     if (~reset_n) begin
       microcode_tick <= 0;
@@ -111,13 +119,25 @@ module microcode (
             bus_output_selector <= temp_dest;
             increment_selector  <= temp_inc;
           end
+          3'b010: begin
+            // TRANSALU
+            $cast(temp_op, instruction[11:8]);
+            $cast(temp_dest, instruction[7:3]);
+            $cast(temp_inc, instruction[2:0]);
+
+            alu_operation <= temp_op;
+            bus_input_selector <= REG_ALU_WITH_FLAGS;
+            bus_output_selector <= temp_dest;
+            increment_selector <= temp_inc;
+          end
           // TODO
         endcase
 
         micro_pc <= micro_pc + 1;
       end
 
-      instruction <= rom[microcode_addr];
+      // Switch from big endian to little
+      instruction_big_endian <= rom[microcode_addr];
     end
   end
 

@@ -8,6 +8,9 @@ module regs (
     input reg_type bus_output_selector,
     input reg_inc_type increment_selector,
 
+    input wire increment_pc,
+    input wire transfer_np,
+
     input wire [3:0] alu,
     input wire alu_zero,
     input wire alu_carry,
@@ -16,14 +19,20 @@ module regs (
     output reg memory_write_en,
     output wire [11:0] memory_addr,
     output reg [3:0] memory_write_data,
-    input wire [3:0] memory_read_data
+    input wire [3:0] memory_read_data,
+
+    output reg [12:0] pc = 0,
+    output reg [ 3:0] temp_a,
+    output reg [ 3:0] temp_b,
+
+    output reg carry,
+    output reg decimal
 );
   // Registers
+  reg [4:0] np;
+
   reg [3:0] a;
   reg [3:0] b;
-
-  reg [3:0] temp_a;
-  reg [3:0] temp_b;
 
   reg [11:0] x;
   reg [11:0] y;
@@ -31,9 +40,7 @@ module regs (
   reg [7:0] sp;
 
   // Flags
-  reg carry;
   reg zero;
-  reg decimal;
   reg interrupt;
 
   wire [3:0] flags_in = {interrupt, decimal, zero, carry};
@@ -166,12 +173,26 @@ module regs (
 
       {REG_SPL, CYCLE_REG_WRITE} : sp[3:0] <= bus_input;
       {REG_SPH, CYCLE_REG_WRITE} : sp[7:4] <= bus_input;
+
+      {REG_PCSL, CYCLE_REG_WRITE} : pc[3:0] <= bus_input;
+      {REG_PCSH, CYCLE_REG_WRITE} : pc[7:4] <= bus_input;
+      {REG_PCP, CYCLE_REG_WRITE} :  pc[11:8] <= bus_input;
+
+      {REG_NPP, CYCLE_REG_WRITE} : np[3:0] <= bus_input;
+      {REG_NBP, CYCLE_REG_WRITE} : np[4] <= bus_input[0];
     endcase
 
     if (bus_input_selector == REG_ALU_WITH_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
       // On write, using value from REG_ALU_WITH_FLAGS, set flags
       carry <= alu_carry;
       zero  <= alu_zero;
+    end
+
+    // PC increment
+    if (transfer_np) begin
+      pc[12:8] <= np;
+    end else if (increment_pc) begin
+      pc[11:0] <= pc[11:0] + 1;
     end
   end
 

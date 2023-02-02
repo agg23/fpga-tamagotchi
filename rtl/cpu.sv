@@ -4,13 +4,16 @@ module cpu (
     input wire clk,
     input wire clk_2x,
 
-    input wire reset_n
-);
+    input wire reset_n,
 
-  reg [11:0] opcode = 0;
+    output wire [12:0] rom_addr,
+    input  wire [11:0] rom_data
+);
+  // reg [11:0] opcode = 0;
 
   // Microcode
   wire skip_pc_increment;
+  wire increment_pc;
 
   wire [6:0] microcode_start_addr;
   instr_length cycle_length;
@@ -18,7 +21,7 @@ module cpu (
   wire [7:0] immed;
 
   decode decoder (
-      .opcode(opcode),
+      .opcode(rom_data),
 
       .skip_pc_increment(skip_pc_increment),
 
@@ -34,6 +37,8 @@ module cpu (
   reg_type bus_output_selector;
   reg_inc_type increment_selector;
 
+  alu_op alu_op;
+
   microcode microcode (
       .clk(clk),
       .clk_2x(clk_2x),
@@ -41,7 +46,7 @@ module cpu (
       .reset_n(reset_n),
 
       // Control
-      .skip_pc_increment(skip_pc_increment),
+      .increment_pc(increment_pc),
 
       .microcode_start_addr(microcode_start_addr),
       .cycle_length(cycle_length),
@@ -49,14 +54,39 @@ module cpu (
       // Bus
       .current_cycle(current_cycle),
 
-      .bus_input_selector (bus_input_selector),
+      .bus_input_selector(bus_input_selector),
       .bus_output_selector(bus_output_selector),
-      .increment_selector (increment_selector)
+      .increment_selector(increment_selector),
+      .alu_operation(alu_op)
   );
 
   wire memory_write_en;
   wire [11:0] memory_addr;
   wire [3:0] memory_write_data;
+
+  wire [3:0] temp_a;
+  wire [3:0] temp_b;
+
+  wire alu_carry_in;
+  wire alu_decimal_in;
+  wire alu_carry_out;
+  wire alu_zero_out;
+
+  wire [3:0] alu_out;
+
+  alu alu (
+      .op(alu_op),
+
+      .temp_a(temp_a),
+      .temp_b(temp_b),
+
+      .flag_carry_in  (alu_carry_in),
+      .flag_decimal_in(alu_decimal_in),
+
+      .out(alu_out),
+      .flag_carry_out(alu_carry_out),
+      .flag_zero_out(alu_zero_out)
+  );
 
   regs regs (
       .clk(clk),
@@ -67,17 +97,26 @@ module cpu (
       .bus_output_selector(bus_output_selector),
       .increment_selector (increment_selector),
 
+      .increment_pc(increment_pc && ~skip_pc_increment),
       // TODO
-      .alu(4'b0),
-      .alu_zero(1'b0),
-      .alu_carry(1'b0),
+      .transfer_np (1'b0),
+
+      .alu(alu_out),
+      .alu_zero(alu_zero_out),
+      .alu_carry(alu_carry_out),
       .immed(immed),
 
       // TODO
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
-      .memory_read_data(4'b0)
-  );
+      .memory_read_data(4'b0),
 
+      .pc(rom_addr),
+      .temp_a(temp_a),
+      .temp_b(temp_b),
+
+      .carry  (alu_carry_in),
+      .decimal(alu_decimal_in)
+  );
 endmodule

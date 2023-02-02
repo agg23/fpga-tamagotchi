@@ -94,9 +94,9 @@ module alu_tb;
     assert_alu(ALU_RLC, a, b, carry, expected, expected_carry);
   endtask
 
-  task assert_not(reg [3:0] a, reg [3:0] b, reg carry, reg [3:0] expected, reg expected_carry);
-    assert_alu(ALU_NOT, a, b, carry, expected, expected_carry);
-  endtask
+  // task assert_not(reg [3:0] a, reg [3:0] b, reg carry, reg [3:0] expected, reg expected_carry);
+  //   assert_alu(ALU_NOT, a, b, carry, expected, expected_carry);
+  // endtask
 
   task assert_cp(reg [3:0] a, reg [3:0] b, reg carry, reg expected_zero, reg expected_carry);
     op = ALU_CP;

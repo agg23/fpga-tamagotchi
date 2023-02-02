@@ -13,11 +13,6 @@ module decode (
     output wire [7:0] immed
 );
   // Arguments
-  wire [7:0] immediate = opcode[7:0];
-
-  reg [1:0] r = 0;
-  reg [1:0] q = 0;
-
   assign immed = opcode[7:0];
 
   always_comb begin

@@ -2,3 +2,5 @@ sim/
 sim2/
 bass/bass.exe
 bass/*.rom
+
+*.hex
