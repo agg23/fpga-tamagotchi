@@ -20,6 +20,8 @@ const transferRegexSuffix =
 const transferRegex = new RegExp("^transfer" + transferRegexSuffix.source, "i");
 const transaluRegex = new RegExp("^transalu" + transferRegexSuffix.source, "i");
 const jmpRegex = /^jmp\s+(?:(n?(?:c|z))\s+)?#([0-9]+)/i;
+const callendRegex = /^callend\s+((?:zero)|(?:copy))/i;
+const haltRegex = /^halt\s*(sleep)?/i;
 
 const regMap = {
   flags: 2,
@@ -76,6 +78,144 @@ const aluMap = {
   rlc: 12,
 };
 
+const instructions = {
+  "#": {
+    type: "regex",
+    regex: addressRegex,
+    matches: ([_, address]) => {
+      // Assign address
+      currentAddress = address * 8;
+    },
+  },
+  nop: {
+    type: "literal",
+    action: (writeWord) => writeWord(0),
+  },
+  setpc: {
+    type: "literal",
+    action: (writeWord) => writeWord(parseInt("6000", 16)),
+  },
+  transfer: {
+    type: "regex",
+    regex: transferRegex,
+    matches: (matches, writeWord) => {
+      let [_, source, dest] = matches;
+
+      const sourceNum = regMap[source];
+      const destNum = regMap[dest];
+
+      const inc =
+        matches.length > 3 && matches[3] !== undefined
+          ? regIncMap[matches[3]]
+          : 0;
+
+      if (sourceNum === undefined) {
+        log(`Could not parse source "${source}"`);
+      }
+
+      if (destNum === undefined) {
+        log(`Could not parse dest "${dest}"`);
+      }
+
+      if (inc === undefined) {
+        log(`Could not parse inc "${matches[3]}"`);
+      }
+
+      const opcode =
+        numberAtBitOffset(1, 13) | // Opcode
+        numberAtBitOffset(sourceNum, 8) |
+        numberAtBitOffset(destNum, 3) |
+        inc;
+
+      writeWord(opcode);
+    },
+  },
+  transalu: {
+    type: "regex",
+    regex: transaluRegex,
+    matches: (matches, writeWord) => {
+      let [_, aluOp, dest] = matches;
+
+      const aluOpNum = aluMap[aluOp];
+      const destNum = regMap[dest];
+
+      const inc =
+        matches.length > 3 && matches[3] !== undefined
+          ? regIncMap[matches[3]]
+          : 0;
+
+      if (aluOpNum === undefined) {
+        log(`Could not parse ALU "${aluOp}"`);
+      }
+
+      if (destNum === undefined) {
+        log(`Could not parse dest "${dest}"`);
+      }
+
+      if (inc === undefined) {
+        log(`Could not parse inc "${matches[3]}"`);
+      }
+
+      const opcode =
+        numberAtBitOffset(1, 14) | // Opcode
+        numberAtBitOffset(aluOpNum, 8) |
+        numberAtBitOffset(destNum, 3) |
+        inc;
+
+      writeWord(opcode);
+    },
+  },
+  jmp: {
+    type: "regex",
+    regex: jmpRegex,
+    matches: ([_, condition, address], writeWord) => {
+      const conditional = !!condition;
+      const conditionSet = conditional && !condition.startsWith("n");
+
+      const isCarry = conditional && condition.endsWith("c");
+
+      const actualAddress = address * 4;
+
+      const opcode =
+        numberAtBitOffset(1, 15) | // Opcode
+        numberAtBitOffset(conditional, 12) |
+        numberAtBitOffset(isCarry, 11) |
+        numberAtBitOffset(conditionSet, 10) |
+        actualAddress;
+
+      writeWord(opcode);
+    },
+  },
+  callend: {
+    type: "regex",
+    regex: callendRegex,
+    matches: ([_, copy], writeWord) => {
+      const opcode =
+        numberAtBitOffset(5, 13) | // Opcode
+        (copy == "copy");
+
+      writeWord(opcode);
+    },
+  },
+  jpbaend: {
+    type: "literal",
+    action: (writeWord) => writeWord(parseInt("C000", 16)),
+  },
+  halt: {
+    type: "regex",
+    regex: haltRegex,
+    matches: (matches, writeWord) => {
+      const stopOscillator = matches.length > 1 && matches[1] == "sleep";
+
+      const opcode =
+        numberAtBitOffset(7, 13) | // Opcode
+        stopOscillator;
+
+      writeWord(opcode);
+    },
+  },
+};
+
 const outputBuffer = Buffer.alloc(1024);
 let currentAddress = 0;
 
@@ -113,112 +253,34 @@ const parseLine = (line, lineNumber) => {
   const log = (message) => {
     console.log(`ERROR (line ${lineNumber}): ${message}`);
   };
+  const writeWordWithLog = (word) => writeWord(word, log);
 
-  if (
-    matchRegex(addressRegex, line, ([_, address]) => {
-      // Assign address
-      currentAddress = address * 8;
-    })
-  ) {
-    return;
-  } else if (line.startsWith("nop")) {
-    writeWord(0, log);
-  } else if (line.startsWith("setpc")) {
-    writeWord(parseInt("6000", 16), log);
-  } else if (line.startsWith("transfer")) {
-    if (
-      !matchRegex(transferRegex, line, (matches) => {
-        let [_, source, dest] = matches;
+  let matchedLine = false;
+  for (const instruction of Object.keys(instructions)) {
+    if (line.startsWith(instruction)) {
+      matchedLine = true;
 
-        const sourceNum = regMap[source];
-        const destNum = regMap[dest];
-
-        const inc =
-          matches.length > 3 && matches[3] !== undefined
-            ? regIncMap[matches[3]]
-            : 0;
-
-        if (sourceNum === undefined) {
-          log(`Could not parse source "${source}"`);
+      const data = instructions[instruction];
+      if (data.type === "literal") {
+        data.action(writeWordWithLog);
+      } else if (data.type === "regex") {
+        if (
+          !matchRegex(data.regex, line, (matches) =>
+            data.matches(matches, writeWordWithLog)
+          )
+        ) {
+          log(`Could not parse ${instruction.toUpperCase()}`);
         }
+      } else {
+        log(`Unknown instruction type "${data.type}"`);
+      }
 
-        if (destNum === undefined) {
-          log(`Could not parse dest "${dest}"`);
-        }
-
-        if (inc === undefined) {
-          log(`Could not parse inc "${matches[3]}"`);
-        }
-
-        const opcode =
-          numberAtBitOffset(1, 13) | // Opcode
-          numberAtBitOffset(sourceNum, 8) |
-          numberAtBitOffset(destNum, 3) |
-          inc;
-
-        writeWord(opcode, log);
-      })
-    ) {
-      log(`Could not parse TRANSFER`);
+      break;
     }
-  } else if (line.startsWith("transalu")) {
-    if (
-      !matchRegex(transaluRegex, line, (matches) => {
-        let [_, aluOp, dest] = matches;
+  }
 
-        const aluOpNum = aluMap[aluOp];
-        const destNum = regMap[dest];
-
-        const inc =
-          matches.length > 3 && matches[3] !== undefined
-            ? regIncMap[matches[3]]
-            : 0;
-
-        if (aluOpNum === undefined) {
-          log(`Could not parse ALU "${aluOp}"`);
-        }
-
-        if (destNum === undefined) {
-          log(`Could not parse dest "${dest}"`);
-        }
-
-        if (inc === undefined) {
-          log(`Could not parse inc "${matches[3]}"`);
-        }
-
-        const opcode =
-          numberAtBitOffset(1, 14) | // Opcode
-          numberAtBitOffset(aluOpNum, 8) |
-          numberAtBitOffset(destNum, 3) |
-          inc;
-
-        writeWord(opcode, log);
-      })
-    ) {
-      log(`Could not parse TRANSALU`);
-    }
-  } else if (line.startsWith("jmp")) {
-    if (
-      !matchRegex(jmpRegex, line, ([_, condition, address]) => {
-        const conditional = !!condition;
-        const conditionSet = conditional && !condition.startsWith("n");
-
-        const isCarry = conditional && condition.endsWith("c");
-
-        const actualAddress = address * 4;
-
-        const opcode =
-          numberAtBitOffset(1, 15) | // Opcode
-          numberAtBitOffset(conditional, 12) |
-          numberAtBitOffset(isCarry, 11) |
-          numberAtBitOffset(conditionSet, 10) |
-          actualAddress;
-
-        writeWord(opcode, log);
-      })
-    ) {
-      console.log(`Could not parse JMP`);
-    }
+  if (line.length > 0 && !line.startsWith("//") && !matchedLine) {
+    log(`Unknown instruction "${line}"`);
   }
 };
 
@@ -230,7 +292,7 @@ const parse = async () => {
 
   let lineNumber = 0;
 
-  rl.on("line", (line) => parseLine(line.toLowerCase(), ++lineNumber));
+  rl.on("line", (line) => parseLine(line.toLowerCase().trim(), ++lineNumber));
 
   await events.once(rl, "close");
 
