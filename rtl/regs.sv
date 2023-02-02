@@ -180,6 +180,36 @@ module regs (
 
       {REG_NPP, CYCLE_REG_WRITE} : np[3:0] <= bus_input;
       {REG_NBP, CYCLE_REG_WRITE} : np[4] <= bus_input[0];
+
+      // Special cases
+      // PC is set in fetch, instead of write
+      {REG_SETPC, CYCLE_REG_FETCH} : pc <= {np, immed};
+      {
+        REG_CALLEND_ZERO_PCP, CYCLE_REG_FETCH
+      } : begin
+        pc[11:0] <= {4'h0, immed};
+
+        // Write PCSL + 1 to M(SP-1)
+        bus_output_memory_addr <= sp_dec;
+        memory_write_data <= pc[3:0] + 1;
+        memory_write_en <= 1;
+      end
+      {
+        REG_CALLEND_SET_PCP, CYCLE_REG_FETCH
+      } : begin
+        pc[11:0] <= {np[3:0], immed};
+
+        // Write PCSL + 1 to M(SP-1)
+        bus_output_memory_addr <= sp_dec;
+        memory_write_data <= pc[3:0] + 1;
+        memory_write_en <= 1;
+      end
+      {
+        REG_JPBAEND, CYCLE_REG_FETCH
+      } : begin
+        pc[12:8] <= np;
+        pc[3:0]  <= a;
+      end
     endcase
 
     if (bus_input_selector == REG_ALU_WITH_FLAGS && current_cycle == CYCLE_REG_WRITE) begin

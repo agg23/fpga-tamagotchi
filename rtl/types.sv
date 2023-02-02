@@ -48,7 +48,13 @@ package types;
     REG_HARDCODED_1,
     REG_IMM_ADDR_L,  // r or q used in position 1:0
     REG_IMM_ADDR_H,  // r or q used in position 3:2
-    REG_IMM_ADDR_P  // r or q used in position 5:4
+    REG_IMM_ADDR_P,  // r or q used in position 5:4
+
+    // Custom "registers" that represent hardcoded multiple registers to be set simultaneously
+    REG_SETPC,  // Copy 8 bit immediate to PCS, NBP to PCB, and NPP to PCP. Set in fetch
+    REG_CALLEND_ZERO_PCP,  // Transfer PCLS+1 to M(SP), and copy 8 bit immediate to PC (set in fetch). Set PCP to 0
+    REG_CALLEND_SET_PCP,  // Transfer PCLS+1 to M(SP), and copy 8 bit immediate to PC (set in fetch). Set PCP to NPP
+    REG_JPBAEND  // Transfer A to PCSL, NBP to PCB, and NPP to PCP
   } reg_type;
 
   typedef enum {

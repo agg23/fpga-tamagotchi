@@ -18,6 +18,13 @@ module regs_tb;
   wire [3:0] memory_write_data;
   reg [3:0] memory_read_data;
 
+  wire [12:0] pc;
+  wire [3:0] temp_a;
+  wire [3:0] temp_b;
+
+  wire carry;
+  wire decimal;
+
   regs regs_uut (
       .clk(clk),
       .current_cycle(cycle),
@@ -25,6 +32,9 @@ module regs_tb;
       .bus_input_selector (bus_input_selector),
       .bus_output_selector(bus_output_selector),
       .increment_selector (increment_selector),
+
+      .increment_pc(1'b0),
+      .transfer_np (1'b0),
 
       .alu(alu_out),
       .alu_zero(alu_zero),
@@ -34,7 +44,14 @@ module regs_tb;
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
-      .memory_read_data(memory_read_data)
+      .memory_read_data(memory_read_data),
+
+      .pc(pc),
+      .temp_a(temp_a),
+      .temp_b(temp_b),
+
+      .carry  (carry),
+      .decimal(decimal)
   );
 
   reg begin_cycle = 0;
@@ -78,7 +95,7 @@ module regs_tb;
     #1 clk = ~clk;
   endtask
 
-  task perform_microinstruction();
+  task perform_decode_fetch_instruction();
     if (clk) begin
       #1 clk = ~clk;
     end
@@ -90,6 +107,10 @@ module regs_tb;
 
     begin_cycle = 0;
     clk_cycle();
+  endtask
+
+  task perform_microinstruction();
+    perform_decode_fetch_instruction();
 
     clk_cycle();
   endtask
@@ -115,6 +136,13 @@ module regs_tb;
     bus_output_selector = destination;
 
     perform_microinstruction();
+  endtask
+
+  task transfer_fetch(reg_type source, reg_type destination);
+    bus_input_selector  = source;
+    bus_output_selector = destination;
+
+    perform_decode_fetch_instruction();
   endtask
 
   task assert_ld_immed_low(reg_type destination, reg [3:0] immed);
@@ -178,6 +206,11 @@ module regs_tb;
   function assert_interrupt(reg expected);
     assert (regs_uut.interrupt == expected)
     else $error("Interrupt was not set to %d", expected);
+  endfunction
+
+  function assert_pc(reg [12:0] expected);
+    assert (regs_uut.pc == expected)
+    else $error("PC was not set to %d", expected);
   endfunction
 
   initial begin
@@ -389,5 +422,45 @@ module regs_tb;
     assert_zero(1);
     assert_decimal(1);
     assert_interrupt(0);
+
+    // Custom "registers"
+    // ------------------
+    // Copy immed to PCS, NBP to PCB, and NPP to PCP
+    immed_out   = 8'h58;
+    regs_uut.np = 5'b1_1010;
+    transfer_fetch(REG_A, REG_SETPC);
+
+    assert_pc(13'h1A58);
+    clk_cycle();
+
+    // Copy PCLS + 1 to M(SP - 1) and copy immed to PCS. Set PCP to 0
+    immed_out   = 8'h99;
+    regs_uut.np = 5'b0_1111;
+    transfer_fetch(REG_B, REG_CALLEND_ZERO_PCP);
+
+    assert_pc(13'h1099);
+    clk_cycle();
+
+    assert_written_mem_data(4'h9);
+    assert_mem_addr(12'hF6);
+
+    // Copy PCLS + 1 to M(SP - 1) and copy immed to PCS. Set PCP to NPP
+    immed_out   = 8'hC2;
+    regs_uut.np = 5'b0_1100;
+    regs_uut.sp = 8'h55;
+    transfer_fetch(REG_TEMPA, REG_CALLEND_SET_PCP);
+
+    assert_pc(13'h1CC2);
+    clk_cycle();
+
+    assert_written_mem_data(4'hA);
+    assert_mem_addr(12'h54);
+
+    // Copy A to PCSL. Set PCB to NBP. Set PCP to NPP
+    regs_uut.np = 5'b0_0011;
+    transfer_fetch(REG_TEMPB, REG_JPBAEND);
+
+    assert_pc(13'h03C8);
+    clk_cycle();
   end
 endmodule

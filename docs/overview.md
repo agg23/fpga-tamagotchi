@@ -134,12 +134,27 @@ Other things
   * `010_0[ALU 11:8][dest 7:3][inc 2:0]`
 * `SETPC`
   * Set 8 bits from immediate to `PCS`
-  * 1 bit each to sets page and bank from `NBP` and `NPP`
+  * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
   * Cancels PC increment
-  * `011_00000_00000_0[set NPP 1:1][set NBP 0:0]`
+  * `011_00000_00000_000`
 * `JMP`
   * 1 bit for conditional. If 1, following two bits are used
   * 1 bit for flag. 0 for zero, 1 for carry
   * 1 bit for set. 0 for unset, 1 for set
   * `x` bits for jump address. If flag matches condition, jump to microaddress
   * `100_[conditional 12:12][flag 11:11][set 10:10][jump addr 9:0]`
+* `CALLEND`
+  * Special instruction to transfer `PCSL+1` to `M(SP - 1)`, while at the same time copying 8 bit immediate to `PCS`
+    * Optionally copies `NPP` to `PCP`
+    * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
+  * Decrement SP
+  * 1 bit for `NPP` copy. If unset, `PCP` is set to 0, otherwise it's set to `NPP`
+  * `101_00000_00000_00[NPP copy 0:0]`
+* `JPBAEND`
+  * Special instruction to transfer `A` to `PCSL` along with transferring the `N*P` values
+  * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
+  * `110_00000_00000_000`
+* `HALT`
+  * Stops the CPU
+  * 1 bit to stop peripheral oscillator
+  * `111_00000_00000_00[stop oscilllator 0:0]`
