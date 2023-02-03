@@ -3,7 +3,7 @@ output "simple_add.rom", create
 
 // Set all instructions to nop7
 fill 8192, 0xFF
-origin 0
+origin 0x180 // Start of page 1 (3 nibbles per address)
 
 ld A, 0x7
 ld B, 0xB

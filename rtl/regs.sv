@@ -21,7 +21,8 @@ module regs (
     output reg [3:0] memory_write_data,
     input wire [3:0] memory_read_data,
 
-    output reg [12:0] pc = 0,
+    // Start at page 1
+    output reg [12:0] pc = 13'h0_1_00,
     output reg [ 3:0] temp_a,
     output reg [ 3:0] temp_b,
 
@@ -29,7 +30,8 @@ module regs (
     output reg decimal
 );
   // Registers
-  reg [4:0] np;
+  // Start at page 1
+  reg [4:0] np = 5'h01;
 
   reg [3:0] a;
   reg [3:0] b;
@@ -41,7 +43,7 @@ module regs (
 
   // Flags
   reg zero;
-  reg interrupt;
+  reg interrupt = 0;
 
   wire [3:0] flags_in = {interrupt, decimal, zero, carry};
 
