@@ -66,7 +66,7 @@ module microcode (
   end
 
   reg microcode_tick = 0;
-  microcode_stage prev_stage;
+  microcode_stage prev_stage = STEP6_2;
   reg cycle_second_step;
 
   always @(posedge clk_2x) begin

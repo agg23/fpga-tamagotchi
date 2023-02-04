@@ -10,9 +10,16 @@ module cpu_tb;
   wire [12:0] rom_addr;
   reg [11:0] rom_data;
 
+  wire memory_write_en;
+  wire [11:0] memory_addr;
+  wire [3:0] memory_write_data;
+  reg [3:0] memory_read_data;
+
   reg [11:0] rom[8192];
 
-  initial $readmemh("C:/Users/adam/code/fpga/tamagotchi/bass/simple_add.hex", rom);
+  initial $readmemh("C:/Users/adam/code/fpga/tamagotchi/bass/fib_optimized.hex", rom);
+
+  reg [3:0] ram[4096];
 
   cpu cpu_uut (
       .clk(clk),
@@ -21,7 +28,12 @@ module cpu_tb;
       .reset_n(reset_n),
 
       .rom_addr(rom_addr),
-      .rom_data(rom_data)
+      .rom_data(rom_data),
+
+      .memory_write_en(memory_write_en),
+      .memory_addr(memory_addr),
+      .memory_write_data(memory_write_data),
+      .memory_read_data(memory_read_data)
   );
 
   task cycle();
@@ -45,9 +57,16 @@ module cpu_tb;
     rom_data <= rom[rom_addr];
   end
 
-  initial begin
-    cpu_uut.regs.a = 4'h5;
+  always @(posedge clk) begin
+    // RAM access
+    if (memory_write_en) begin
+      ram[memory_addr] <= memory_write_data;
+    end else begin
+      memory_read_data <= ram[memory_addr];
+    end
+  end
 
+  initial begin
     cycle();
     cycle();
 

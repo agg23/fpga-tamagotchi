@@ -7,10 +7,13 @@ module cpu (
     input wire reset_n,
 
     output wire [12:0] rom_addr,
-    input  wire [11:0] rom_data
-);
-  // reg [11:0] opcode = 0;
+    input  wire [11:0] rom_data,
 
+    output reg memory_write_en,
+    output wire [11:0] memory_addr,
+    output reg [3:0] memory_write_data,
+    input wire [3:0] memory_read_data
+);
   // Microcode
   wire skip_pc_increment;
   wire increment_pc;
@@ -60,10 +63,6 @@ module cpu (
       .alu_operation(alu_op)
   );
 
-  wire memory_write_en;
-  wire [11:0] memory_addr;
-  wire [3:0] memory_write_data;
-
   wire [3:0] temp_a;
   wire [3:0] temp_b;
 
@@ -106,11 +105,10 @@ module cpu (
       .alu_carry(alu_carry_out),
       .immed(immed),
 
-      // TODO
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
-      .memory_read_data(4'b0),
+      .memory_read_data(memory_read_data),
 
       .pc(rom_addr),
       .temp_a(temp_a),
