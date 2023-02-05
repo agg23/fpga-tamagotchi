@@ -8,6 +8,7 @@ const archPath = "../bass/architectures/6200.arch";
 const whitespaceRegex = /\s+/g;
 const numberRegex = /\*([0-9]+)/;
 const labelRegex = /^([a-z0-9]+):/i;
+const commentRegex = /(\/\/.*)/;
 
 const supportedInstructions = [];
 
@@ -188,9 +189,15 @@ const parseAsmLine = (line, lineNumber) => {
     unmatchedLabels = [];
   }
 
+  let lineWithoutLabel = line;
+
   const matches = labelRegex.exec(line);
 
   if (!!matches && matches.length > 0) {
+    lineWithoutLabel =
+      lineWithoutLabel.substring(0, matches.index) +
+      lineWithoutLabel.substring(matches.index + matches[0].length);
+
     const label = matches[1];
     if (matchedLabels[label]) {
       log(
@@ -215,6 +222,12 @@ const parseAsmLine = (line, lineNumber) => {
         lineNumber,
       });
     }
+  }
+
+  lineWithoutLabel = lineWithoutLabel.replace(commentRegex, "").trim();
+
+  if (!hasInstruction && lineWithoutLabel.length > 0) {
+    log(`Unknown instruction "${lineWithoutLabel}"`, lineNumber);
   }
 };
 

@@ -1,12 +1,11 @@
-architecture 6200
-output "fib_optimized.rom", create
-
 // Set all instructions to nop7
 // fill 8192, 0xFF
 origin 0x100 // Start of page 1
 
-ld A, 1
+ld A, 0
+ld XP, A
 ld X, 1 // Going to use MX and MY for temporaries, and access them via M1, M2. MX is iteration count
+ld YP, A
 ld Y, 2 // MY is prev value
 
 ld MX, 7 // F(n)
