@@ -42,11 +42,17 @@ module cpu (
 
   alu_op alu_op;
 
+  wire alu_zero_in;
+  wire alu_carry_in;
+
   microcode microcode (
       .clk(clk),
       .clk_2x(clk_2x),
 
       .reset_n(reset_n),
+
+      .zero (alu_zero_in),
+      .carry(alu_carry_in),
 
       // Control
       .increment_pc(increment_pc),
@@ -66,7 +72,6 @@ module cpu (
   wire [3:0] temp_a;
   wire [3:0] temp_b;
 
-  wire alu_carry_in;
   wire alu_decimal_in;
   wire alu_carry_out;
   wire alu_zero_out;
@@ -114,7 +119,8 @@ module cpu (
       .temp_a(temp_a),
       .temp_b(temp_b),
 
-      .carry  (alu_carry_in),
+      .zero(alu_zero_in),
+      .carry(alu_carry_in),
       .decimal(alu_decimal_in)
   );
 endmodule

@@ -26,6 +26,7 @@ module regs (
     output reg [ 3:0] temp_a,
     output reg [ 3:0] temp_b,
 
+    output reg zero,
     output reg carry,
     output reg decimal
 );
@@ -42,7 +43,6 @@ module regs (
   reg [7:0] sp;
 
   // Flags
-  reg zero;
   reg interrupt = 0;
 
   wire [3:0] flags_in = {interrupt, decimal, zero, carry};
@@ -214,7 +214,7 @@ module regs (
       end
     endcase
 
-    if (bus_input_selector == REG_ALU_WITH_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
+    if (bus_input_selector == REG_ALU_WITH_FLAGS && bus_output_selector != REG_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
       // On write, using value from REG_ALU_WITH_FLAGS, set flags
       carry <= alu_carry;
       zero  <= alu_zero;

@@ -2,15 +2,16 @@
 // fill 8192, 0xFF
 origin 0x100 // Start of page 1
 
-ld A, 0
+// Set flags
+rst F, 0
+
+ld A, 0 // Accumlator
 ld XP, A
 ld X, 1 // Going to use MX and MY for temporaries, and access them via M1, M2. MX is iteration count
 ld YP, A
 ld Y, 2 // MY is prev value
 
 ld MX, 7 // F(n)
-dec M1 // Sub 1 so we can start at F(1)
-ld A, 0 // Accumulator
 ld MY, 1 // F(n-1)
 
 loop:

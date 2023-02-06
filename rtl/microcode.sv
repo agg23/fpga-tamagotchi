@@ -6,6 +6,10 @@ module microcode (
 
     input wire reset_n,
 
+    // Reg
+    input wire zero,
+    input wire carry,
+
     // Control
     output wire increment_pc,
 
@@ -50,7 +54,8 @@ module microcode (
 
   wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
 
-  assign increment_pc = stage + 2 == cycle_count_int(cycle_length);
+  reg disable_increment = 0;
+  assign increment_pc = ~disable_increment && stage + 2 == cycle_count_int(cycle_length);
 
   always @(posedge clk) begin
     if (~reset_n) begin
@@ -83,6 +88,8 @@ module microcode (
       bus_input_selector <= REG_ALU;
       bus_output_selector <= REG_ALU;
       increment_selector <= REG_NONE;
+
+      disable_increment <= 0;
     end else begin
       prev_stage <= stage;
 
@@ -98,12 +105,16 @@ module microcode (
         microcode_addr = {microcode_start_addr, 2'b00};
 
         micro_pc <= microcode_addr;
+        disable_increment <= 0;
       end else if (cycle_second_step && ~last_cycle_step && ~microcode_tick) begin
         // Execute microcode instruction
         // Defaults
-        bus_input_selector  <= REG_ALU;
+        alu_operation <= ALU_ADD;
+        bus_input_selector <= REG_ALU;
         bus_output_selector <= REG_ALU;
-        increment_selector  <= REG_NONE;
+        increment_selector <= REG_NONE;
+
+        micro_pc <= micro_pc + 1;
 
         casex (instruction[15:13])
           3'b000: begin
@@ -130,10 +141,32 @@ module microcode (
             bus_output_selector <= temp_dest;
             increment_selector <= temp_inc;
           end
+          3'b011: begin
+            // SETPC
+            bus_output_selector <= REG_SETPC;
+            disable_increment   <= 1;
+          end
+          3'b100: begin
+            // JMP
+            reg flag_nzero_carry;
+            reg flag_set;
+
+            flag_nzero_carry = instruction[11];
+            flag_set = instruction[10];
+
+            if (instruction[12]) begin
+              // Conditional
+              if ((~flag_nzero_carry && (flag_set == zero)) || (flag_nzero_carry && (flag_set == carry))) begin
+                // Condition met
+                micro_pc <= instruction[9:0];
+              end
+            end else begin
+              // Always jump
+              micro_pc <= instruction[9:0];
+            end
+          end
           // TODO
         endcase
-
-        micro_pc <= micro_pc + 1;
       end
 
       // Switch from big endian to little
