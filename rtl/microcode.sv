@@ -54,11 +54,12 @@ module microcode (
 
   wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
 
+  reg halt = 0;
   reg disable_increment = 0;
   assign increment_pc = ~disable_increment && stage + 2 == cycle_count_int(cycle_length);
 
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (~reset_n || halt) begin
       stage <= STEP6_2;
     end else begin
       if (last_cycle_step || stage == STEP6_2) begin
@@ -89,6 +90,7 @@ module microcode (
       bus_output_selector <= REG_ALU;
       increment_selector <= REG_NONE;
 
+      halt <= 0;
       disable_increment <= 0;
     end else begin
       prev_stage <= stage;
@@ -165,7 +167,25 @@ module microcode (
               micro_pc <= instruction[9:0];
             end
           end
-          // TODO
+          3'b101: begin
+            // CALLEND
+            if (instruction[0]) begin
+              // Copy NPP to PCP
+              bus_output_selector <= REG_CALLEND_SET_PCP;
+            end else begin
+              // Zero PCP
+              bus_output_selector <= REG_CALLEND_ZERO_PCP;
+            end
+          end
+          3'b110: begin
+            // JPBAEND
+            bus_output_selector <= REG_JPBAEND;
+          end
+          3'b111: begin
+            // HALT
+            // TODO: Do we need to do anything with the oscillator?
+            halt <= 1;
+          end
         endcase
       end
 

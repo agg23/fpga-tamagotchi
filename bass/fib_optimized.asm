@@ -27,3 +27,4 @@ loop:
 // Calculated
 // Store F(n) into M0
 ld M0, A
+halt
