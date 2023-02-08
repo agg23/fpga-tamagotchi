@@ -3,6 +3,8 @@ import types::*;
 module reg_mux (
     input reg_type selector,
 
+    input wire [12:0] pc,
+
     input wire [3:0] alu,
     input wire [3:0] flags,
 
@@ -74,6 +76,11 @@ module reg_mux (
         memory_addr = sp;  // TODO: This might not work due to adjustments on SP
         use_memory = 1;
       end
+      REG_MSP_INC: begin
+        out = memory_read_data;
+        memory_addr = sp + 1;
+        use_memory = 1;
+      end
       REG_Mn: begin
         out = memory_read_data;
         memory_addr = immed[3:0];
@@ -83,6 +90,10 @@ module reg_mux (
       REG_IMML: out = immed[3:0];
       REG_IMMH: out = immed[7:4];
       REG_HARDCODED_1: out = 4'h1;
+
+      REG_PCP:  out = pc[11:8];
+      REG_PCSH: out = pc[7:4];
+      REG_PCSL: out = pc[3:0];
     endcase
   end
 

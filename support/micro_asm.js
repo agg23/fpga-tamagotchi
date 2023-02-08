@@ -21,30 +21,33 @@ const transferRegex = new RegExp("^transfer" + transferRegexSuffix.source, "i");
 const transaluRegex = new RegExp("^transalu" + transferRegexSuffix.source, "i");
 const jmpRegex = /^jmp\s+(?:(n?(?:c|z))\s+)?#([0-9]+)/i;
 const callendRegex = /^callend\s+((?:zero)|(?:copy))/i;
+const retendRegex = /^retend\s+((?:pcsh)|(?:pcp))/i;
 const haltRegex = /^halt\s*(sleep)?/i;
 
 const regMap = {
-  flags: 2,
-  a: 3,
-  b: 4,
-  tempa: 5,
-  tempb: 6,
-  xl: 7,
-  xh: 8,
-  xp: 9,
-  yl: 10,
-  yh: 11,
-  yp: 12,
-  spl: 13,
-  sph: 14,
-  mx: 15,
-  my: 16,
-  msp: 17,
-  msp_dec: 18,
-  mn: 19,
-  pcsl: 20,
-  pcsh: 21,
-  pcp: 22,
+  flags: 0,
+  a: 1,
+  b: 2,
+  tempa: 3,
+  tempb: 4,
+  xl: 5,
+  xh: 6,
+  xp: 7,
+  yl: 8,
+  yh: 9,
+  yp: 10,
+  spl: 11,
+  sph: 12,
+  mx: 13,
+  my: 14,
+  msp: 15,
+  msp_inc: 16,
+  msp_dec: 17,
+  mn: 18,
+  pcsl: 19,
+  pcsh: 20,
+  pcp: 21,
+  pcp_early: 22,
   nbp: 23,
   npp: 24,
   imml: 25,
@@ -192,7 +195,18 @@ const instructions = {
     matches: ([_, copy], writeWord) => {
       const opcode =
         numberAtBitOffset(5, 13) | // Opcode
-        (copy == "copy");
+        (copy === "copy");
+
+      writeWord(opcode);
+    },
+  },
+  retend: {
+    type: "regex",
+    regex: retendRegex,
+    matches: ([_, type], writeWord) => {
+      const opcode =
+        numberAtBitOffset(11, 12) | // Opcode
+        (type === "pcp");
 
       writeWord(opcode);
     },

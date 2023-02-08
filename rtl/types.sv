@@ -18,8 +18,6 @@ package types;
   } alu_op;
 
   typedef enum {
-    REG_ALU,
-    REG_ALU_WITH_FLAGS,
     REG_FLAGS,
     REG_A,
     REG_B,
@@ -36,11 +34,13 @@ package types;
     REG_MX,
     REG_MY,
     REG_MSP,
+    REG_MSP_INC,  // M(SP + 1)
     REG_MSP_DEC,  // M(SP - 1)
     REG_Mn,
     REG_PCSL,
     REG_PCSH,
     REG_PCP,
+    REG_PCP_EARLY,
     REG_NBP,
     REG_NPP,
     REG_IMML,
@@ -54,7 +54,10 @@ package types;
     REG_SETPC,  // Copy 8 bit immediate to PCS, NBP to PCB, and NPP to PCP. Set in fetch
     REG_CALLEND_ZERO_PCP,  // Transfer PCLS+1 to M(SP), and copy 8 bit immediate to PC (set in fetch). Set PCP to 0
     REG_CALLEND_SET_PCP,  // Transfer PCLS+1 to M(SP), and copy 8 bit immediate to PC (set in fetch). Set PCP to NPP
-    REG_JPBAEND  // Transfer A to PCSL, NBP to PCB, and NPP to PCP
+    REG_JPBAEND,  // Transfer A to PCSL, NBP to PCB, and NPP to PCP
+
+    REG_ALU,
+    REG_ALU_WITH_FLAGS
   } reg_type;
 
   typedef enum {

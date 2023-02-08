@@ -7,7 +7,7 @@ const archPath = "../bass/architectures/6200.arch";
 
 const whitespaceRegex = /\s+/g;
 const numberRegex = /\*([0-9]+)/;
-const labelRegex = /^([a-z0-9]+):/i;
+const labelRegex = /^([a-z0-9_]+):/i;
 const commentRegex = /(\/\/.*)/;
 
 const supportedInstructions = [];
@@ -75,7 +75,7 @@ const parseArchLine = (line, lineNumber) => {
 
     let instructionLine =
       originalInstruction.substring(0, index) +
-      "(?:([0-9]+)|([a-z0-9]+))" +
+      "(?:(0x[a-f0-9]+|[0-9]+)|([a-z0-9_]+))" +
       originalInstruction.substring(index + matchString.length);
 
     instructionLine = instructionLine

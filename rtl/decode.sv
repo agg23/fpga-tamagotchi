@@ -66,7 +66,7 @@ module decode (
       12'hBXX: {microcode_start_addr, cycle_length} <= {26, CYCLE5};  // LD X, e
 
       12'hCXX: begin
-        case (opcode[7:6])
+        casex (opcode[7:6])
           2'b00: {microcode_start_addr, cycle_length} <= {27, CYCLE7};  // ADD r, i
           2'b01: {microcode_start_addr, cycle_length} <= {28, CYCLE7};  // ADC r, i
           2'b10: {microcode_start_addr, cycle_length} <= {29, CYCLE7};  // AND r, i
@@ -74,7 +74,7 @@ module decode (
         endcase
       end
       12'hDXX: begin
-        case (opcode[7:6])
+        casex (opcode[7:6])
           2'b00: {microcode_start_addr, cycle_length} <= {31, CYCLE7};  // XOR r, i
           2'b01: {microcode_start_addr, cycle_length} <= {32, CYCLE7};  // SBC r, i
           2'b10: {microcode_start_addr, cycle_length} <= {33, CYCLE7};  // FAN r, i
@@ -117,13 +117,13 @@ module decode (
       12'hF0X: {microcode_start_addr, cycle_length} <= {55, CYCLE7};  // CP r, q
       12'hF1X: {microcode_start_addr, cycle_length} <= {56, CYCLE7};  // FAN r, q
       12'hF2X: begin
-        case (opcode[3:2])
+        casex (opcode[3:2])
           2'b10: {microcode_start_addr, cycle_length} <= {57, CYCLE7};  // ACPX MX, r
           2'b11: {microcode_start_addr, cycle_length} <= {58, CYCLE7};  // ACPY MY, r
         endcase
       end
       12'hF3X: begin
-        case (opcode[3:2])
+        casex (opcode[3:2])
           2'b10: {microcode_start_addr, cycle_length} <= {59, CYCLE7};  // SCPX MX, r
           2'b11: {microcode_start_addr, cycle_length} <= {60, CYCLE7};  // SCPY MY, r
         endcase
@@ -141,7 +141,7 @@ module decode (
       12'hFBX: {microcode_start_addr, cycle_length} <= {68, CYCLE5};  // LD B, Mn
 
       12'hFCX: begin
-        case (opcode[3:0])
+        casex (opcode[3:0])
           4'b00XX: {microcode_start_addr, cycle_length} <= {69, CYCLE5};  // PUSH r
           4'b0100: {microcode_start_addr, cycle_length} <= {70, CYCLE5};  // PUSH XP
           4'b0101: {microcode_start_addr, cycle_length} <= {71, CYCLE5};  // PUSH XH
@@ -155,7 +155,7 @@ module decode (
       end
 
       12'hFDX: begin
-        case (opcode[3:0])
+        casex (opcode[3:0])
           4'b00XX: {microcode_start_addr, cycle_length} <= {78, CYCLE5};  // POP r
           4'b0100: {microcode_start_addr, cycle_length} <= {79, CYCLE5};  // POP XP
           4'b0101: {microcode_start_addr, cycle_length} <= {80, CYCLE5};  // POP XH
@@ -176,7 +176,7 @@ module decode (
       end
 
       12'hFEX: begin
-        case (opcode[3:0])
+        casex (opcode[3:0])
           4'b00XX: {microcode_start_addr, cycle_length} <= {89, CYCLE5};  // LD SPH, r
           4'b01XX: {microcode_start_addr, cycle_length} <= {90, CYCLE5};  // LD r, SPH
 
@@ -185,7 +185,7 @@ module decode (
       end
 
       12'hFFX: begin
-        case (opcode[3:0])
+        casex (opcode[3:0])
           4'b00XX: {microcode_start_addr, cycle_length} <= {92, CYCLE5};  // LD SPL, r
           4'b01XX: {microcode_start_addr, cycle_length} <= {93, CYCLE5};  // LD r, SPL
 

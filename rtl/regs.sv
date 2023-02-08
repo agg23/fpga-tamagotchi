@@ -65,6 +65,8 @@ module regs (
   reg_mux bus_input_mux (
       .selector(bus_input_selector),
 
+      .pc(pc),
+
       .alu  (alu),
       .flags(flags_in),
 
@@ -185,6 +187,8 @@ module regs (
 
       // Special cases
       // PC is set in fetch, instead of write
+      {REG_PCP_EARLY, CYCLE_REG_FETCH} : pc[11:8] <= bus_input;
+
       {REG_SETPC, CYCLE_REG_FETCH} : pc <= {np, immed};
       {
         REG_CALLEND_ZERO_PCP, CYCLE_REG_FETCH

@@ -15,21 +15,24 @@ module cpu (
     input wire [3:0] memory_read_data
 );
   // Microcode
-  wire skip_pc_increment;
+  reg skip_pc_increment;
+  wire decode_skip_pc_increment;
   wire increment_pc;
 
   wire [6:0] microcode_start_addr;
+  instr_length decode_cycle_length;
   instr_length cycle_length;
 
   wire [7:0] immed;
 
+
   decode decoder (
       .opcode(rom_data),
 
-      .skip_pc_increment(skip_pc_increment),
+      .skip_pc_increment(decode_skip_pc_increment),
 
       .microcode_start_addr(microcode_start_addr),
-      .cycle_length(cycle_length),
+      .cycle_length(decode_cycle_length),
 
       .immed(immed)
   );
@@ -44,6 +47,13 @@ module cpu (
 
   wire alu_zero_in;
   wire alu_carry_in;
+
+  always @(posedge clk_2x) begin
+    if (current_cycle == CYCLE_NONE) begin
+      skip_pc_increment <= decode_skip_pc_increment;
+      cycle_length <= decode_cycle_length;
+    end
+  end
 
   microcode microcode (
       .clk(clk),

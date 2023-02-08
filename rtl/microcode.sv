@@ -54,6 +54,8 @@ module microcode (
 
   wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
 
+  // This is a dirty hack to provide memory data to the bus for the RET instruction
+  reg_type temp_override_bus_input_selector;
   reg halt = 0;
   reg disable_increment = 0;
   assign increment_pc = ~disable_increment && stage + 2 == cycle_count_int(cycle_length);
@@ -103,6 +105,11 @@ module microcode (
 
       microcode_addr = micro_pc;
 
+      if (current_cycle == CYCLE_REG_FETCH && ~microcode_tick && temp_override_bus_input_selector != REG_ALU) begin
+        // Hack for RET (RETEND microcode)
+        bus_input_selector <= temp_override_bus_input_selector;
+      end
+
       if (stage == DECODE && microcode_tick) begin
         microcode_addr = {microcode_start_addr, 2'b00};
 
@@ -115,6 +122,8 @@ module microcode (
         bus_input_selector <= REG_ALU;
         bus_output_selector <= REG_ALU;
         increment_selector <= REG_NONE;
+
+        temp_override_bus_input_selector <= REG_ALU;
 
         micro_pc <= micro_pc + 1;
 
@@ -168,13 +177,32 @@ module microcode (
             end
           end
           3'b101: begin
-            // CALLEND
-            if (instruction[0]) begin
-              // Copy NPP to PCP
-              bus_output_selector <= REG_CALLEND_SET_PCP;
+            if (instruction[12]) begin
+              // RETEND
+              if (instruction[0]) begin
+                // PCP copy
+                bus_input_selector  <= REG_MSP;
+                bus_output_selector <= REG_PCP_EARLY;
+                increment_selector  <= REG_SP_INC;
+              end else begin
+                // PCSH copy
+                bus_input_selector <= REG_MSP;
+                bus_output_selector <= REG_PCSH;
+                increment_selector <= REG_SP_INC;
+
+                temp_override_bus_input_selector <= REG_MSP_INC;
+              end
             end else begin
-              // Zero PCP
-              bus_output_selector <= REG_CALLEND_ZERO_PCP;
+              // CALLEND
+              if (instruction[0]) begin
+                // Copy NPP to PCP
+                bus_output_selector <= REG_CALLEND_SET_PCP;
+              end else begin
+                // Zero PCP
+                bus_output_selector <= REG_CALLEND_ZERO_PCP;
+              end
+
+              increment_selector <= REG_SP_DEC;
             end
           end
           3'b110: begin

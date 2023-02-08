@@ -150,6 +150,11 @@ Other things
   * Decrement SP
   * 1 bit for `NPP` copy. If unset, `PCP` is set to 0, otherwise it's set to `NPP`
   * `101_00000_00000_00[NPP copy 0:0]`
+* `RETEND`
+  * Special instruction to transfer `PCSH` and `PCP` to M(SP + 1) faster than normal
+  * Increments SP
+  * 1 bit to copy `PCP`. If unset, `PCSH` is copied, and `M(SP+1)` begins loading at `WRITE`. If set, `PCP` is copied, stored on `WRITE`
+  * `101_10000_00000_00[PCP copy 0:0]`
 * `JPBAEND`
   * Special instruction to transfer `A` to `PCSL` along with transferring the `N*P` values
   * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
