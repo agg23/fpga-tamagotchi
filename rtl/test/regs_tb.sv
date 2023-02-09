@@ -22,6 +22,7 @@ module regs_tb;
   wire [3:0] temp_a;
   wire [3:0] temp_b;
 
+  wire zero;
   wire carry;
   wire decimal;
 
@@ -50,7 +51,8 @@ module regs_tb;
       .temp_a(temp_a),
       .temp_b(temp_b),
 
-      .carry  (carry),
+      .zero(zero),
+      .carry(carry),
       .decimal(decimal)
   );
 

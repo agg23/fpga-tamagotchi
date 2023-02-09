@@ -53,12 +53,13 @@ module microcode (
   wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
 
   wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
+  wire last_fetch_step = stage + 2 == cycle_count_int(cycle_length);
 
   // This is a dirty hack to provide memory data to the bus for the RET instruction
   reg_type temp_override_bus_input_selector;
   reg halt = 0;
   reg disable_increment = 0;
-  assign increment_pc = ~disable_increment && stage + 2 == cycle_count_int(cycle_length);
+  assign increment_pc = ~disable_increment && last_fetch_step;
 
   always @(posedge clk) begin
     if (~reset_n || halt) begin
@@ -97,7 +98,7 @@ module microcode (
     end else begin
       prev_stage <= stage;
 
-      if (stage != prev_stage && stage != STEP4) begin
+      if (stage != prev_stage) begin
         microcode_tick <= 0;
       end else begin
         microcode_tick <= 1;
@@ -169,12 +170,15 @@ module microcode (
               // Conditional
               if ((~flag_nzero_carry && (flag_set == zero)) || (flag_nzero_carry && (flag_set == carry))) begin
                 // Condition met
-                micro_pc <= instruction[9:0];
+                microcode_addr = instruction[9:0];
               end
             end else begin
               // Always jump
-              micro_pc <= instruction[9:0];
+              microcode_addr = instruction[9:0];
             end
+
+            // JMP and immediately load new microcode address as well
+            micro_pc <= microcode_addr;
           end
           3'b101: begin
             if (instruction[12]) begin
