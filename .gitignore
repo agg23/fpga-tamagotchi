@@ -2,5 +2,6 @@ sim/
 sim2/
 bass/bass.exe
 bass/*.rom
+rtl/test/vunit_out
 
 *.hex
