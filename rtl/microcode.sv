@@ -171,6 +171,9 @@ module microcode (
               if ((~flag_nzero_carry && (flag_set == zero)) || (flag_nzero_carry && (flag_set == carry))) begin
                 // Condition met
                 microcode_addr = instruction[9:0];
+              end else begin
+                // Condition not met, move to next instr
+                microcode_addr = microcode_addr + 1;
               end
             end else begin
               // Always jump
