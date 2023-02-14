@@ -30,5 +30,16 @@ for bench in lib.get_test_benches(allow_empty=True):
       for (r, q) in product(range(4), range(4)):
         test.add_config("r %x q %x" % (r, q), generics=dict(r=r, q=q))
 
+    elif test.name.startswith("GENrd"):
+      # Add configs for decimal and r 0-3
+      for r in range(4):
+        test.add_config("d 0 r %x" % (r), generics=dict(decimal=0, r=r))
+        test.add_config("d 1 r %x" % (r), generics=dict(decimal=1, r=r))
+
+    elif test.name.startswith("GENr"):
+      # Add configs for r 0-3
+      for r in range(4):
+        test.add_config("r %x" % (r), generics=dict(r=r))
+
 # Run vunit function
 vu.main()

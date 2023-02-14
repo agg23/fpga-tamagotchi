@@ -56,15 +56,20 @@ module bench;
 
   // Values for easy reference in change detection
   reg [12:0] prev_pc;
-  reg [ 3:0] prev_a;
-  reg [ 3:0] prev_b;
+  reg [3:0] prev_a;
+  reg [3:0] prev_b;
 
   reg [11:0] prev_x;
   reg [11:0] prev_y;
 
-  reg [ 7:0] prev_sp;
+  reg [7:0] prev_sp;
 
-  reg [ 7:0] cycle_count;
+  reg prev_carry;
+  reg prev_zero;
+  reg prev_interrupt;
+  reg prev_decimal;
+
+  reg [7:0] cycle_count;
 
   always @(posedge clk) begin
     if (bench.reset_n) begin
@@ -74,13 +79,18 @@ module bench;
 
   task update_prevs();
     prev_pc = cpu_uut.regs.pc;
-    prev_a  = cpu_uut.regs.a;
-    prev_b  = cpu_uut.regs.b;
+    prev_a = cpu_uut.regs.a;
+    prev_b = cpu_uut.regs.b;
 
-    prev_x  = cpu_uut.regs.x;
-    prev_y  = cpu_uut.regs.y;
+    prev_x = cpu_uut.regs.x;
+    prev_y = cpu_uut.regs.y;
 
     prev_sp = cpu_uut.regs.sp;
+
+    prev_carry = cpu_uut.regs.carry;
+    prev_zero = cpu_uut.regs.zero;
+    prev_interrupt = cpu_uut.regs.interrupt;
+    prev_decimal = cpu_uut.regs.decimal;
   endtask
 
   task initialize_regs();
