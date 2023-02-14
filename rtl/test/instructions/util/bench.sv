@@ -168,6 +168,14 @@ module bench;
     `CHECK_EQUAL(cycle_count - 1, expected);
   endtask
 
+  task assert_carry(reg expected);
+    `CHECK_EQUAL(cpu_uut.regs.carry, expected);
+  endtask
+
+  task assert_zero(reg expected);
+    `CHECK_EQUAL(cpu_uut.regs.zero, expected);
+  endtask
+
   task assert_expected(reg [12:0] expected_pc, reg [3:0] expected_a, reg [3:0] expected_b,
                        reg [11:0] expected_x, reg [11:0] expected_y, reg [7:0] expected_sp);
     assert_pc(expected_pc);
@@ -179,4 +187,13 @@ module bench;
 
     assert_sp(expected_sp);
   endtask
+
+  function [3:0] get_r_value(reg [1:0] r);
+    case (r)
+      0: get_r_value = cpu_uut.regs.a;
+      1: get_r_value = cpu_uut.regs.b;
+      2: get_r_value = ram[cpu_uut.regs.x];
+      3: get_r_value = ram[cpu_uut.regs.y];
+    endcase
+  endfunction
 endmodule
