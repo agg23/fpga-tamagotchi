@@ -138,6 +138,12 @@ module bench;
     end
   endtask
 
+  task assert_np(reg [4:0] expected);
+    if (expected !== 15'hXX) begin
+      `CHECK_EQUAL(cpu_uut.regs.np, expected);
+    end
+  endtask
+
   task assert_a(reg [3:0] expected);
     if (expected !== 4'hX) begin
       `CHECK_EQUAL(cpu_uut.regs.a, expected);

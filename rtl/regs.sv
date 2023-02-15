@@ -103,9 +103,6 @@ module regs (
       modified_selector = bus_output_selector;
     end
 
-    // TODO: Handle setting PC
-    // TODO: Handle NBP and NPP
-
     // Some registers are set only on WRITE cycle, others do stuff on other cycles
     casex ({
       modified_selector, current_cycle
