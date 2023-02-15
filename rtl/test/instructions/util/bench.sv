@@ -192,6 +192,14 @@ module bench;
     `CHECK_EQUAL(cpu_uut.regs.zero, expected);
   endtask
 
+  task assert_interrupt(reg expected);
+    `CHECK_EQUAL(cpu_uut.regs.interrupt, expected);
+  endtask
+
+  task assert_decimal(reg expected);
+    `CHECK_EQUAL(cpu_uut.regs.decimal, expected);
+  endtask
+
   task assert_expected(reg [12:0] expected_pc, reg [3:0] expected_a, reg [3:0] expected_b,
                        reg [11:0] expected_x, reg [11:0] expected_y, reg [7:0] expected_sp);
     assert_pc(expected_pc);

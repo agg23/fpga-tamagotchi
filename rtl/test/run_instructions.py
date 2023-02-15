@@ -41,5 +41,15 @@ for bench in lib.get_test_benches(allow_empty=True):
       for r in range(4):
         test.add_config("r %x" % (r), generics=dict(r=r))
 
+    elif test.name.startswith("GENip"):
+      # Add configs for i, p 0-15
+      for (i, p) in product(range(16), range(16)):
+        test.add_config("i %x p %x" % (i, p), generics=dict(i=i, p=p))
+
+    elif test.name.startswith("GENi"):
+      # Add configs for i 0-15
+      for i in range(16):
+        test.add_config("i %x" % (i), generics=dict(i=i))
+
 # Run vunit function
 vu.main()
