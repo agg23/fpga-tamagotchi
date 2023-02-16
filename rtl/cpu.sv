@@ -18,6 +18,7 @@ module cpu (
   reg skip_pc_increment;
   wire decode_skip_pc_increment;
   wire increment_pc;
+  wire reset_np;
 
   wire [6:0] microcode_start_addr;
   instr_length decode_cycle_length;
@@ -66,6 +67,7 @@ module cpu (
 
       // Control
       .increment_pc(increment_pc),
+      .reset_np(reset_np),
 
       .microcode_start_addr(microcode_start_addr),
       .cycle_length(cycle_length),
@@ -112,8 +114,7 @@ module cpu (
       .increment_selector (increment_selector),
 
       .increment_pc(increment_pc && ~skip_pc_increment),
-      // TODO
-      .transfer_np (1'b0),
+      .reset_np(reset_np),
 
       .alu(alu_out),
       .alu_zero(alu_zero_out),

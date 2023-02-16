@@ -9,7 +9,7 @@ module regs (
     input reg_inc_type increment_selector,
 
     input wire increment_pc,
-    input wire transfer_np,
+    input wire reset_np,
 
     input wire [3:0] alu,
     input wire alu_zero,
@@ -222,10 +222,13 @@ module regs (
     end
 
     // PC increment
-    if (transfer_np) begin
-      pc[12:8] <= np;
-    end else if (increment_pc) begin
+    if (increment_pc) begin
       pc[11:0] <= pc[11:0] + 1;
+    end
+
+    // NP reset
+    if (reset_np) begin
+      np <= pc[12:8];
     end
   end
 

@@ -12,6 +12,7 @@ module microcode (
 
     // Control
     output wire increment_pc,
+    output wire reset_np,
 
     input wire [6:0] microcode_start_addr,
     input instr_length cycle_length,
@@ -59,7 +60,9 @@ module microcode (
   reg_type temp_override_bus_input_selector;
   reg halt = 0;
   reg disable_increment = 0;
+  reg prevent_reset_np = 0;
   assign increment_pc = ~disable_increment && last_fetch_step;
+  assign reset_np = ~prevent_reset_np && last_cycle_step;
 
   always @(posedge clk) begin
     if (~reset_n || halt) begin
@@ -95,6 +98,7 @@ module microcode (
 
       halt <= 0;
       disable_increment <= 0;
+      prevent_reset_np <= 0;
     end else begin
       prev_stage <= stage;
 
@@ -116,6 +120,7 @@ module microcode (
 
         micro_pc <= microcode_addr;
         disable_increment <= 0;
+        prevent_reset_np <= 0;
       end else if (cycle_second_step && ~last_cycle_step && ~microcode_tick) begin
         // Execute microcode instruction
         // Defaults
@@ -141,6 +146,11 @@ module microcode (
             bus_input_selector  <= temp_source;
             bus_output_selector <= temp_dest;
             increment_selector  <= temp_inc;
+
+            if (temp_dest == REG_NPP) begin
+              // If NPP was modified in this instruction, don't reset NP
+              prevent_reset_np <= 1;
+            end
           end
           3'b010: begin
             // TRANSALU
