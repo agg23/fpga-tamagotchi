@@ -132,6 +132,10 @@ module bench;
     @(posedge clk iff cpu_uut.microcode.last_cycle_step);
   endtask
 
+  task run_until_halt();
+    @(posedge clk iff cpu_uut.microcode.halt);
+  endtask
+
   task assert_pc(reg [12:0] expected);
     if (expected !== 13'hXXXX) begin
       `CHECK_EQUAL(cpu_uut.regs.pc, expected);

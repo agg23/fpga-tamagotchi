@@ -59,6 +59,26 @@ module inc_tb;
       bench.assert_carry(carry);
       bench.assert_zero(result == 4'h0);
     end
+
+    `TEST_CASE("DEC SP should decrement SP") begin
+      bench.rom_data = 12'hFCB; // DEC SP
+
+      bench.run_until_complete();
+      #1;
+
+      bench.assert_expected(bench.prev_pc + 1, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp - 1);
+      bench.assert_cycle_length(5);
+    end
+
+    `TEST_CASE("INC SP should increment SP") begin
+      bench.rom_data = 12'hFDB; // INC SP
+
+      bench.run_until_complete();
+      #1;
+
+      bench.assert_expected(bench.prev_pc + 1, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp + 1);
+      bench.assert_cycle_length(5);
+    end
   end;
 
   // The watchdog macro is optional, but recommended. If present, it

@@ -180,7 +180,11 @@ module decode (
           4'b00XX: {microcode_start_addr, cycle_length} <= {7'd89, CYCLE5};  // LD SPH, r
           4'b01XX: {microcode_start_addr, cycle_length} <= {7'd90, CYCLE5};  // LD r, SPH
 
-          4'b1000: {microcode_start_addr, cycle_length} <= {7'd91, CYCLE5};  // JPBA
+          4'b1000: begin  // JPBA
+            {microcode_start_addr, cycle_length} <= {7'd91, CYCLE5};
+
+            skip_pc_increment <= 1;
+          end
         endcase
       end
 
