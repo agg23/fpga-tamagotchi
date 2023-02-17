@@ -389,3 +389,6 @@ HALT SLEEP
 
 #97 // NOP7
 JMP #96
+
+#100 // Special reset vector
+SETPCVEC

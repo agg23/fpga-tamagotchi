@@ -10,6 +10,8 @@ module call_tb;
 
     `TEST_CASE("CALL s should push to stack") begin
       bench.rom_data = 12'h4AB; // CALL 0xAB
+
+      #1;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h12;
 
@@ -28,6 +30,8 @@ module call_tb;
 
     `TEST_CASE("CALL s should use PCP but not bank") begin
       bench.rom_data = 12'h444; // CALL 0x44
+
+      #1;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h0A;
 
@@ -43,6 +47,8 @@ module call_tb;
 
     `TEST_CASE("CALZ s should jump to page 0") begin
       bench.rom_data = 12'h569; // CALZ 0x69
+
+      #1;
       bench.cpu_uut.regs.pc = 13'h1ABC;
       bench.cpu_uut.regs.np = 5'h15;
 

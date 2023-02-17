@@ -94,6 +94,10 @@ const instructions = {
     type: "literal",
     action: (writeWord) => writeWord(0),
   },
+  setpcvec: {
+    type: "literal",
+    action: (writeWord) => writeWord(parseInt("7000", 16)),
+  },
   setpc: {
     type: "literal",
     action: (writeWord) => writeWord(parseInt("6000", 16)),

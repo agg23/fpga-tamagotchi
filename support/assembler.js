@@ -21,8 +21,47 @@ let currentAddress = 0;
 const commands = [
   {
     regex: /origin\s+((?:0x)?[a-f0-9]+)/,
-    action: ([_, address]) => {
+    action: (_, [_2, address]) => {
       currentAddress = parseNumber(address);
+    },
+  },
+  {
+    regex: /constant\s+(?:(0x[a-f0-9]+|[0-9]+)|([a-z0-9_]+))/,
+    action: ({ line, lineNumber }, [_, constant, label]) => {
+      if (constant !== undefined) {
+        const value = parseNumber(constant);
+
+        if (value > 4095) {
+          log(
+            `Constant ${constant} is too large to fit into 12 bits`,
+            lineNumber
+          );
+          return;
+        }
+
+        matchedInstructions.push({
+          type: "constant",
+          subtype: "literal",
+          value,
+          line,
+          lineNumber,
+          address: currentAddress,
+        });
+      } else if (label !== undefined) {
+        matchedInstructions.push({
+          type: "constant",
+          subtype: "label",
+          label,
+          line,
+          lineNumber,
+          address: currentAddress,
+        });
+      } else {
+        log("Unknown constant error", lineNumber);
+        return;
+      }
+
+      currentAddress += 1;
     },
   },
 ];
@@ -37,15 +76,6 @@ const parseNumber = (string) => {
     return parseInt(string, 10);
   }
 };
-
-// const writeWord = (word, address) => {
-//   const low = word & 0xF;
-//   const mid = (word & 0xF0) >> 4;
-//   const high = (word & 0xF00) >> 8;
-
-//   outputBuffer[address] = high;
-//   outputBuffer[address + ]
-// }
 
 const parseArchLine = (line, lineNumber) => {
   if (line.length == 0 || line.startsWith("//") || line.startsWith("#")) {
@@ -115,7 +145,7 @@ const parseAsmLine = (line, lineNumber) => {
     const matches = command.regex.exec(line);
 
     if (!!matches && matches.length > 0) {
-      command.action(matches);
+      command.action({ lineNumber, line }, matches);
       return;
     }
   }
@@ -313,6 +343,25 @@ const outputInstructions = () => {
           instruction.bitCount,
           label.address
         );
+        break;
+      }
+      case "constant": {
+        if (instruction.subtype === "literal") {
+          opcode = instruction.value;
+        } else {
+          // Label
+          const label = matchedLabels[instruction.label];
+
+          if (!label) {
+            log(`Unknown label ${instruction.label}`, instruction.lineNumber);
+
+            return;
+          }
+
+          console.log(`${label.address.toString(16)}`);
+
+          opcode = label.address;
+        }
         break;
       }
     }

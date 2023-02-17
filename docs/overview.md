@@ -137,6 +137,11 @@ Other things
   * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
   * Cancels PC increment
   * `011_00000_00000_000`
+* `SETPCVEC`
+  * Set 12 bit "special" immediate (reset or interrupt vector) to `PC`
+  * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
+  * Cancels PC increment
+  * `011_10000_00000_000`
 * `JMP`
   * 1 bit for conditional. If 1, following two bits are used
   * 1 bit for flag. 0 for zero, 1 for carry

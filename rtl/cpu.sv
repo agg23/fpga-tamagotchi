@@ -26,7 +26,6 @@ module cpu (
 
   wire [7:0] immed;
 
-
   decode decoder (
       .opcode(rom_data),
 
@@ -107,6 +106,8 @@ module cpu (
   regs regs (
       .clk(clk),
 
+      .reset_n(reset_n),
+
       .current_cycle(current_cycle),
 
       .bus_input_selector (bus_input_selector),
@@ -120,6 +121,7 @@ module cpu (
       .alu_zero(alu_zero_out),
       .alu_carry(alu_carry_out),
       .immed(immed),
+      .opcode(rom_data),
 
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),

@@ -4,6 +4,8 @@ module regs (
     input wire clk,
     input microcode_cycle current_cycle,
 
+    input wire reset_n,
+
     input reg_type bus_input_selector,
     input reg_type bus_output_selector,
     input reg_inc_type increment_selector,
@@ -15,6 +17,7 @@ module regs (
     input wire alu_zero,
     input wire alu_carry,
     input wire [7:0] immed,
+    input wire [11:0] opcode,  // Special case used for reset, interrupt vectors
 
     output reg memory_write_en,
     output wire [11:0] memory_addr,
@@ -22,7 +25,7 @@ module regs (
     input wire [3:0] memory_read_data,
 
     // Start at page 1
-    output reg [12:0] pc = 13'h0_1_00,
+    output reg [12:0] pc,
     output reg [ 3:0] temp_a,
     output reg [ 3:0] temp_b,
 
@@ -93,142 +96,148 @@ module regs (
   always @(posedge clk) begin
     reg_type modified_selector;
 
-    if (current_cycle != CYCLE_REG_WRITE) begin
-      memory_write_en <= 0;
-    end
-
-    if (bus_output_selector == REG_IMM_ADDR_L || bus_output_selector == REG_IMM_ADDR_H || bus_output_selector == REG_IMM_ADDR_P) begin
-      modified_selector = imm_addressed_reg(bus_output_selector, immed[5:0]);
+    if (~reset_n) begin
+      // Start at page 1, for reset vector
+      pc <= 13'h0_1_00;
     end else begin
-      modified_selector = bus_output_selector;
-    end
-
-    // Some registers are set only on WRITE cycle, others do stuff on other cycles
-    casex ({
-      modified_selector, current_cycle
-    })
-      {
-        REG_ALU, 2'hX
-      }, {
-        REG_ALU_WITH_FLAGS, 2'hX
-      }, {
-        REG_IMML, 2'hX
-      }, {
-        REG_IMMH, 2'hX
-      } : begin
-        // Do nothing, these are invalid write targets
+      if (current_cycle != CYCLE_REG_WRITE) begin
+        memory_write_en <= 0;
       end
 
-      {REG_FLAGS, CYCLE_REG_WRITE} : {interrupt, decimal, zero, carry} <= bus_input;
-
-      // Grab address and data in fetch cycle
-      {
-        REG_MX, CYCLE_REG_FETCH
-      } : begin
-        bus_output_memory_addr <= x;
-        memory_write_data <= bus_input;
-        memory_write_en <= 1;
-      end
-      {
-        REG_MY, CYCLE_REG_FETCH
-      } : begin
-        bus_output_memory_addr <= y;
-        memory_write_data <= bus_input;
-        memory_write_en <= 1;
-      end
-      {
-        REG_MSP, CYCLE_REG_FETCH
-      } : begin
-        bus_output_memory_addr <= sp;
-        memory_write_data <= bus_input;
-        memory_write_en <= 1;
-      end
-      {
-        REG_MSP_DEC, CYCLE_REG_FETCH
-      } : begin
-        bus_output_memory_addr <= sp_dec;
-        memory_write_data <= bus_input;
-        memory_write_en <= 1;
-      end
-      {
-        REG_Mn, CYCLE_REG_FETCH
-      } : begin
-        bus_output_memory_addr <= immed[3:0];
-        memory_write_data <= bus_input;
-        memory_write_en <= 1;
+      if (bus_output_selector == REG_IMM_ADDR_L || bus_output_selector == REG_IMM_ADDR_H || bus_output_selector == REG_IMM_ADDR_P) begin
+        modified_selector = imm_addressed_reg(bus_output_selector, immed[5:0]);
+      end else begin
+        modified_selector = bus_output_selector;
       end
 
-      {REG_A, CYCLE_REG_WRITE} : a <= bus_input;
-      {REG_B, CYCLE_REG_WRITE} : b <= bus_input;
+      // Some registers are set only on WRITE cycle, others do stuff on other cycles
+      casex ({
+        modified_selector, current_cycle
+      })
+        {
+          REG_ALU, 2'hX
+        }, {
+          REG_ALU_WITH_FLAGS, 2'hX
+        }, {
+          REG_IMML, 2'hX
+        }, {
+          REG_IMMH, 2'hX
+        } : begin
+          // Do nothing, these are invalid write targets
+        end
 
-      {REG_TEMPA, CYCLE_REG_WRITE} : temp_a <= bus_input;
-      {REG_TEMPB, CYCLE_REG_WRITE} : temp_b <= bus_input;
+        {REG_FLAGS, CYCLE_REG_WRITE} : {interrupt, decimal, zero, carry} <= bus_input;
 
-      {REG_XL, CYCLE_REG_WRITE} : x[3:0] <= bus_input;
-      {REG_XH, CYCLE_REG_WRITE} : x[7:4] <= bus_input;
-      {REG_XP, CYCLE_REG_WRITE} : x[11:8] <= bus_input;
+        // Grab address and data in fetch cycle
+        {
+          REG_MX, CYCLE_REG_FETCH
+        } : begin
+          bus_output_memory_addr <= x;
+          memory_write_data <= bus_input;
+          memory_write_en <= 1;
+        end
+        {
+          REG_MY, CYCLE_REG_FETCH
+        } : begin
+          bus_output_memory_addr <= y;
+          memory_write_data <= bus_input;
+          memory_write_en <= 1;
+        end
+        {
+          REG_MSP, CYCLE_REG_FETCH
+        } : begin
+          bus_output_memory_addr <= sp;
+          memory_write_data <= bus_input;
+          memory_write_en <= 1;
+        end
+        {
+          REG_MSP_DEC, CYCLE_REG_FETCH
+        } : begin
+          bus_output_memory_addr <= sp_dec;
+          memory_write_data <= bus_input;
+          memory_write_en <= 1;
+        end
+        {
+          REG_Mn, CYCLE_REG_FETCH
+        } : begin
+          bus_output_memory_addr <= immed[3:0];
+          memory_write_data <= bus_input;
+          memory_write_en <= 1;
+        end
 
-      {REG_YL, CYCLE_REG_WRITE} : y[3:0] <= bus_input;
-      {REG_YH, CYCLE_REG_WRITE} : y[7:4] <= bus_input;
-      {REG_YP, CYCLE_REG_WRITE} : y[11:8] <= bus_input;
+        {REG_A, CYCLE_REG_WRITE} : a <= bus_input;
+        {REG_B, CYCLE_REG_WRITE} : b <= bus_input;
 
-      {REG_SPL, CYCLE_REG_WRITE} : sp[3:0] <= bus_input;
-      {REG_SPH, CYCLE_REG_WRITE} : sp[7:4] <= bus_input;
+        {REG_TEMPA, CYCLE_REG_WRITE} : temp_a <= bus_input;
+        {REG_TEMPB, CYCLE_REG_WRITE} : temp_b <= bus_input;
 
-      {REG_PCSL, CYCLE_REG_WRITE} : pc[3:0] <= bus_input;
-      {REG_PCSH, CYCLE_REG_WRITE} : pc[7:4] <= bus_input;
-      {REG_PCP, CYCLE_REG_WRITE} :  pc[11:8] <= bus_input;
+        {REG_XL, CYCLE_REG_WRITE} : x[3:0] <= bus_input;
+        {REG_XH, CYCLE_REG_WRITE} : x[7:4] <= bus_input;
+        {REG_XP, CYCLE_REG_WRITE} : x[11:8] <= bus_input;
 
-      {REG_NPP, CYCLE_REG_WRITE} : np[3:0] <= bus_input;
-      {REG_NBP, CYCLE_REG_WRITE} : np[4] <= bus_input[0];
+        {REG_YL, CYCLE_REG_WRITE} : y[3:0] <= bus_input;
+        {REG_YH, CYCLE_REG_WRITE} : y[7:4] <= bus_input;
+        {REG_YP, CYCLE_REG_WRITE} : y[11:8] <= bus_input;
 
-      // Special cases
-      // PC is set in fetch, instead of write
-      {REG_PCP_EARLY, CYCLE_REG_FETCH} : pc[11:8] <= bus_input;
+        {REG_SPL, CYCLE_REG_WRITE} : sp[3:0] <= bus_input;
+        {REG_SPH, CYCLE_REG_WRITE} : sp[7:4] <= bus_input;
 
-      {REG_SETPC, CYCLE_REG_FETCH} : pc <= {np, immed};
-      {
-        REG_CALLEND_ZERO_PCP, CYCLE_REG_FETCH
-      } : begin
-        pc[11:0] <= {4'h0, immed};
+        {REG_PCSL, CYCLE_REG_WRITE} : pc[3:0] <= bus_input;
+        {REG_PCSH, CYCLE_REG_WRITE} : pc[7:4] <= bus_input;
+        {REG_PCP, CYCLE_REG_WRITE} :  pc[11:8] <= bus_input;
 
-        // Write PCSL + 1 to M(SP-1)
-        bus_output_memory_addr <= sp_dec;
-        memory_write_data <= pc[3:0] + 1;
-        memory_write_en <= 1;
+        {REG_NPP, CYCLE_REG_WRITE} : np[3:0] <= bus_input;
+        {REG_NBP, CYCLE_REG_WRITE} : np[4] <= bus_input[0];
+
+        // Special cases
+        // PC is set in fetch, instead of write
+        {REG_PCP_EARLY, CYCLE_REG_FETCH} : pc[11:8] <= bus_input;
+
+        {REG_SETPC, CYCLE_REG_FETCH} : pc <= {np, immed};
+        {REG_SETPCVEC, CYCLE_REG_FETCH} : pc <= opcode;
+        {
+          REG_CALLEND_ZERO_PCP, CYCLE_REG_FETCH
+        } : begin
+          pc[11:0] <= {4'h0, immed};
+
+          // Write PCSL + 1 to M(SP-1)
+          bus_output_memory_addr <= sp_dec;
+          memory_write_data <= pc[3:0] + 1;
+          memory_write_en <= 1;
+        end
+        {
+          REG_CALLEND_SET_PCP, CYCLE_REG_FETCH
+        } : begin
+          pc[11:0] <= {np[3:0], immed};
+
+          // Write PCSL + 1 to M(SP-1)
+          bus_output_memory_addr <= sp_dec;
+          memory_write_data <= pc[3:0] + 1;
+          memory_write_en <= 1;
+        end
+        {
+          REG_JPBAEND, CYCLE_REG_FETCH
+        } : begin
+          pc[12:8] <= np;
+          pc[3:0]  <= a;
+        end
+      endcase
+
+      if (bus_input_selector == REG_ALU_WITH_FLAGS && bus_output_selector != REG_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
+        // On write, using value from REG_ALU_WITH_FLAGS, set flags
+        carry <= alu_carry;
+        zero  <= alu_zero;
       end
-      {
-        REG_CALLEND_SET_PCP, CYCLE_REG_FETCH
-      } : begin
-        pc[11:0] <= {np[3:0], immed};
 
-        // Write PCSL + 1 to M(SP-1)
-        bus_output_memory_addr <= sp_dec;
-        memory_write_data <= pc[3:0] + 1;
-        memory_write_en <= 1;
+      // PC increment
+      if (increment_pc) begin
+        pc[11:0] <= pc[11:0] + 1;
       end
-      {
-        REG_JPBAEND, CYCLE_REG_FETCH
-      } : begin
-        pc[12:8] <= np;
-        pc[3:0]  <= a;
+
+      // NP reset
+      if (reset_np) begin
+        np <= pc[12:8];
       end
-    endcase
-
-    if (bus_input_selector == REG_ALU_WITH_FLAGS && bus_output_selector != REG_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
-      // On write, using value from REG_ALU_WITH_FLAGS, set flags
-      carry <= alu_carry;
-      zero  <= alu_zero;
-    end
-
-    // PC increment
-    if (increment_pc) begin
-      pc[11:0] <= pc[11:0] + 1;
-    end
-
-    // NP reset
-    if (reset_np) begin
-      np <= pc[12:8];
     end
   end
 

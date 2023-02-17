@@ -17,8 +17,13 @@ add_8:
 
   ret
 
-origin 0x100 // Start of page 1
+origin 0x100 // Start of page 1 and vector table
 
+constant start
+
+origin 0x110 // End of vector table
+
+start:
 rst F, 0 // Set flags
 
 // M0-1 is result (M0 high, M1 low)

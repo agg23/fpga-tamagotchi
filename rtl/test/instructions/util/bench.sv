@@ -72,7 +72,7 @@ module bench;
   reg [7:0] cycle_count;
 
   always @(posedge clk) begin
-    if (bench.reset_n) begin
+    if (reset_n && ~cpu_uut.microcode.init_instruction) begin
       cycle_count <= cycle_count + 1;
     end
   end
@@ -121,7 +121,11 @@ module bench;
 
     #2;
 
-    bench.reset_n = 1;
+    bench.reset_n  = 1;
+    bench.rom_data = 12'h100;
+
+    run_until_complete();
+    cycle_count = 0;
   endtask
 
   task run_until_final_stage_fetch();
@@ -185,7 +189,7 @@ module bench;
   endtask
 
   task assert_cycle_length(reg [3:0] expected);
-    `CHECK_EQUAL(cycle_count - 1, expected);
+    `CHECK_EQUAL(cycle_count, expected);
   endtask
 
   task assert_carry(reg expected);
