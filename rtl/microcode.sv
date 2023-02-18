@@ -53,6 +53,7 @@ module microcode (
 
   wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
 
+  // These serve as a hack to insert the initial SETPCVEC microinstruction to start the program
   reg init_instruction = 1;
   reg completed_init = 0;
 
