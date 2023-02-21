@@ -22,8 +22,6 @@ module jp_tb;
 
     `TEST_CASE("JP should use NBP + NPP") begin
       bench.rom_data = 12'h045; // JP 0x45
-
-      #1;
       bench.cpu_uut.regs.np = 5'h12;
 
       bench.run_until_final_stage_fetch();
@@ -54,8 +52,6 @@ module jp_tb;
       bench.rom_data = 12'hFE8; // JPBA
       bench.cpu_uut.regs.a = 4'h4;
       bench.cpu_uut.regs.b = 4'hB;
-
-      #1;
       bench.cpu_uut.regs.np = 5'h15;
       bench.update_prevs();
 

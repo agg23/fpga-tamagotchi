@@ -17,7 +17,6 @@ module regs (
     input wire alu_zero,
     input wire alu_carry,
     input wire [7:0] immed,
-    input wire [11:0] opcode,  // Special case used for reset, interrupt vectors
 
     output reg memory_write_en,
     output wire [11:0] memory_addr,
@@ -35,7 +34,7 @@ module regs (
 );
   // Registers
   // Start at page 1
-  reg [4:0] np = 5'h01;
+  reg [4:0] np;
 
   reg [3:0] a;
   reg [3:0] b;
@@ -99,6 +98,7 @@ module regs (
     if (~reset_n) begin
       // Start at page 1, for reset vector
       pc <= 13'h0_1_00;
+      np <= 5'h01;
     end else begin
       if (current_cycle != CYCLE_REG_WRITE) begin
         memory_write_en <= 0;
@@ -194,7 +194,6 @@ module regs (
         {REG_PCP_EARLY, CYCLE_REG_FETCH} : pc[11:8] <= bus_input;
 
         {REG_SETPC, CYCLE_REG_FETCH} : pc <= {np, immed};
-        {REG_SETPCVEC, CYCLE_REG_FETCH} : pc <= opcode;
         {
           REG_CALLEND_ZERO_PCP, CYCLE_REG_FETCH
         } : begin

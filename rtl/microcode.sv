@@ -53,15 +53,8 @@ module microcode (
 
   wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
 
-  // These serve as a hack to insert the initial SETPCVEC microinstruction to start the program
-  reg init_instruction = 1;
-  reg completed_init = 0;
-
-  instr_length actual_cycle_length;
-  assign actual_cycle_length = init_instruction ? CYCLE5 : cycle_length;
-
-  wire last_cycle_step = stage + 1 == cycle_count_int(actual_cycle_length);
-  wire last_fetch_step = stage + 2 == cycle_count_int(actual_cycle_length);
+  wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
+  wire last_fetch_step = stage + 2 == cycle_count_int(cycle_length);
 
   // This is a dirty hack to provide memory data to the bus for the RET instruction
   reg_type temp_override_bus_input_selector;
@@ -78,12 +71,6 @@ module microcode (
       if (last_cycle_step || stage == STEP6_2) begin
         // Finished cycle, go back to decode
         stage <= DECODE;
-
-        if (~completed_init) begin
-          completed_init <= 1;
-        end else begin
-          init_instruction <= 0;
-        end
       end else begin
         $cast(stage, stage + 1);
       end
@@ -112,9 +99,6 @@ module microcode (
       halt <= 0;
       disable_increment <= 0;
       prevent_reset_np <= 0;
-
-      init_instruction <= 1;
-      completed_init <= 0;
     end else begin
       prev_stage <= stage;
 
@@ -132,12 +116,7 @@ module microcode (
       end
 
       if (stage == DECODE && microcode_tick) begin
-        if (init_instruction) begin
-          // Init instruction is at #100
-          microcode_addr = {7'd100, 2'b00};
-        end else begin
-          microcode_addr = {microcode_start_addr, 2'b00};
-        end
+        microcode_addr = {microcode_start_addr, 2'b00};
 
         micro_pc <= microcode_addr;
         disable_increment <= 0;
@@ -185,15 +164,9 @@ module microcode (
             increment_selector <= temp_inc;
           end
           3'b011: begin
-            disable_increment <= 1;
-
-            if (instruction[12]) begin
-              // SETPCVEC
-              bus_output_selector <= REG_SETPCVEC;
-            end else begin
-              // SETPC
-              bus_output_selector <= REG_SETPC;
-            end
+            // SETPC
+            bus_output_selector <= REG_SETPC;
+            disable_increment   <= 1;
           end
           3'b100: begin
             // JMP

@@ -121,7 +121,6 @@ module cpu (
       .alu_zero(alu_zero_out),
       .alu_carry(alu_carry_out),
       .immed(immed),
-      .opcode(rom_data),
 
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),

@@ -19,7 +19,7 @@ add_8:
 
 origin 0x100 // Start of page 1 and vector table
 
-constant start
+jp start // Reset vector
 
 origin 0x110 // End of vector table
 
