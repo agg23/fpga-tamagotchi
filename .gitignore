@@ -2,6 +2,7 @@ sim/
 sim2/
 bass/bass.exe
 bass/*.rom
-rtl/test/vunit_out
+**/vunit_out
+**/__pycache__
 
 *.hex

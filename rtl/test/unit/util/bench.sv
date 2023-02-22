@@ -14,6 +14,8 @@ module bench;
   wire [3:0] memory_write_data;
   reg [3:0] memory_read_data = 0;
 
+  reg [14:0] interrupt_req = 0;
+
   reg [3:0] ram[4096];
 
   cpu cpu_uut (
@@ -28,7 +30,9 @@ module bench;
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
-      .memory_read_data(memory_read_data)
+      .memory_read_data(memory_read_data),
+
+      .interrupt_req(interrupt_req)
   );
 
   always @(posedge clk) begin
