@@ -28,9 +28,11 @@ module regs (
     output reg [ 3:0] temp_a,
     output reg [ 3:0] temp_b,
 
+    // Flags
     output reg zero,
     output reg carry,
-    output reg decimal
+    output reg decimal,
+    output reg interrupt = 0
 );
   // Registers
   // Start at page 1
@@ -45,8 +47,6 @@ module regs (
   reg [7:0] sp;
 
   // Flags
-  reg interrupt = 0;
-
   wire [3:0] flags_in = {interrupt, decimal, zero, carry};
 
   // Increment
@@ -195,6 +195,15 @@ module regs (
 
         {REG_SETPC, CYCLE_REG_FETCH} : pc <= {np, immed};
         {
+          REG_STARTINTERRUPT, CYCLE_REG_WRITE
+        } : begin
+          bus_output_memory_addr <= sp_dec;
+          memory_write_data <= bus_input;
+          memory_write_en <= 1;
+
+          interrupt <= 0;
+        end
+        {
           REG_CALLEND_ZERO_PCP, CYCLE_REG_FETCH
         } : begin
           pc[11:0] <= {4'h0, immed};
@@ -229,13 +238,27 @@ module regs (
       end
 
       // PC increment
-      if (increment_pc) begin
+      if (increment_pc || (current_cycle == CYCLE_REG_FETCH && increment_selector == REG_PC)) begin
         pc[11:0] <= pc[11:0] + 1;
       end
 
       // NP reset
       if (reset_np) begin
         np <= pc[12:8];
+      end
+
+      // Post-increment
+      if (current_cycle == CYCLE_REG_WRITE) begin
+        // Increment any configured post-increment reg
+        case (increment_selector)
+          REG_NONE: begin
+            // Do nothing
+          end
+          REG_XHL: x[7:0] <= x_inc;
+          REG_YHL: y[7:0] <= y_inc;
+          REG_SP_INC: sp <= sp_inc;
+          REG_SP_DEC: sp <= sp_dec;
+        endcase
       end
     end
   end

@@ -188,7 +188,7 @@ module bench;
     end
   endtask
 
-  task assert_cycle_length(reg [3:0] expected);
+  task assert_cycle_length(reg [7:0] expected);
     `CHECK_EQUAL(cycle_count - 1, expected);
   endtask
 

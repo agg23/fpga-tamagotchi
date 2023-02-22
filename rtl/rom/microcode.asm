@@ -390,5 +390,12 @@ HALT SLEEP
 #97 // NOP7
 JMP #96
 
-//#100 // Special reset vector
-//SETPCVEC
+#100 // Interrupt step 1. Push old PC to stack
+STARTINTERRUPT // TRANSFER PCP MSP_DEC INC(SP_DEC)
+TRANSFER PCSH MSP_DEC INC(SP_DEC)
+TRANSFER PCSL MSP_DEC INC(SP_DEC)
+JMP #101
+
+#101 // Interrupt step 2. Set PC to interrupt vector
+TRANSFER HARDCODED_1 NPP
+SETPC

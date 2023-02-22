@@ -55,6 +55,7 @@ package types;
     REG_CALLEND_ZERO_PCP,  // Transfer PCLS+1 to M(SP), and copy 8 bit immediate to PC (set in fetch). Set PCP to 0
     REG_CALLEND_SET_PCP,  // Transfer PCLS+1 to M(SP), and copy 8 bit immediate to PC (set in fetch). Set PCP to NPP
     REG_JPBAEND,  // Transfer A to PCSL, NBP to PCB, and NPP to PCP
+    REG_STARTINTERRUPT,  // Transfer PCP to M(SP - 1) and decrement SP. Disable interrupt flag
 
     REG_ALU,
     REG_ALU_WITH_FLAGS
@@ -65,7 +66,8 @@ package types;
     REG_XHL,
     REG_YHL,
     REG_SP_INC,
-    REG_SP_DEC
+    REG_SP_DEC,
+    REG_PC  // Special case used only for halt
   } reg_inc_type;
 
   typedef enum {

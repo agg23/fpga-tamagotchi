@@ -9,6 +9,7 @@ module microcode (
     // Reg
     input wire zero,
     input wire carry,
+    input wire interrupt,
 
     // Control
     output wire increment_pc,
@@ -16,6 +17,11 @@ module microcode (
 
     input wire [6:0] microcode_start_addr,
     input instr_length cycle_length,
+
+    // Interrupt
+    input wire [14:0] interrupt_req,
+    output reg performing_interrupt = 0,
+    output reg [3:0] interrupt_address,
 
     // Bus
     output microcode_cycle current_cycle,
@@ -53,8 +59,17 @@ module microcode (
 
   wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
 
-  wire last_cycle_step = stage + 1 == cycle_count_int(cycle_length);
-  wire last_fetch_step = stage + 2 == cycle_count_int(cycle_length);
+  // Interrupts
+  reg queued_interrupt = 0;
+
+  wire is_interrupt_requested = interrupt && |interrupt_req;
+
+  instr_length actual_cycle_length;
+  // Interrupt technically uses a 7 and a 5 cycle instruction, but for ease we collapse this into one 12
+  assign actual_cycle_length = performing_interrupt ? CYCLE12 : cycle_length;
+
+  wire last_cycle_step = stage + 1 == cycle_count_int(actual_cycle_length);
+  wire last_fetch_step = stage + 2 == cycle_count_int(actual_cycle_length);
 
   // This is a dirty hack to provide memory data to the bus for the RET instruction
   reg_type temp_override_bus_input_selector;
@@ -64,15 +79,46 @@ module microcode (
   assign increment_pc = ~disable_increment && last_fetch_step;
   assign reset_np = ~prevent_reset_np && last_cycle_step;
 
+  int interrupt_req_i;
+
   always @(posedge clk) begin
-    if (~reset_n || halt) begin
+    if (~reset_n) begin
       stage <= STEP6_2;
+
+      queued_interrupt <= 0;
+      performing_interrupt <= 0;
     end else begin
+      if (is_interrupt_requested) begin
+        // Interrupt flag set and an interrupt requested
+        queued_interrupt <= 1;
+      end
+
       if (last_cycle_step || stage == STEP6_2) begin
         // Finished cycle, go back to decode
         stage <= DECODE;
+        performing_interrupt <= 0;
+
+        if (queued_interrupt || is_interrupt_requested) begin
+          // If incoming interrupt on the same cycle as enter decode, short circuit and start processing immediately
+          performing_interrupt <= 1;
+          queued_interrupt <= 0;
+
+          // End halt if we were halted
+          halt <= 0;
+
+          interrupt_req_i = 14;
+          while (interrupt_req_i > 0 && ~interrupt_req[interrupt_req_i]) begin
+            interrupt_req_i = interrupt_req_i - 1;
+          end
+
+          interrupt_address <= interrupt_req_i;
+        end
       end else begin
         $cast(stage, stage + 1);
+      end
+
+      if (halt) begin
+        stage <= STEP6_2;
       end
     end
   end
@@ -116,7 +162,12 @@ module microcode (
       end
 
       if (stage == DECODE && microcode_tick) begin
-        microcode_addr = {microcode_start_addr, 2'b00};
+        if (performing_interrupt) begin
+          // Interrupt instruction is at #100
+          microcode_addr = {7'd100, 2'b00};
+        end else begin
+          microcode_addr = {microcode_start_addr, 2'b00};
+        end
 
         micro_pc <= microcode_addr;
         disable_increment <= 0;
@@ -164,9 +215,16 @@ module microcode (
             increment_selector <= temp_inc;
           end
           3'b011: begin
-            // SETPC
-            bus_output_selector <= REG_SETPC;
-            disable_increment   <= 1;
+            if (instruction[12]) begin
+              // STARTINTERRUPT
+              bus_input_selector  <= REG_PCP;
+              bus_output_selector <= REG_STARTINTERRUPT;
+              increment_selector  <= REG_SP_DEC;
+            end else begin
+              // SETPC
+              bus_output_selector <= REG_SETPC;
+              disable_increment   <= 1;
+            end
           end
           3'b100: begin
             // JMP
@@ -230,6 +288,8 @@ module microcode (
             // HALT
             // TODO: Do we need to do anything with the oscillator?
             halt <= 1;
+
+            increment_selector <= REG_PC;
           end
         endcase
       end

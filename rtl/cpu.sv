@@ -12,7 +12,9 @@ module cpu (
     output reg memory_write_en,
     output wire [11:0] memory_addr,
     output reg [3:0] memory_write_data,
-    input wire [3:0] memory_read_data
+    input wire [3:0] memory_read_data,
+
+    input wire [14:0] interrupt_req
 );
   // Microcode
   reg skip_pc_increment;
@@ -45,8 +47,13 @@ module cpu (
 
   alu_op alu_op;
 
-  wire alu_zero_in;
-  wire alu_carry_in;
+  wire flag_zero;
+  wire flag_carry;
+  wire flag_decimal;
+  wire flag_interrupt;
+
+  wire performing_interrupt;
+  wire [3:0] interrupt_address;
 
   always @(posedge clk_2x) begin
     if (current_cycle == CYCLE_NONE) begin
@@ -61,8 +68,9 @@ module cpu (
 
       .reset_n(reset_n),
 
-      .zero (alu_zero_in),
-      .carry(alu_carry_in),
+      .zero(flag_zero),
+      .carry(flag_carry),
+      .interrupt(flag_interrupt),
 
       // Control
       .increment_pc(increment_pc),
@@ -70,6 +78,11 @@ module cpu (
 
       .microcode_start_addr(microcode_start_addr),
       .cycle_length(cycle_length),
+
+      // Interrupt
+      .interrupt_req(interrupt_req),
+      .performing_interrupt(performing_interrupt),
+      .interrupt_address(interrupt_address),
 
       // Bus
       .current_cycle(current_cycle),
@@ -83,7 +96,6 @@ module cpu (
   wire [3:0] temp_a;
   wire [3:0] temp_b;
 
-  wire alu_decimal_in;
   wire alu_carry_out;
   wire alu_zero_out;
 
@@ -95,8 +107,8 @@ module cpu (
       .temp_a(temp_a),
       .temp_b(temp_b),
 
-      .flag_carry_in  (alu_carry_in),
-      .flag_decimal_in(alu_decimal_in),
+      .flag_carry_in  (flag_carry),
+      .flag_decimal_in(flag_decimal),
 
       .out(alu_out),
       .flag_carry_out(alu_carry_out),
@@ -120,7 +132,8 @@ module cpu (
       .alu(alu_out),
       .alu_zero(alu_zero_out),
       .alu_carry(alu_carry_out),
-      .immed(immed),
+      // Offset by 1, since 0 index is reset vector
+      .immed(performing_interrupt ? {4'b0, interrupt_address + 1'b1} : immed),
 
       .memory_write_en(memory_write_en),
       .memory_addr(memory_addr),
@@ -131,8 +144,9 @@ module cpu (
       .temp_a(temp_a),
       .temp_b(temp_b),
 
-      .zero(alu_zero_in),
-      .carry(alu_carry_in),
-      .decimal(alu_decimal_in)
+      .zero(flag_zero),
+      .carry(flag_carry),
+      .decimal(flag_decimal),
+      .interrupt(flag_interrupt)
   );
 endmodule

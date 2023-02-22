@@ -137,6 +137,10 @@ Other things
   * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
   * Cancels PC increment
   * `011_00000_00000_000`
+* `STARTINTERRUPT`
+  * `TRANSFER PCP MSP_DEC INC(SP_DEC)`
+  * Disable interrupt flag
+  * `011_10000_00000_000`
 * ~~`SETPCVEC`~~
   * Set 12 bit "special" immediate (reset or interrupt vector) to `PC`
   * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
