@@ -63,6 +63,7 @@ module interrupt_tb;
       bench.assert_pc(13'h110C);
     end
 
+    // TODO: I'm unsure whether this should be 12 or 13 cycles. The docs aren't very clear
     `TEST_CASE("Interrupt should take exactly 12 cycles when immediately asserted") begin
       reg [7:0] cycle_time;
 

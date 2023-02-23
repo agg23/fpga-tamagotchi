@@ -4,7 +4,9 @@
   "description": "Assembles microcode for 6200",
   "main": "index.js",
   "scripts": {
-    "build": "node micro_asm.js ../rtl/rom/microcode.asm ../rtl/rom/microcode.rom"
+    "build": "npm run build-cpu && npm run build-code",
+    "build-cpu": "node build_cpu.js",
+    "build-code": "node build_code.js"
   },
   "type": "module",
   "author": "",
