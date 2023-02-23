@@ -50,7 +50,7 @@ module microcode (
   reg [15:0] rom[1024];
 
   // TODO: ModelSim only
-  initial $readmemh("C:/Users/adam/code/fpga/tamagotchi/rtl/rom/microcode.hex", rom);
+  initial $readmemh("C:/Users/adam/code/fpga/tamagotchi/rtl/core/rom/microcode.hex", rom);
 
   microcode_stage stage = STEP6_2;
 

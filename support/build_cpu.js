@@ -3,12 +3,12 @@ import { execSync } from "child_process";
 const commands = [
   {
     command:
-      "node micro_asm.js ../rtl/rom/microcode.asm ../rtl/rom/microcode.rom",
+      "node micro_asm.js ../rtl/core/rom/microcode.asm ../rtl/core/rom/microcode.rom",
     error: "Failed to build microcode",
   },
   {
     command:
-      "node modelsim.js ../rtl/rom/microcode.rom ../rtl/rom/microcode.hex 3",
+      "node modelsim.js ../rtl/core/rom/microcode.rom ../rtl/core/rom/microcode.hex 4",
     error: "Failed to create ModelSim microcode binary",
   },
 ];
