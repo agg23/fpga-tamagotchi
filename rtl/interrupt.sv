@@ -9,10 +9,22 @@ module interrupt (
     input wire timer_2hz,
     input wire timer_1hz,
 
+    // Masks
+    input wire [3:0] clock_mask,
+
     // Factor flags
     input wire reset_clock_factor,
-    output reg [3:0] clock_factor = 0
+    output reg [3:0] clock_factor = 0,
+
+    output reg [14:0] interrupt_req = 0
 );
+  always_comb begin
+    interrupt_req = 0;
+
+    // Clock is 0x102 interrupt
+    interrupt_req[1] = |(clock_mask & clock_factor);
+  end
+
   reg prev_timer_32hz = 0;
   reg prev_timer_8hz = 0;
   reg prev_timer_2hz = 0;

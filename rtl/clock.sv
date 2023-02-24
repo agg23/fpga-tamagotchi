@@ -3,6 +3,8 @@ module clock (
 
     input wire reset_n,
 
+    input wire reset_clock_timer,
+
     output wire timer_128hz,
     output wire timer_64hz,
     output wire timer_32hz,
@@ -12,21 +14,21 @@ module clock (
     output wire timer_2hz,
     output wire timer_1hz
 );
-  reg prev_reset_n = 0;
+  reg prev_reset = 0;
 
   reg [6:0] divider = 0;
   reg [7:0] counter = 0;
 
   always @(posedge clk) begin
-    prev_reset_n <= reset_n;
+    prev_reset <= ~reset_n || reset_clock_timer;
 
-    if (~reset_n) begin
+    if (~reset_n || reset_clock_timer) begin
       divider <= 0;
       counter <= 0;
     end else begin
       divider <= divider + 1;
 
-      if (divider == 0 && prev_reset_n) begin
+      if (divider == 0 && ~prev_reset) begin
         // Special case to prevent ticking on reset
         counter <= counter + 1;
       end
