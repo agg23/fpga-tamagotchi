@@ -5,7 +5,7 @@ module ld_tb;
   parameter q = 0;
   parameter i = 0;
 
-  bench bench();
+  core_bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE_SETUP begin

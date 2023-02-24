@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module call_tb;
-  bench bench();
+  core_bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE_SETUP begin

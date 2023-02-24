@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module inc_tb;
-  bench bench();
+  core_bench bench();
 
   parameter i = 0;
 

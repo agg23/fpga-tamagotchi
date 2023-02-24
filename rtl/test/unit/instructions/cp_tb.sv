@@ -4,7 +4,7 @@ module cp_tb;
   parameter r = 0;
   parameter q = 0;
 
-  bench bench();
+  core_bench bench();
 
   function [1:0] cp_flags(reg [3:0] a, reg [3:0] b);
     if (a > b) begin

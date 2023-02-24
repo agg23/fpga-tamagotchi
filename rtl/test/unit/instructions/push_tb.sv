@@ -3,7 +3,7 @@
 module push_tb;
   parameter r = 0;
 
-  bench bench();
+  core_bench bench();
 
   task test_push(reg [11:0] opcode, reg [3:0] expected, reg use_r);
     reg [3:0] value;

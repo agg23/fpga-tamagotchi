@@ -5,7 +5,7 @@ module adc_tb;
   parameter q = 0;
   parameter decimal = 0;
 
-  bench bench();
+  core_bench bench();
 
   function [4:0] add(reg [3:0] temp_a, reg [3:0] temp_b);
     reg [4:0] add_result;

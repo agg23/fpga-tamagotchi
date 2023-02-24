@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module rotate_tb;
-  bench bench();
+  core_bench bench();
 
   parameter r = 0;
 

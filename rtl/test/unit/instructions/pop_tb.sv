@@ -3,7 +3,7 @@
 module pop_tb;
   parameter r = 0;
 
-  bench bench();
+  core_bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE_SETUP begin
