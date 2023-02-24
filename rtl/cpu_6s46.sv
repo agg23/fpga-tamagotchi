@@ -45,7 +45,7 @@ module cpu_6s46 (
   wire timer_2hz;
   wire timer_1hz;
 
-  clock clock (
+  timers timers (
       .clk(clk),
 
       .reset_n(reset_n),

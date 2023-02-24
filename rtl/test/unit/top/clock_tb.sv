@@ -1,6 +1,6 @@
 `include "vunit_defines.svh"
 
-module timers_tb;
+module clock_tb;
   bench bench();
 
   `TEST_SUITE begin
@@ -177,8 +177,8 @@ module timers_tb;
       bench.cpu_uut.interrupt.clock_factor = 4'h0;
       #4;
       #1;
-      `CHECK_EQUAL(bench.cpu_uut.clock.counter, 4'b0);
-      `CHECK_EQUAL(bench.cpu_uut.clock.divider, 4'b0);
+      `CHECK_EQUAL(bench.cpu_uut.timers.clock.counter_256, 4'b0);
+      `CHECK_EQUAL(bench.cpu_uut.timers.clock.divider, 4'b0);
 
       // 8hz: 16384ps + 4ps - 5ps + 12ps
       #16395;
@@ -203,8 +203,8 @@ module timers_tb;
       bench.rom_data = 12'hFFF; // NOP7
       #4;
       #1;
-      `CHECK_NOT_EQUAL(bench.cpu_uut.clock.counter, 4'b0);
-      `CHECK_NOT_EQUAL(bench.cpu_uut.clock.divider, 4'b0);
+      `CHECK_NOT_EQUAL(bench.cpu_uut.timers.clock.counter_256, 4'b0);
+      `CHECK_NOT_EQUAL(bench.cpu_uut.timers.clock.divider, 4'b0);
     end
   end;
 
