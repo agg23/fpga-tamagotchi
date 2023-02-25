@@ -269,7 +269,7 @@ module stopwatch_tb;
       `CHECK_EQUAL(bench.cpu_uut.timers.stopwatch.counter_swh, 4'h1);
     end
 
-    `TEST_CASE("Reading 0xF01 should get factor flags and reset them") begin
+    `TEST_CASE("Reading 0xF01 should get factor flags and clear them") begin
       bench.rom_data = 12'hFFF; // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
 
@@ -277,7 +277,7 @@ module stopwatch_tb;
       #23044;
       #1;
 
-      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b0001);
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b01);
 
       bench.run_until_complete();
       bench.cpu_uut.core.regs.x = 12'hF01;
@@ -287,11 +287,80 @@ module stopwatch_tb;
       bench.rom_data = 12'hFFF; // NOP7
       #1;
       bench.assert_a(4'h1);
-      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b0000);
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b00);
 
       // 256 - (26 + 19)
       #108036;
-      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b0011);
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b11);
+    end
+
+    `TEST_CASE("Interrupt factor AND with mask should produce interrupts") begin
+      bench.rom_data = 12'hFFF; // NOP7
+      bench.cpu_uut.core.regs.interrupt = 1;
+      bench.cpu_uut.enable_stopwatch = 1;
+      bench.cpu_uut.stopwatch_mask = 2'b01;
+
+      // 10/100: 26/256: 13312 + 4ps
+      #13316;
+      #1;
+
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b01);
+
+      bench.run_until_complete();
+      #1;
+      // Interrupt should begin processing
+      `CHECK_EQUAL(bench.cpu_uut.core.microcode.performing_interrupt, 1);
+
+      bench.run_until_complete();
+      #1;
+      bench.assert_pc(13'h0104);
+    end
+
+    `TEST_CASE("Interrupts should not be produced if factor AND mask is 0") begin
+      bench.rom_data = 12'hFFF; // NOP7
+      bench.cpu_uut.core.regs.interrupt = 1;
+      bench.cpu_uut.enable_stopwatch = 1;
+      bench.cpu_uut.stopwatch_mask = 2'b10;
+
+      // 10/100: 26/256: 13312 + 4ps
+      #13316;
+      #1;
+
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b01);
+
+      bench.run_until_complete();
+      #1;
+      // Interrupt should NOT begin processing
+      `CHECK_EQUAL(bench.cpu_uut.core.microcode.performing_interrupt, 0);
+
+      // 90/100: (256-26)/256: 117760
+      #117760;
+
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b11);
+
+      bench.run_until_complete();
+      #1;
+      // Interrupt should begin processing
+      `CHECK_EQUAL(bench.cpu_uut.core.microcode.performing_interrupt, 1);
+
+      bench.run_until_complete();
+      #1;
+      bench.assert_pc(13'h0104);
+    end
+
+    `TEST_CASE("Reading/writing from 0xF11 should read/write mask settings") begin
+      bench.rom_data = 12'hEC8; // LD MX, A
+      bench.cpu_uut.core.regs.a = 4'h6;
+      bench.cpu_uut.core.regs.x = 12'hF11;
+
+      bench.run_until_complete();
+      bench.rom_data = 12'hEC6; // LD B, MX
+      #1;
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_mask, 2'b10);
+
+      bench.run_until_complete();
+      #1;
+      bench.assert_b(4'h2);
     end
   end;
 

@@ -11,12 +11,12 @@ module interrupt (
 
     // Masks
     input wire [3:0] clock_mask,
+    input wire [1:0] stopwatch_mask,
 
     // Factor flags
     input wire reset_clock_factor,
     output reg [3:0] clock_factor = 0,
 
-    // TODO: Use
     input wire [1:0] stopwatch_factor,
 
     output reg [14:0] interrupt_req = 0
@@ -26,6 +26,8 @@ module interrupt (
 
     // Clock is 0x102 interrupt
     interrupt_req[1] = |(clock_mask & clock_factor);
+    // Stopwatch is 0x104 interrupt
+    interrupt_req[3] = |(stopwatch_mask & stopwatch_factor);
   end
 
   reg prev_timer_32hz = 0;

@@ -38,6 +38,7 @@ module cpu_6s46 (
   reg reset_stopwatch = 0;
   reg enable_stopwatch = 0;
 
+  reg reset_clock_factor = 0;
   reg reset_stopwatch_factor = 0;
 
   wire timer_128hz;
@@ -52,6 +53,7 @@ module cpu_6s46 (
   wire [3:0] stopwatch_swl;
   wire [3:0] stopwatch_swh;
 
+  wire [3:0] clock_factor;
   wire [1:0] stopwatch_factor;
 
   timers timers (
@@ -82,9 +84,7 @@ module cpu_6s46 (
 
   // Interrupt masks
   reg [3:0] clock_mask = 0;
-
-  reg reset_clock_factor = 0;
-  wire [3:0] clock_factor;
+  reg [1:0] stopwatch_mask = 0;
 
   interrupt interrupt (
       .clk(clk),
@@ -99,6 +99,7 @@ module cpu_6s46 (
 
       // Masks
       .clock_mask(clock_mask),
+      .stopwatch_mask(stopwatch_mask),
 
       // Factor flags
       .reset_clock_factor(reset_clock_factor),
@@ -174,6 +175,16 @@ module cpu_6s46 (
               clock_mask <= memory_write_data;
             end else begin
               memory_read_data <= clock_mask;
+            end
+          end
+          {
+            8'h11, 1'bX
+          } : begin
+            // Stopwatch interrupt mask
+            if (memory_write_en) begin
+              stopwatch_mask <= memory_write_data[1:0];
+            end else begin
+              memory_read_data <= {2'b0, stopwatch_mask};
             end
           end
           {
