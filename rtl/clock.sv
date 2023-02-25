@@ -14,11 +14,12 @@ module clock (
     output wire timer_2hz,
     output wire timer_1hz,
 
-    output reg [7:0] counter_256 = 0
+    output reg timer_256_tick = 0
 );
   reg prev_reset = 0;
 
   reg [6:0] divider = 0;
+  reg [7:0] counter_256 = 0;
 
   always @(posedge clk) begin
     prev_reset <= ~reset_n || reset_clock_timer;
@@ -26,12 +27,18 @@ module clock (
     if (~reset_n || reset_clock_timer) begin
       divider <= 0;
       counter_256 <= 0;
+
+      timer_256_tick <= 0;
     end else begin
+      timer_256_tick <= 0;
+
       divider <= divider + 1;
 
       if (divider == 0 && ~prev_reset) begin
         // Special case to prevent ticking on reset
         counter_256 <= counter_256 + 1;
+
+        timer_256_tick <= 1;
       end
     end
   end

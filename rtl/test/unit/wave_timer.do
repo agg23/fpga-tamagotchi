@@ -54,7 +54,7 @@ add wave -noupdate /stopwatch_tb/bench/cpu_uut/timer_2hz
 add wave -noupdate /stopwatch_tb/bench/cpu_uut/timer_1hz
 add wave -noupdate /stopwatch_tb/bench/cpu_uut/clock_factor
 add wave -noupdate /stopwatch_tb/bench/cpu_uut/reset_clock_factor
-add wave -noupdate -radix hexadecimal /stopwatch_tb/bench/cpu_uut/timers/stopwatch/counter_256
+add wave -noupdate -radix hexadecimal /stopwatch_tb/bench/cpu_uut/timers/stopwatch/timer_256_tick
 add wave -noupdate -radix hexadecimal /stopwatch_tb/bench/cpu_uut/timers/stopwatch/counter_100hz
 add wave -noupdate -radix hexadecimal /stopwatch_tb/bench/cpu_uut/timers/stopwatch/counter_swl
 add wave -noupdate -radix hexadecimal /stopwatch_tb/bench/cpu_uut/timers/stopwatch/counter_swh

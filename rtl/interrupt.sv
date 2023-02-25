@@ -16,6 +16,9 @@ module interrupt (
     input wire reset_clock_factor,
     output reg [3:0] clock_factor = 0,
 
+    // TODO: Use
+    input wire [1:0] stopwatch_factor,
+
     output reg [14:0] interrupt_req = 0
 );
   always_comb begin

@@ -4,6 +4,11 @@ module timers (
     input wire reset_n,
 
     input wire reset_clock_timer,
+    input wire reset_stopwatch,
+
+    input wire reset_stopwatch_factor,
+
+    input wire enable_stopwatch,
 
     output wire timer_128hz,
     output wire timer_64hz,
@@ -12,9 +17,13 @@ module timers (
     output wire timer_8hz,
     output wire timer_4hz,
     output wire timer_2hz,
-    output wire timer_1hz
+    output wire timer_1hz,
+
+    output wire [3:0] stopwatch_swl,
+    output wire [3:0] stopwatch_swh,
+    output wire [1:0] stopwatch_factor
 );
-  wire [7:0] counter_256;
+  wire timer_256_tick;
 
   clock clock (
       .clk(clk),
@@ -32,7 +41,7 @@ module timers (
       .timer_2hz  (timer_2hz),
       .timer_1hz  (timer_1hz),
 
-      .counter_256(counter_256)
+      .timer_256_tick(timer_256_tick)
   );
 
   stopwatch stopwatch (
@@ -40,8 +49,14 @@ module timers (
 
       .reset_n(reset_n),
 
-      .counter_256(counter_256)
+      .reset(reset_stopwatch),
+      .enable(enable_stopwatch),
+      .timer_256_tick(timer_256_tick),
+
+      .reset_factor(reset_stopwatch_factor),
+      .factor_flags(stopwatch_factor),
+
+      .swl(stopwatch_swl),
+      .swh(stopwatch_swh)
   );
-
-
 endmodule

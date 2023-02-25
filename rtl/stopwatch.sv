@@ -3,7 +3,15 @@ module stopwatch (
 
     input wire reset_n,
 
-    input wire [7:0] counter_256
+    input wire reset,
+    input wire enable,
+    input wire timer_256_tick,
+
+    input wire reset_factor,
+    output reg [1:0] factor_flags = 0,
+
+    output wire [3:0] swl,
+    output wire [3:0] swh
 );
   reg [3:0] counter_100hz = 0;
 
@@ -16,6 +24,9 @@ module stopwatch (
   // Comb: If 0, swl will consume 2 ticks of counter_256. Otherwise, consume 3 ticks
   reg high_count_100hz = 0;
 
+  assign swl = counter_swl;
+  assign swh = counter_swh;
+
   always_comb begin
     // If 0, count to 25. Otherwise count to 26
     reg count_26;
@@ -27,19 +38,15 @@ module stopwatch (
     high_count_100hz = (counter_swl == 1 && count_26) || ~counter_swl[0];
   end
 
-  reg [7:0] prev_counter_256 = 0;
-
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (~reset_n || reset) begin
       counter_100hz <= 0;
-      counter_swl <= 0;
-      counter_swh <= 0;
+      counter_swl   <= 0;
+      counter_swh   <= 0;
 
-      prev_counter_256 <= 0;
+      factor_flags  <= 0;
     end else begin
-      prev_counter_256 <= counter_256;
-
-      if (counter_256 != prev_counter_256) begin
+      if (enable && timer_256_tick) begin
         // Tick 100hz
         counter_100hz <= counter_100hz + 1;
 
@@ -52,13 +59,19 @@ module stopwatch (
             // ~10hz. Tick SWH
             counter_swl <= 0;
             counter_swh <= counter_swh + 1;
+            factor_flags[0] <= 1;
 
             if (counter_swh == 9) begin
               // 1hz
               counter_swh <= 0;
+              factor_flags[1] <= 1;
             end
           end
         end
+      end
+
+      if (reset_factor) begin
+        factor_flags <= 0;
       end
     end
   end

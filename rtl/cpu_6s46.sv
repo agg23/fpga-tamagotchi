@@ -34,7 +34,11 @@ module cpu_6s46 (
       .interrupt_req(interrupt_req)
   );
 
-  reg  reset_clock_timer = 0;
+  reg reset_clock_timer = 0;
+  reg reset_stopwatch = 0;
+  reg enable_stopwatch = 0;
+
+  reg reset_stopwatch_factor = 0;
 
   wire timer_128hz;
   wire timer_64hz;
@@ -45,12 +49,22 @@ module cpu_6s46 (
   wire timer_2hz;
   wire timer_1hz;
 
+  wire [3:0] stopwatch_swl;
+  wire [3:0] stopwatch_swh;
+
+  wire [1:0] stopwatch_factor;
+
   timers timers (
       .clk(clk),
 
       .reset_n(reset_n),
 
       .reset_clock_timer(reset_clock_timer),
+      .reset_stopwatch  (reset_stopwatch),
+
+      .reset_stopwatch_factor(reset_stopwatch_factor),
+
+      .enable_stopwatch(enable_stopwatch),
 
       .timer_128hz(timer_128hz),
       .timer_64hz (timer_64hz),
@@ -59,7 +73,11 @@ module cpu_6s46 (
       .timer_8hz  (timer_8hz),
       .timer_4hz  (timer_4hz),
       .timer_2hz  (timer_2hz),
-      .timer_1hz  (timer_1hz)
+      .timer_1hz  (timer_1hz),
+
+      .stopwatch_swl(stopwatch_swl),
+      .stopwatch_swh(stopwatch_swh),
+      .stopwatch_factor(stopwatch_factor)
   );
 
   // Interrupt masks
@@ -85,6 +103,7 @@ module cpu_6s46 (
       // Factor flags
       .reset_clock_factor(reset_clock_factor),
       .clock_factor(clock_factor),
+      .stopwatch_factor(stopwatch_factor),
 
       .interrupt_req(interrupt_req)
   );
@@ -97,13 +116,21 @@ module cpu_6s46 (
     if (~reset_n) begin
       reset_clock_factor <= 0;
       reset_clock_timer <= 0;
+      reset_stopwatch <= 0;
+
+      reset_stopwatch_factor <= 0;
+
+      enable_stopwatch <= 0;
 
       clock_mask <= 0;
 
       oscillation <= 0;
     end else begin
       reset_clock_factor <= 0;
-      reset_clock_timer  <= 0;
+      reset_clock_timer <= 0;
+      reset_stopwatch <= 0;
+
+      reset_stopwatch_factor <= 0;
 
       if (~memory_write_en) begin
         memory_read_data <= 0;
@@ -133,6 +160,13 @@ module cpu_6s46 (
             reset_clock_factor <= 1;
           end
           {
+            8'h01, 1'b0
+          } : begin
+            // Stopwatch interrupt factor
+            memory_read_data <= {2'b0, stopwatch_factor};
+            reset_stopwatch_factor <= 1;
+          end
+          {
             8'h10, 1'bX
           } : begin
             // Clock interrupt mask
@@ -153,6 +187,18 @@ module cpu_6s46 (
           } : begin
             // Clock timer values (high)
             memory_read_data <= {timer_1hz, timer_2hz, timer_4hz, timer_8hz};
+          end
+          {
+            8'h22, 1'b0
+          } : begin
+            // Stopwatch 1/100 sec BCD
+            memory_read_data <= stopwatch_swl;
+          end
+          {
+            8'h23, 1'b0
+          } : begin
+            // Stopwatch 1/10 sec BCD
+            memory_read_data <= stopwatch_swh;
           end
           {
             8'h70, 1'bX
@@ -177,6 +223,16 @@ module cpu_6s46 (
             end
             if (memory_write_data[0]) begin
               // TODO: Reset watchdog timer
+            end
+          end
+          {
+            8'h77, 1'bX
+          } : begin
+            // Stopwatch reset/pause
+            if (memory_write_en) begin
+              {reset_stopwatch, enable_stopwatch} <= memory_write_data[1:0];
+            end else begin
+              memory_read_data <= {3'b0, enable_stopwatch};
             end
           end
         endcase
