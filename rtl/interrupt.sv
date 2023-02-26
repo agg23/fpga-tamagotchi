@@ -20,6 +20,7 @@ module interrupt (
 
     input wire [1:0] stopwatch_factor,
     input wire prog_timer_factor,
+    input wire [1:0] input_factor,
 
     output reg [14:0] interrupt_req = 0
 );
@@ -30,6 +31,11 @@ module interrupt (
     interrupt_req[1] = |(clock_mask & clock_factor);
     // Stopwatch is 0x104 interrupt
     interrupt_req[3] = |(stopwatch_mask & stopwatch_factor);
+    // Input uses the mask for setting the factor, for some reason
+    // Input K0 is 0x106 interrupt
+    interrupt_req[5] = input_factor[0];
+    // Input K1 is 0x108 interrupt
+    interrupt_req[7] = input_factor[1];
     // Prog timer is 0x10C interrupt
     interrupt_req[11] = |(prog_timer_mask & prog_timer_factor);
   end

@@ -4,6 +4,9 @@ module cpu_6s46 (
 
     input wire reset_n,
 
+    input wire [3:0] input_k0,
+    input wire [3:0] input_k1,
+
     output wire [12:0] rom_addr,
     input  wire [11:0] rom_data
 );
@@ -44,6 +47,7 @@ module cpu_6s46 (
   reg reset_clock_factor = 0;
   reg reset_stopwatch_factor = 0;
   reg reset_prog_timer_factor = 0;
+  reg reset_input_factor = 0;
 
   reg [2:0] prog_timer_clock_selection = 0;
   reg [7:0] prog_timer_reload = 0;
@@ -64,6 +68,7 @@ module cpu_6s46 (
   wire [3:0] clock_factor;
   wire [1:0] stopwatch_factor;
   wire prog_timer_factor;
+  wire [1:0] input_factor;
 
   timers timers (
       .clk(clk),
@@ -106,6 +111,8 @@ module cpu_6s46 (
   reg [3:0] clock_mask = 0;
   reg [1:0] stopwatch_mask = 0;
   reg prog_timer_mask = 0;
+  reg [3:0] input_k0_mask = 0;
+  reg [3:0] input_k1_mask = 0;
 
   interrupt interrupt (
       .clk(clk),
@@ -128,12 +135,35 @@ module cpu_6s46 (
       .clock_factor(clock_factor),
       .stopwatch_factor(stopwatch_factor),
       .prog_timer_factor(prog_timer_factor),
+      .input_factor(input_factor),
 
       .interrupt_req(interrupt_req)
   );
 
+  reg [3:0] input_relation_k0 = 4'hF;
+
+  input_lines input_lines (
+      .clk(clk),
+
+      .reset_n(reset_n),
+
+      .input_k0(input_k0),
+      .input_k1(input_k1),
+
+      .input_relation_k0(input_relation_k0),
+      .input_k0_mask(input_k0_mask),
+      .input_k1_mask(input_k1_mask),
+
+      .reset_factor(reset_input_factor),
+      .factor_flags(input_factor)
+  );
+
+  reg [2:0] lcd_control = 3'b100;
+
   // Unused registers
   reg [2:0] svd_status = 0;
+  reg heavy_load_protection = 0;
+  reg serial_mask = 0;
   reg [3:0] oscillation = 0;
 
   // RAM bus
@@ -148,8 +178,18 @@ module cpu_6s46 (
       enable_stopwatch <= 0;
 
       clock_mask <= 0;
+      stopwatch_mask <= 0;
+      prog_timer_mask <= 0;
+      input_k0_mask <= 0;
+      input_k1_mask <= 0;
+
+      input_relation_k0 <= 4'hF;
+
+      lcd_control <= 3'b100;
 
       svd_status <= 0;
+      heavy_load_protection <= 0;
+      serial_mask <= 0;
       oscillation <= 0;
     end else begin
       reset_clock_timer <= 0;
@@ -159,6 +199,7 @@ module cpu_6s46 (
       reset_clock_factor <= 0;
       reset_stopwatch_factor <= 0;
       reset_prog_timer_factor <= 0;
+      reset_input_factor <= 0;
 
       if (~memory_write_en) begin
         memory_read_data <= 0;
@@ -201,6 +242,21 @@ module cpu_6s46 (
             memory_read_data <= {3'b0, prog_timer_factor};
             reset_prog_timer_factor <= 1;
           end
+          // {8'h03, 1'b0} Serial interrupt factor
+          {
+            8'h04, 1'b0
+          } : begin
+            // Input K0 interrupt factor
+            memory_read_data   <= {3'b0, input_factor[0]};
+            reset_input_factor <= 1;
+          end
+          {
+            8'h05, 1'b0
+          } : begin
+            // Input K1 interrupt factor
+            memory_read_data   <= {3'b0, input_factor[1]};
+            reset_input_factor <= 1;
+          end
           {
             8'h10, 1'bX
           } : begin
@@ -229,6 +285,36 @@ module cpu_6s46 (
               prog_timer_mask <= memory_write_data[0];
             end else begin
               memory_read_data <= {3'b0, prog_timer_mask};
+            end
+          end
+          {
+            8'h13, 1'bX
+          } : begin
+            // Serial interrupt mask
+            if (memory_write_en) begin
+              serial_mask <= memory_write_data[0];
+            end else begin
+              memory_read_data <= {3'b0, serial_mask};
+            end
+          end
+          {
+            8'h14, 1'bX
+          } : begin
+            // Input K0 interrupt mask
+            if (memory_write_en) begin
+              input_k0_mask <= memory_write_data;
+            end else begin
+              memory_read_data <= input_k0_mask;
+            end
+          end
+          {
+            8'h15, 1'bX
+          } : begin
+            // Input K1 interrupt mask
+            if (memory_write_en) begin
+              input_k1_mask <= memory_write_data;
+            end else begin
+              memory_read_data <= input_k1_mask;
             end
           end
           {
@@ -288,6 +374,28 @@ module cpu_6s46 (
             end
           end
           {
+            8'h40, 1'b0
+          } : begin
+            // Input K0 value
+            memory_read_data <= input_k0;
+          end
+          {
+            8'h41, 1'bX
+          } : begin
+            // Input relation
+            if (memory_write_en) begin
+              input_relation_k0 <= memory_write_data;
+            end else begin
+              memory_read_data <= input_relation_k0;
+            end
+          end
+          {
+            8'h42, 1'b0
+          } : begin
+            // Input K1 value
+            memory_read_data <= input_k1;
+          end
+          {
             8'h70, 1'bX
           } : begin
             // Oscillation control
@@ -299,6 +407,16 @@ module cpu_6s46 (
             end
 
             $display("Warning: RAM 0xF70 is unimplemented");
+          end
+          {
+            8'h71, 1'bX
+          } : begin
+            // LCD control and heavy load protection
+            if (memory_write_en) begin
+              {lcd_control, heavy_load_protection} <= memory_write_data;
+            end else begin
+              memory_read_data <= {lcd_control, heavy_load_protection};
+            end
           end
           {
             8'h73, 1'bX
@@ -320,7 +438,7 @@ module cpu_6s46 (
               reset_clock_timer <= 1;
             end
             if (memory_write_data[0]) begin
-              // TODO: Reset watchdog timer
+              // TODO: Reset watchdog timer, purposefully omitted
             end
           end
           {

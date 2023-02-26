@@ -44,6 +44,12 @@ add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/core/regs/x
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/core/regs/y
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/core/regs/sp
 add wave -noupdate /interrupt_tb/bench/cpu_uut/core/regs/interrupt
+add wave -noupdate /interrupt_tb/bench/input_k0
+add wave -noupdate /interrupt_tb/bench/input_k1
+add wave -noupdate /interrupt_tb/bench/cpu_uut/input_relation_k0
+add wave -noupdate /interrupt_tb/bench/cpu_uut/input_factor
+add wave -noupdate /interrupt_tb/bench/cpu_uut/input_k0_mask
+add wave -noupdate /interrupt_tb/bench/cpu_uut/input_k1_mask
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {2 ps} 0}
 quietly wave cursor active 1

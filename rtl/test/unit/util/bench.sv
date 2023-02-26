@@ -11,11 +11,17 @@ module bench;
 
   reg [14:0] interrupt_req = 0;
 
+  reg [3:0] input_k0 = 0;
+  reg [3:0] input_k1 = 0;
+
   cpu_6s46 cpu_uut (
       .clk(clk),
       .clk_2x(clk_2x),
 
       .reset_n(reset_n),
+
+      .input_k0(input_k0),
+      .input_k1(input_k1),
 
       .rom_addr(rom_addr),
       .rom_data(rom_data)
