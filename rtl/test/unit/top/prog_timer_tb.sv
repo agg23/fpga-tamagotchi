@@ -142,6 +142,21 @@ module prog_timer_tb;
       `CHECK_EQUAL(bench.cpu_uut.prog_timer_reload, 8'hF5);
     end
 
+    `TEST_CASE("Reading/writing from 0xF79 should read/write the selected clock") begin 
+      bench.rom_data = 12'hEC8; // LD MX, A
+      bench.cpu_uut.core.regs.a = 4'hA;
+      bench.cpu_uut.core.regs.x = 12'hF79;
+
+      bench.run_until_complete();
+      bench.rom_data = 12'hEC6; // LD B, MX
+      #1;
+      `CHECK_EQUAL(bench.cpu_uut.prog_timer_clock_selection, 3'h2);
+
+      bench.run_until_complete();
+      #1;
+      bench.assert_b(4'hA);
+    end
+
     `TEST_CASE("Timer should only start once 0xF78 bit 0 is set") begin
       bench.rom_data = 12'hFFF; // NOP7
 

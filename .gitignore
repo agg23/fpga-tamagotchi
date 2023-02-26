@@ -2,6 +2,7 @@ sim/
 sim2/
 bass/bass.exe
 bass/*.rom
+bass/tama.*
 **/vunit_out
 **/__pycache__
 

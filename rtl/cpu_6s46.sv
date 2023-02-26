@@ -18,6 +18,9 @@ module cpu_6s46 (
   // RAM from 0x000 - 0x280
   reg [3:0] ram[256+256+128];
 
+  reg [3:0] video_low_ram['h50];
+  reg [3:0] video_high_ram['h50];
+
   wire [14:0] interrupt_req;
 
   cpu core (
@@ -76,7 +79,7 @@ module cpu_6s46 (
       .reset_n(reset_n),
 
       // TODO
-      .input_k03(1'b0),
+      .input_k03(input_k0[3]),
       .prog_timer_clock_selection(prog_timer_clock_selection),
       .prog_timer_reload(prog_timer_reload),
 
@@ -159,12 +162,19 @@ module cpu_6s46 (
   );
 
   reg [2:0] lcd_control = 3'b100;
+  reg [3:0] lcd_contrast = 4'h8;
+
+  reg [3:0] buzzer_output_control = 4'hF;
+  reg [3:0] buzzer_selection = 4'hF;
+  reg [1:0] buzzer_envelope = 2'b0;
 
   // Unused registers
   reg [2:0] svd_status = 0;
   reg heavy_load_protection = 0;
   reg serial_mask = 0;
+  reg [7:0] serial_data = 0;
   reg [3:0] oscillation = 0;
+  reg prog_timer_clock_output = 0;
 
   // RAM bus
   always @(posedge clk) begin
@@ -185,12 +195,20 @@ module cpu_6s46 (
 
       input_relation_k0 <= 4'hF;
 
+      prog_timer_clock_selection <= 0;
+      prog_timer_reload <= 0;
+
       lcd_control <= 3'b100;
+      lcd_contrast <= 4'h8;
+
+      buzzer_output_control <= 4'hF;
 
       svd_status <= 0;
       heavy_load_protection <= 0;
       serial_mask <= 0;
+      serial_data <= 0;
       oscillation <= 0;
+      prog_timer_clock_output <= 0;
     end else begin
       reset_clock_timer <= 0;
       reset_stopwatch <= 0;
@@ -214,10 +232,23 @@ module cpu_6s46 (
         end
       end else if (memory_addr >= 12'hE00 && memory_addr < 12'hE50) begin
         // Display lower segment
+        if (memory_write_en) begin
+          video_low_ram[memory_addr[6:0]] <= memory_write_data;
+        end else begin
+          memory_read_data <= video_low_ram[memory_addr[6:0]];
+        end
       end else if (memory_addr >= 12'hE80 && memory_addr < 12'hED0) begin
         // Display upper segment
+        if (memory_write_en) begin
+          video_high_ram[memory_addr[6:0]] <= memory_write_data;
+        end else begin
+          memory_read_data <= video_high_ram[memory_addr[6:0]];
+        end
       end else if (memory_addr[11:8] == 4'hF) begin
         // I/O segment
+        // TODO: Remove
+        $display("Accessing I/O address 0x%h. Writing: %b", memory_addr, memory_write_en);
+
         casex ({
           memory_addr[7:0], memory_write_en
         })
@@ -374,6 +405,26 @@ module cpu_6s46 (
             end
           end
           {
+            8'h30, 1'bX
+          } : begin
+            // Serial data (low)
+            if (memory_write_en) begin
+              serial_data[3:0] <= memory_write_data;
+            end else begin
+              memory_read_data <= serial_data[3:0];
+            end
+          end
+          {
+            8'h31, 1'bX
+          } : begin
+            // Serial data (high)
+            if (memory_write_en) begin
+              serial_data[7:4] <= memory_write_data;
+            end else begin
+              memory_read_data <= serial_data[7:4];
+            end
+          end
+          {
             8'h40, 1'b0
           } : begin
             // Input K0 value
@@ -395,6 +446,19 @@ module cpu_6s46 (
             // Input K1 value
             memory_read_data <= input_k1;
           end
+          // 50-53 are unused output ports
+          {
+            8'h54, 1'bX
+          } : begin
+            // Output ports R4, buzzer control
+            // TODO: Handle buzzer enable
+            if (memory_write_en) begin
+              buzzer_output_control <= memory_write_data;
+            end else begin
+              memory_read_data <= buzzer_output_control;
+            end
+          end
+          // 60-63 are unused I/O ports
           {
             8'h70, 1'bX
           } : begin
@@ -419,6 +483,16 @@ module cpu_6s46 (
             end
           end
           {
+            8'h72, 1'bX
+          } : begin
+            // LCD contrast
+            if (memory_write_en) begin
+              lcd_contrast <= memory_write_data;
+            end else begin
+              memory_read_data <= lcd_contrast;
+            end
+          end
+          {
             8'h73, 1'bX
           } : begin
             // Supply voltage detection control
@@ -427,6 +501,29 @@ module cpu_6s46 (
             end else begin
               // Battery is always good
               memory_read_data <= {1'b1, svd_status};
+            end
+          end
+          {
+            8'h74, 1'bX
+          } : begin
+            // Buzzer frequency
+            // TODO: Implement
+            if (memory_write_en) begin
+              buzzer_selection <= memory_write_data;
+            end else begin
+              memory_read_data <= buzzer_selection;
+            end
+          end
+          {
+            8'h75, 1'bX
+          } : begin
+            // Buzzer settings
+            // TODO: Implement
+            if (memory_write_en) begin
+              // TODO: Handle trigger and reset
+              buzzer_envelope <= memory_write_data[1:0];
+            end else begin
+              memory_read_data <= {2'b0, buzzer_envelope};
             end
           end
           {
@@ -461,6 +558,17 @@ module cpu_6s46 (
               memory_read_data <= {3'b0, enable_prog_timer};
             end
           end
+          {
+            8'h79, 1'bX
+          } : begin
+            // Programmable timer clock selection
+            if (memory_write_en) begin
+              {prog_timer_clock_output, prog_timer_clock_selection} <= memory_write_data;
+            end else begin
+              memory_read_data <= {prog_timer_clock_output, prog_timer_clock_selection};
+            end
+          end
+          // 7A-7E is unused I/O
         endcase
       end
     end
