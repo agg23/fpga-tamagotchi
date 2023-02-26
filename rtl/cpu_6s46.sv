@@ -36,10 +36,17 @@ module cpu_6s46 (
 
   reg reset_clock_timer = 0;
   reg reset_stopwatch = 0;
+  reg reset_prog_timer = 0;
+
   reg enable_stopwatch = 0;
+  reg enable_prog_timer = 0;
 
   reg reset_clock_factor = 0;
   reg reset_stopwatch_factor = 0;
+  reg reset_prog_timer_factor = 0;
+
+  reg [2:0] prog_timer_clock_selection = 0;
+  reg [7:0] prog_timer_reload = 0;
 
   wire timer_128hz;
   wire timer_64hz;
@@ -52,21 +59,31 @@ module cpu_6s46 (
 
   wire [3:0] stopwatch_swl;
   wire [3:0] stopwatch_swh;
+  wire [7:0] prog_timer_downcounter;
 
   wire [3:0] clock_factor;
   wire [1:0] stopwatch_factor;
+  wire prog_timer_factor;
 
   timers timers (
       .clk(clk),
 
       .reset_n(reset_n),
 
+      // TODO
+      .input_k03(1'b0),
+      .prog_timer_clock_selection(prog_timer_clock_selection),
+      .prog_timer_reload(prog_timer_reload),
+
       .reset_clock_timer(reset_clock_timer),
       .reset_stopwatch  (reset_stopwatch),
+      .reset_prog_timer (reset_prog_timer),
 
-      .reset_stopwatch_factor(reset_stopwatch_factor),
+      .reset_stopwatch_factor (reset_stopwatch_factor),
+      .reset_prog_timer_factor(reset_prog_timer_factor),
 
-      .enable_stopwatch(enable_stopwatch),
+      .enable_stopwatch (enable_stopwatch),
+      .enable_prog_timer(enable_prog_timer),
 
       .timer_128hz(timer_128hz),
       .timer_64hz (timer_64hz),
@@ -79,12 +96,16 @@ module cpu_6s46 (
 
       .stopwatch_swl(stopwatch_swl),
       .stopwatch_swh(stopwatch_swh),
-      .stopwatch_factor(stopwatch_factor)
+      .prog_timer_downcounter(prog_timer_downcounter),
+
+      .stopwatch_factor (stopwatch_factor),
+      .prog_timer_factor(prog_timer_factor)
   );
 
   // Interrupt masks
   reg [3:0] clock_mask = 0;
   reg [1:0] stopwatch_mask = 0;
+  reg prog_timer_mask = 0;
 
   interrupt interrupt (
       .clk(clk),
@@ -100,11 +121,13 @@ module cpu_6s46 (
       // Masks
       .clock_mask(clock_mask),
       .stopwatch_mask(stopwatch_mask),
+      .prog_timer_mask(prog_timer_mask),
 
       // Factor flags
       .reset_clock_factor(reset_clock_factor),
       .clock_factor(clock_factor),
       .stopwatch_factor(stopwatch_factor),
+      .prog_timer_factor(prog_timer_factor),
 
       .interrupt_req(interrupt_req)
   );
@@ -127,11 +150,13 @@ module cpu_6s46 (
 
       oscillation <= 0;
     end else begin
-      reset_clock_factor <= 0;
       reset_clock_timer <= 0;
       reset_stopwatch <= 0;
+      reset_prog_timer <= 0;
 
+      reset_clock_factor <= 0;
       reset_stopwatch_factor <= 0;
+      reset_prog_timer_factor <= 0;
 
       if (~memory_write_en) begin
         memory_read_data <= 0;
@@ -168,6 +193,13 @@ module cpu_6s46 (
             reset_stopwatch_factor <= 1;
           end
           {
+            8'h02, 1'b0
+          } : begin
+            // Programmable timer interrupt factor
+            memory_read_data <= {3'b0, prog_timer_factor};
+            reset_prog_timer_factor <= 1;
+          end
+          {
             8'h10, 1'bX
           } : begin
             // Clock interrupt mask
@@ -185,6 +217,16 @@ module cpu_6s46 (
               stopwatch_mask <= memory_write_data[1:0];
             end else begin
               memory_read_data <= {2'b0, stopwatch_mask};
+            end
+          end
+          {
+            8'h12, 1'bX
+          } : begin
+            // Programmable timer interrupt mask
+            if (memory_write_en) begin
+              prog_timer_mask <= memory_write_data[0];
+            end else begin
+              memory_read_data <= {3'b0, prog_timer_mask};
             end
           end
           {
@@ -210,6 +252,38 @@ module cpu_6s46 (
           } : begin
             // Stopwatch 1/10 sec BCD
             memory_read_data <= stopwatch_swh;
+          end
+          {
+            8'h24, 1'b0
+          } : begin
+            // Programmable timer value (low)
+            memory_read_data <= prog_timer_downcounter[3:0];
+          end
+          {
+            8'h25, 1'b0
+          } : begin
+            // Programmable timer value (high)
+            memory_read_data <= prog_timer_downcounter[7:4];
+          end
+          {
+            8'h26, 1'bX
+          } : begin
+            // Programmable timer reload data (low)
+            if (memory_write_en) begin
+              prog_timer_reload[3:0] <= memory_write_data;
+            end else begin
+              memory_read_data <= prog_timer_reload[3:0];
+            end
+          end
+          {
+            8'h27, 1'bX
+          } : begin
+            // Programmable timer reload data (high)
+            if (memory_write_en) begin
+              prog_timer_reload[7:4] <= memory_write_data;
+            end else begin
+              memory_read_data <= prog_timer_reload[7:4];
+            end
           end
           {
             8'h70, 1'bX
@@ -244,6 +318,16 @@ module cpu_6s46 (
               {reset_stopwatch, enable_stopwatch} <= memory_write_data[1:0];
             end else begin
               memory_read_data <= {3'b0, enable_stopwatch};
+            end
+          end
+          {
+            8'h78, 1'bX
+          } : begin
+            // Programmable timer reset/start/stop
+            if (memory_write_en) begin
+              {reset_prog_timer, enable_prog_timer} <= memory_write_data[1:0];
+            end else begin
+              memory_read_data <= {3'b0, enable_prog_timer};
             end
           end
         endcase
