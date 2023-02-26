@@ -133,6 +133,7 @@ module cpu_6s46 (
   );
 
   // Unused registers
+  reg [2:0] svd_status = 0;
   reg [3:0] oscillation = 0;
 
   // RAM bus
@@ -148,6 +149,7 @@ module cpu_6s46 (
 
       clock_mask <= 0;
 
+      svd_status <= 0;
       oscillation <= 0;
     end else begin
       reset_clock_timer <= 0;
@@ -297,6 +299,17 @@ module cpu_6s46 (
             end
 
             $display("Warning: RAM 0xF70 is unimplemented");
+          end
+          {
+            8'h73, 1'bX
+          } : begin
+            // Supply voltage detection control
+            if (memory_write_en) begin
+              svd_status <= memory_write_data[2:0];
+            end else begin
+              // Battery is always good
+              memory_read_data <= {1'b1, svd_status};
+            end
           end
           {
             8'h76, 1'b1
