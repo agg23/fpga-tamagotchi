@@ -16,7 +16,7 @@ module prog_timer (
     output reg [7:0] downcounter = 0
 );
   reg divider_8khz = 0;
-  reg [4:0] counter_8khz = 0;
+  reg [5:0] counter_8khz = 0;
 
   // Comb: The input clock for the timer
   reg input_clock = 0;
@@ -29,8 +29,7 @@ module prog_timer (
       // TODO: Unused. We don't add noise rejector
       3'b000, 3'b001: input_clock = input_k03;
       // 256Hz
-      // prev_reset hack to prevent going high on reset
-      3'b010: input_clock = counter_8khz == 0 && ~prev_reset;
+      3'b010: input_clock = counter_8khz[5];
       // 512Hz
       3'b011: input_clock = counter_8khz[4];
       // 1024Hz
@@ -56,7 +55,7 @@ module prog_timer (
       // Every 2 ticks, we're at 2x 8,192Hz
       divider_8khz <= ~divider_8khz;
 
-      if (divider_8khz && ~prev_reset) begin
+      if (enable && divider_8khz && ~prev_reset) begin
         // Special case to prevent ticking on reset
         counter_8khz <= counter_8khz + 1;
       end

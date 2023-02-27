@@ -12,16 +12,18 @@ module prog_timer_tb;
 
     // Wait for first tick
     // + 12 cycle delay
-    #(duration + 12);
+    #(duration);
+    `CHECK_EQUAL(bench.cpu_uut.prog_timer_factor, 0);
+    #12;
     #1;
 
-    `CHECK_EQUAL(bench.cpu_uut.prog_timer_factor, 4'b0001);
+    `CHECK_EQUAL(bench.cpu_uut.prog_timer_factor, 1);
     bench.cpu_uut.timers.prog_timer.factor_flags = 0;
 
     // Test second tick
     #(duration);
 
-    `CHECK_EQUAL(bench.cpu_uut.prog_timer_factor, 4'b0001);
+    `CHECK_EQUAL(bench.cpu_uut.prog_timer_factor, 1);
   endtask
 
   `TEST_SUITE begin
