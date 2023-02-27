@@ -9,7 +9,8 @@ module cpu (
     output wire [12:0] rom_addr,
     input  wire [11:0] rom_data,
 
-    output reg memory_write_en,
+    output wire memory_write_en,
+    output wire memory_read_en,
     output wire [11:0] memory_addr,
     output reg [3:0] memory_write_data,
     input wire [3:0] memory_read_data,
@@ -55,6 +56,11 @@ module cpu (
   wire performing_interrupt;
   wire [3:0] interrupt_address;
 
+  wire internal_memory_read_en;
+  wire override_memory_read_en;
+
+  assign memory_read_en = override_memory_read_en | internal_memory_read_en;
+
   always @(posedge clk_2x) begin
     if (current_cycle == CYCLE_NONE) begin
       skip_pc_increment <= decode_skip_pc_increment;
@@ -90,7 +96,9 @@ module cpu (
       .bus_input_selector(bus_input_selector),
       .bus_output_selector(bus_output_selector),
       .increment_selector(increment_selector),
-      .alu_operation(alu_op)
+      .alu_operation(alu_op),
+
+      .override_memory_read_en(override_memory_read_en)
   );
 
   wire [3:0] temp_a;
@@ -136,6 +144,7 @@ module cpu (
       .immed(performing_interrupt ? {4'b0, interrupt_address + 1'b1} : immed),
 
       .memory_write_en(memory_write_en),
+      .memory_read_en(internal_memory_read_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
       .memory_read_data(memory_read_data),

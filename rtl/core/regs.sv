@@ -19,6 +19,7 @@ module regs (
     input wire [7:0] immed,
 
     output reg memory_write_en,
+    output wire memory_read_en,
     output wire [11:0] memory_addr,
     output reg [3:0] memory_write_data,
     input wire [3:0] memory_read_data,
@@ -63,6 +64,8 @@ module regs (
   reg [11:0] bus_output_memory_addr;
 
   assign memory_addr = use_bus_input_memory_addr ? bus_input_memory_addr : bus_output_memory_addr;
+
+  assign memory_read_en = use_bus_input_memory_addr && current_cycle == CYCLE_REG_FETCH;
 
   reg_mux bus_input_mux (
       .selector(bus_input_selector),

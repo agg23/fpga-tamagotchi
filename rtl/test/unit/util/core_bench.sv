@@ -10,6 +10,7 @@ module core_bench;
   reg [11:0] rom_data = 0;
 
   wire memory_write_en;
+  wire memory_read_en;
   wire [11:0] memory_addr;
   wire [3:0] memory_write_data;
   reg [3:0] memory_read_data = 0;
@@ -28,6 +29,7 @@ module core_bench;
       .rom_data(rom_data),
 
       .memory_write_en(memory_write_en),
+      .memory_read_en(memory_read_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
       .memory_read_data(memory_read_data),
@@ -39,7 +41,7 @@ module core_bench;
     // RAM access
     if (memory_write_en) begin
       ram[memory_addr] <= memory_write_data;
-    end else begin
+    end else if (memory_read_en) begin
       memory_read_data <= ram[memory_addr];
     end
   end

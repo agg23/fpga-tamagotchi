@@ -29,7 +29,10 @@ module microcode (
     output reg_type bus_input_selector,
     output reg_type bus_output_selector,
     output reg_inc_type increment_selector,
-    output alu_op alu_operation
+    output alu_op alu_operation,
+
+    // Hack for RET
+    output wire override_memory_read_en
 );
   typedef enum {
     DECODE,   // Single cycle
@@ -78,6 +81,8 @@ module microcode (
   reg prevent_reset_np = 0;
   assign increment_pc = ~disable_increment && last_fetch_step;
   assign reset_np = ~prevent_reset_np && last_cycle_step;
+
+  assign override_memory_read_en = temp_override_bus_input_selector != REG_ALU && current_cycle == CYCLE_REG_WRITE;
 
   int interrupt_req_i;
 

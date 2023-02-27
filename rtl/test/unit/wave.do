@@ -6,6 +6,7 @@ add wave -noupdate /interrupt_tb/bench/cpu_uut/reset_n
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/rom_addr
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/rom_data
 add wave -noupdate /interrupt_tb/bench/cpu_uut/memory_write_en
+add wave -noupdate /interrupt_tb/bench/cpu_uut/memory_read_en
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/memory_addr
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/memory_write_data
 add wave -noupdate -radix hexadecimal /interrupt_tb/bench/cpu_uut/memory_read_data

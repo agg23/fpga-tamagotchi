@@ -11,6 +11,7 @@ module cpu_6s46 (
     input  wire [11:0] rom_data
 );
   wire memory_write_en;
+  wire memory_read_en;
   wire [11:0] memory_addr;
   wire [3:0] memory_write_data;
   reg [3:0] memory_read_data;
@@ -33,6 +34,7 @@ module cpu_6s46 (
       .rom_data(rom_data),
 
       .memory_write_en(memory_write_en),
+      .memory_read_en(memory_read_en),
       .memory_addr(memory_addr),
       .memory_write_data(memory_write_data),
       .memory_read_data(memory_read_data),
@@ -78,7 +80,6 @@ module cpu_6s46 (
 
       .reset_n(reset_n),
 
-      // TODO
       .input_k03(input_k0[3]),
       .prog_timer_clock_selection(prog_timer_clock_selection),
       .prog_timer_reload(prog_timer_reload),
@@ -223,353 +224,355 @@ module cpu_6s46 (
         memory_read_data <= 0;
       end
 
-      if (memory_addr < 12'h280) begin
-        // Actual RAM space
-        if (memory_write_en) begin
-          ram[memory_addr[9:0]] <= memory_write_data;
-        end else begin
-          memory_read_data <= ram[memory_addr[9:0]];
-        end
-      end else if (memory_addr >= 12'hE00 && memory_addr < 12'hE50) begin
-        // Display lower segment
-        if (memory_write_en) begin
-          video_low_ram[memory_addr[6:0]] <= memory_write_data;
-        end else begin
-          memory_read_data <= video_low_ram[memory_addr[6:0]];
-        end
-      end else if (memory_addr >= 12'hE80 && memory_addr < 12'hED0) begin
-        // Display upper segment
-        if (memory_write_en) begin
-          video_high_ram[memory_addr[6:0]] <= memory_write_data;
-        end else begin
-          memory_read_data <= video_high_ram[memory_addr[6:0]];
-        end
-      end else if (memory_addr[11:8] == 4'hF) begin
-        // I/O segment
-        // TODO: Remove
-        $display("Accessing I/O address 0x%h. Writing: %b", memory_addr, memory_write_en);
+      if (memory_write_en || memory_read_en) begin
+        if (memory_addr < 12'h280) begin
+          // Actual RAM space
+          if (memory_write_en) begin
+            ram[memory_addr[9:0]] <= memory_write_data;
+          end else begin
+            memory_read_data <= ram[memory_addr[9:0]];
+          end
+        end else if (memory_addr >= 12'hE00 && memory_addr < 12'hE50) begin
+          // Display lower segment
+          if (memory_write_en) begin
+            video_low_ram[memory_addr[6:0]] <= memory_write_data;
+          end else begin
+            memory_read_data <= video_low_ram[memory_addr[6:0]];
+          end
+        end else if (memory_addr >= 12'hE80 && memory_addr < 12'hED0) begin
+          // Display upper segment
+          if (memory_write_en) begin
+            video_high_ram[memory_addr[6:0]] <= memory_write_data;
+          end else begin
+            memory_read_data <= video_high_ram[memory_addr[6:0]];
+          end
+        end else if (memory_addr[11:8] == 4'hF) begin
+          // I/O segment
+          // TODO: Remove
+          $display("Accessing I/O address 0x%h. Writing: %b", memory_addr, memory_write_en);
 
-        casex ({
-          memory_addr[7:0], memory_write_en
-        })
-          {
-            8'h00, 1'b0
-          } : begin
-            // Clock interrupt factor
-            memory_read_data   <= clock_factor;
-            reset_clock_factor <= 1;
-          end
-          {
-            8'h01, 1'b0
-          } : begin
-            // Stopwatch interrupt factor
-            memory_read_data <= {2'b0, stopwatch_factor};
-            reset_stopwatch_factor <= 1;
-          end
-          {
-            8'h02, 1'b0
-          } : begin
-            // Programmable timer interrupt factor
-            memory_read_data <= {3'b0, prog_timer_factor};
-            reset_prog_timer_factor <= 1;
-          end
-          // {8'h03, 1'b0} Serial interrupt factor
-          {
-            8'h04, 1'b0
-          } : begin
-            // Input K0 interrupt factor
-            memory_read_data   <= {3'b0, input_factor[0]};
-            reset_input_factor <= 1;
-          end
-          {
-            8'h05, 1'b0
-          } : begin
-            // Input K1 interrupt factor
-            memory_read_data   <= {3'b0, input_factor[1]};
-            reset_input_factor <= 1;
-          end
-          {
-            8'h10, 1'bX
-          } : begin
-            // Clock interrupt mask
-            if (memory_write_en) begin
-              clock_mask <= memory_write_data;
-            end else begin
-              memory_read_data <= clock_mask;
+          casex ({
+            memory_addr[7:0], memory_write_en
+          })
+            {
+              8'h00, 1'b0
+            } : begin
+              // Clock interrupt factor
+              memory_read_data   <= clock_factor;
+              reset_clock_factor <= 1;
             end
-          end
-          {
-            8'h11, 1'bX
-          } : begin
-            // Stopwatch interrupt mask
-            if (memory_write_en) begin
-              stopwatch_mask <= memory_write_data[1:0];
-            end else begin
-              memory_read_data <= {2'b0, stopwatch_mask};
+            {
+              8'h01, 1'b0
+            } : begin
+              // Stopwatch interrupt factor
+              memory_read_data <= {2'b0, stopwatch_factor};
+              reset_stopwatch_factor <= 1;
             end
-          end
-          {
-            8'h12, 1'bX
-          } : begin
-            // Programmable timer interrupt mask
-            if (memory_write_en) begin
-              prog_timer_mask <= memory_write_data[0];
-            end else begin
-              memory_read_data <= {3'b0, prog_timer_mask};
+            {
+              8'h02, 1'b0
+            } : begin
+              // Programmable timer interrupt factor
+              memory_read_data <= {3'b0, prog_timer_factor};
+              reset_prog_timer_factor <= 1;
             end
-          end
-          {
-            8'h13, 1'bX
-          } : begin
-            // Serial interrupt mask
-            if (memory_write_en) begin
-              serial_mask <= memory_write_data[0];
-            end else begin
-              memory_read_data <= {3'b0, serial_mask};
+            // {8'h03, 1'b0} Serial interrupt factor
+            {
+              8'h04, 1'b0
+            } : begin
+              // Input K0 interrupt factor
+              memory_read_data   <= {3'b0, input_factor[0]};
+              reset_input_factor <= 1;
             end
-          end
-          {
-            8'h14, 1'bX
-          } : begin
-            // Input K0 interrupt mask
-            if (memory_write_en) begin
-              input_k0_mask <= memory_write_data;
-            end else begin
-              memory_read_data <= input_k0_mask;
+            {
+              8'h05, 1'b0
+            } : begin
+              // Input K1 interrupt factor
+              memory_read_data   <= {3'b0, input_factor[1]};
+              reset_input_factor <= 1;
             end
-          end
-          {
-            8'h15, 1'bX
-          } : begin
-            // Input K1 interrupt mask
-            if (memory_write_en) begin
-              input_k1_mask <= memory_write_data;
-            end else begin
-              memory_read_data <= input_k1_mask;
+            {
+              8'h10, 1'bX
+            } : begin
+              // Clock interrupt mask
+              if (memory_write_en) begin
+                clock_mask <= memory_write_data;
+              end else begin
+                memory_read_data <= clock_mask;
+              end
             end
-          end
-          {
-            8'h20, 1'b0
-          } : begin
-            // Clock timer values (low)
-            memory_read_data <= {timer_16hz, timer_32hz, timer_64hz, timer_128hz};
-          end
-          {
-            8'h21, 1'b0
-          } : begin
-            // Clock timer values (high)
-            memory_read_data <= {timer_1hz, timer_2hz, timer_4hz, timer_8hz};
-          end
-          {
-            8'h22, 1'b0
-          } : begin
-            // Stopwatch 1/100 sec BCD
-            memory_read_data <= stopwatch_swl;
-          end
-          {
-            8'h23, 1'b0
-          } : begin
-            // Stopwatch 1/10 sec BCD
-            memory_read_data <= stopwatch_swh;
-          end
-          {
-            8'h24, 1'b0
-          } : begin
-            // Programmable timer value (low)
-            memory_read_data <= prog_timer_downcounter[3:0];
-          end
-          {
-            8'h25, 1'b0
-          } : begin
-            // Programmable timer value (high)
-            memory_read_data <= prog_timer_downcounter[7:4];
-          end
-          {
-            8'h26, 1'bX
-          } : begin
-            // Programmable timer reload data (low)
-            if (memory_write_en) begin
-              prog_timer_reload[3:0] <= memory_write_data;
-            end else begin
-              memory_read_data <= prog_timer_reload[3:0];
+            {
+              8'h11, 1'bX
+            } : begin
+              // Stopwatch interrupt mask
+              if (memory_write_en) begin
+                stopwatch_mask <= memory_write_data[1:0];
+              end else begin
+                memory_read_data <= {2'b0, stopwatch_mask};
+              end
             end
-          end
-          {
-            8'h27, 1'bX
-          } : begin
-            // Programmable timer reload data (high)
-            if (memory_write_en) begin
-              prog_timer_reload[7:4] <= memory_write_data;
-            end else begin
-              memory_read_data <= prog_timer_reload[7:4];
+            {
+              8'h12, 1'bX
+            } : begin
+              // Programmable timer interrupt mask
+              if (memory_write_en) begin
+                prog_timer_mask <= memory_write_data[0];
+              end else begin
+                memory_read_data <= {3'b0, prog_timer_mask};
+              end
             end
-          end
-          {
-            8'h30, 1'bX
-          } : begin
-            // Serial data (low)
-            if (memory_write_en) begin
-              serial_data[3:0] <= memory_write_data;
-            end else begin
-              memory_read_data <= serial_data[3:0];
+            {
+              8'h13, 1'bX
+            } : begin
+              // Serial interrupt mask
+              if (memory_write_en) begin
+                serial_mask <= memory_write_data[0];
+              end else begin
+                memory_read_data <= {3'b0, serial_mask};
+              end
             end
-          end
-          {
-            8'h31, 1'bX
-          } : begin
-            // Serial data (high)
-            if (memory_write_en) begin
-              serial_data[7:4] <= memory_write_data;
-            end else begin
-              memory_read_data <= serial_data[7:4];
+            {
+              8'h14, 1'bX
+            } : begin
+              // Input K0 interrupt mask
+              if (memory_write_en) begin
+                input_k0_mask <= memory_write_data;
+              end else begin
+                memory_read_data <= input_k0_mask;
+              end
             end
-          end
-          {
-            8'h40, 1'b0
-          } : begin
-            // Input K0 value
-            memory_read_data <= input_k0;
-          end
-          {
-            8'h41, 1'bX
-          } : begin
-            // Input relation
-            if (memory_write_en) begin
-              input_relation_k0 <= memory_write_data;
-            end else begin
-              memory_read_data <= input_relation_k0;
+            {
+              8'h15, 1'bX
+            } : begin
+              // Input K1 interrupt mask
+              if (memory_write_en) begin
+                input_k1_mask <= memory_write_data;
+              end else begin
+                memory_read_data <= input_k1_mask;
+              end
             end
-          end
-          {
-            8'h42, 1'b0
-          } : begin
-            // Input K1 value
-            memory_read_data <= input_k1;
-          end
-          // 50-53 are unused output ports
-          {
-            8'h54, 1'bX
-          } : begin
-            // Output ports R4, buzzer control
-            // TODO: Handle buzzer enable
-            if (memory_write_en) begin
-              buzzer_output_control <= memory_write_data;
-            end else begin
-              memory_read_data <= buzzer_output_control;
+            {
+              8'h20, 1'b0
+            } : begin
+              // Clock timer values (low)
+              memory_read_data <= {timer_16hz, timer_32hz, timer_64hz, timer_128hz};
             end
-          end
-          // 60-63 are unused I/O ports
-          {
-            8'h70, 1'bX
-          } : begin
-            // Oscillation control
-            // Unimplemented
-            if (memory_write_en) begin
-              oscillation <= memory_write_data;
-            end else begin
-              memory_read_data <= oscillation;
+            {
+              8'h21, 1'b0
+            } : begin
+              // Clock timer values (high)
+              memory_read_data <= {timer_1hz, timer_2hz, timer_4hz, timer_8hz};
             end
+            {
+              8'h22, 1'b0
+            } : begin
+              // Stopwatch 1/100 sec BCD
+              memory_read_data <= stopwatch_swl;
+            end
+            {
+              8'h23, 1'b0
+            } : begin
+              // Stopwatch 1/10 sec BCD
+              memory_read_data <= stopwatch_swh;
+            end
+            {
+              8'h24, 1'b0
+            } : begin
+              // Programmable timer value (low)
+              memory_read_data <= prog_timer_downcounter[3:0];
+            end
+            {
+              8'h25, 1'b0
+            } : begin
+              // Programmable timer value (high)
+              memory_read_data <= prog_timer_downcounter[7:4];
+            end
+            {
+              8'h26, 1'bX
+            } : begin
+              // Programmable timer reload data (low)
+              if (memory_write_en) begin
+                prog_timer_reload[3:0] <= memory_write_data;
+              end else begin
+                memory_read_data <= prog_timer_reload[3:0];
+              end
+            end
+            {
+              8'h27, 1'bX
+            } : begin
+              // Programmable timer reload data (high)
+              if (memory_write_en) begin
+                prog_timer_reload[7:4] <= memory_write_data;
+              end else begin
+                memory_read_data <= prog_timer_reload[7:4];
+              end
+            end
+            {
+              8'h30, 1'bX
+            } : begin
+              // Serial data (low)
+              if (memory_write_en) begin
+                serial_data[3:0] <= memory_write_data;
+              end else begin
+                memory_read_data <= serial_data[3:0];
+              end
+            end
+            {
+              8'h31, 1'bX
+            } : begin
+              // Serial data (high)
+              if (memory_write_en) begin
+                serial_data[7:4] <= memory_write_data;
+              end else begin
+                memory_read_data <= serial_data[7:4];
+              end
+            end
+            {
+              8'h40, 1'b0
+            } : begin
+              // Input K0 value
+              memory_read_data <= input_k0;
+            end
+            {
+              8'h41, 1'bX
+            } : begin
+              // Input relation
+              if (memory_write_en) begin
+                input_relation_k0 <= memory_write_data;
+              end else begin
+                memory_read_data <= input_relation_k0;
+              end
+            end
+            {
+              8'h42, 1'b0
+            } : begin
+              // Input K1 value
+              memory_read_data <= input_k1;
+            end
+            // 50-53 are unused output ports
+            {
+              8'h54, 1'bX
+            } : begin
+              // Output ports R4, buzzer control
+              // TODO: Handle buzzer enable
+              if (memory_write_en) begin
+                buzzer_output_control <= memory_write_data;
+              end else begin
+                memory_read_data <= buzzer_output_control;
+              end
+            end
+            // 60-63 are unused I/O ports
+            {
+              8'h70, 1'bX
+            } : begin
+              // Oscillation control
+              // Unimplemented
+              if (memory_write_en) begin
+                oscillation <= memory_write_data;
+              end else begin
+                memory_read_data <= oscillation;
+              end
 
-            $display("Warning: RAM 0xF70 is unimplemented");
-          end
-          {
-            8'h71, 1'bX
-          } : begin
-            // LCD control and heavy load protection
-            if (memory_write_en) begin
-              {lcd_control, heavy_load_protection} <= memory_write_data;
-            end else begin
-              memory_read_data <= {lcd_control, heavy_load_protection};
+              $display("Warning: RAM 0xF70 is unimplemented");
             end
-          end
-          {
-            8'h72, 1'bX
-          } : begin
-            // LCD contrast
-            if (memory_write_en) begin
-              lcd_contrast <= memory_write_data;
-            end else begin
-              memory_read_data <= lcd_contrast;
+            {
+              8'h71, 1'bX
+            } : begin
+              // LCD control and heavy load protection
+              if (memory_write_en) begin
+                {lcd_control, heavy_load_protection} <= memory_write_data;
+              end else begin
+                memory_read_data <= {lcd_control, heavy_load_protection};
+              end
             end
-          end
-          {
-            8'h73, 1'bX
-          } : begin
-            // Supply voltage detection control
-            if (memory_write_en) begin
-              svd_status <= memory_write_data[2:0];
-            end else begin
-              // Battery is always good
-              memory_read_data <= {1'b1, svd_status};
+            {
+              8'h72, 1'bX
+            } : begin
+              // LCD contrast
+              if (memory_write_en) begin
+                lcd_contrast <= memory_write_data;
+              end else begin
+                memory_read_data <= lcd_contrast;
+              end
             end
-          end
-          {
-            8'h74, 1'bX
-          } : begin
-            // Buzzer frequency
-            // TODO: Implement
-            if (memory_write_en) begin
-              buzzer_selection <= memory_write_data;
-            end else begin
-              memory_read_data <= buzzer_selection;
+            {
+              8'h73, 1'bX
+            } : begin
+              // Supply voltage detection control
+              if (memory_write_en) begin
+                svd_status <= memory_write_data[2:0];
+              end else begin
+                // Battery is always good
+                memory_read_data <= {1'b1, svd_status};
+              end
             end
-          end
-          {
-            8'h75, 1'bX
-          } : begin
-            // Buzzer settings
-            // TODO: Implement
-            if (memory_write_en) begin
-              // TODO: Handle trigger and reset
-              buzzer_envelope <= memory_write_data[1:0];
-            end else begin
-              memory_read_data <= {2'b0, buzzer_envelope};
+            {
+              8'h74, 1'bX
+            } : begin
+              // Buzzer frequency
+              // TODO: Implement
+              if (memory_write_en) begin
+                buzzer_selection <= memory_write_data;
+              end else begin
+                memory_read_data <= buzzer_selection;
+              end
             end
-          end
-          {
-            8'h76, 1'b1
-          } : begin
-            // Timer reset
-            if (memory_write_data[1]) begin
-              // Reset clock timer
-              reset_clock_timer <= 1;
+            {
+              8'h75, 1'bX
+            } : begin
+              // Buzzer settings
+              // TODO: Implement
+              if (memory_write_en) begin
+                // TODO: Handle trigger and reset
+                buzzer_envelope <= memory_write_data[1:0];
+              end else begin
+                memory_read_data <= {2'b0, buzzer_envelope};
+              end
             end
-            if (memory_write_data[0]) begin
-              // TODO: Reset watchdog timer, purposefully omitted
+            {
+              8'h76, 1'b1
+            } : begin
+              // Timer reset
+              if (memory_write_data[1]) begin
+                // Reset clock timer
+                reset_clock_timer <= 1;
+              end
+              if (memory_write_data[0]) begin
+                // TODO: Reset watchdog timer, purposefully omitted
+              end
             end
-          end
-          {
-            8'h77, 1'bX
-          } : begin
-            // Stopwatch reset/pause
-            if (memory_write_en) begin
-              {reset_stopwatch, enable_stopwatch} <= memory_write_data[1:0];
-            end else begin
-              memory_read_data <= {3'b0, enable_stopwatch};
+            {
+              8'h77, 1'bX
+            } : begin
+              // Stopwatch reset/pause
+              if (memory_write_en) begin
+                {reset_stopwatch, enable_stopwatch} <= memory_write_data[1:0];
+              end else begin
+                memory_read_data <= {3'b0, enable_stopwatch};
+              end
             end
-          end
-          {
-            8'h78, 1'bX
-          } : begin
-            // Programmable timer reset/start/stop
-            if (memory_write_en) begin
-              {reset_prog_timer, enable_prog_timer} <= memory_write_data[1:0];
-            end else begin
-              memory_read_data <= {3'b0, enable_prog_timer};
+            {
+              8'h78, 1'bX
+            } : begin
+              // Programmable timer reset/start/stop
+              if (memory_write_en) begin
+                {reset_prog_timer, enable_prog_timer} <= memory_write_data[1:0];
+              end else begin
+                memory_read_data <= {3'b0, enable_prog_timer};
+              end
             end
-          end
-          {
-            8'h79, 1'bX
-          } : begin
-            // Programmable timer clock selection
-            if (memory_write_en) begin
-              {prog_timer_clock_output, prog_timer_clock_selection} <= memory_write_data;
-            end else begin
-              memory_read_data <= {prog_timer_clock_output, prog_timer_clock_selection};
+            {
+              8'h79, 1'bX
+            } : begin
+              // Programmable timer clock selection
+              if (memory_write_en) begin
+                {prog_timer_clock_output, prog_timer_clock_selection} <= memory_write_data;
+              end else begin
+                memory_read_data <= {prog_timer_clock_output, prog_timer_clock_selection};
+              end
             end
-          end
-          // 7A-7E is unused I/O
-        endcase
+            // 7A-7E is unused I/O
+          endcase
+        end
       end
     end
   end
