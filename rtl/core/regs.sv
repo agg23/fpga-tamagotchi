@@ -51,6 +51,7 @@ module regs (
   wire [3:0] flags_in = {interrupt, decimal, zero, carry};
 
   // Increment
+  wire [11:0] pc_inc = pc[11:0] + 1;
   wire [7:0] x_inc = x[7:0] + 1;
   wire [7:0] y_inc = y[7:0] + 1;
   wire [7:0] sp_inc = sp + 1;
@@ -71,6 +72,7 @@ module regs (
       .selector(bus_input_selector),
 
       .pc(pc),
+      .pc_inc(pc_inc),
 
       .alu  (alu),
       .flags(flags_in),
@@ -102,6 +104,8 @@ module regs (
       // Start at page 1, for reset vector
       pc <= 13'h0_1_00;
       np <= 5'h01;
+
+      interrupt <= 0;
     end else begin
       if (current_cycle != CYCLE_REG_WRITE) begin
         memory_write_en <= 0;
@@ -213,7 +217,7 @@ module regs (
 
           // Write PCSL + 1 to M(SP-1)
           bus_output_memory_addr <= sp_dec;
-          memory_write_data <= pc[3:0] + 1;
+          memory_write_data <= pc_inc[3:0];
           memory_write_en <= 1;
         end
         {
@@ -223,7 +227,7 @@ module regs (
 
           // Write PCSL + 1 to M(SP-1)
           bus_output_memory_addr <= sp_dec;
-          memory_write_data <= pc[3:0] + 1;
+          memory_write_data <= pc_inc[3:0];
           memory_write_en <= 1;
         end
         {
@@ -242,7 +246,7 @@ module regs (
 
       // PC increment
       if (increment_pc || (current_cycle == CYCLE_REG_FETCH && increment_selector == REG_PC)) begin
-        pc[11:0] <= pc[11:0] + 1;
+        pc[11:0] <= pc_inc;
       end
 
       // NP reset

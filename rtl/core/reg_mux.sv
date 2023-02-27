@@ -4,6 +4,7 @@ module reg_mux (
     input reg_type selector,
 
     input wire [12:0] pc,
+    input wire [11:0] pc_inc,
 
     input wire [3:0] alu,
     input wire [3:0] flags,
@@ -94,6 +95,9 @@ module reg_mux (
       REG_PCP:  out = pc[11:8];
       REG_PCSH: out = pc[7:4];
       REG_PCSL: out = pc[3:0];
+
+      REG_PCP_INC:  out = pc_inc[11:8];
+      REG_PCSH_INC: out = pc_inc[7:4];
     endcase
   end
 

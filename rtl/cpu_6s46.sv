@@ -501,8 +501,8 @@ module cpu_6s46 (
               if (memory_write_en) begin
                 svd_status <= memory_write_data[2:0];
               end else begin
-                // Battery is always good
-                memory_read_data <= {1'b1, svd_status};
+                // Battery is always good, so when voltage detection is off, battery low field is on (in spec), and when on, it's always low
+                memory_read_data <= {~svd_status[2], svd_status};
               end
             end
             {

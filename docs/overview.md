@@ -153,12 +153,17 @@ Other things
   * `x` bits for jump address. If flag matches condition, jump to microaddress
   * `100_[conditional 12:12][flag 11:11][set 10:10][jump addr 9:0]`
 * `CALLEND`
-  * Special instruction to transfer `PCSL+1` to `M(SP - 1)`, while at the same time copying 8 bit immediate to `PCS`
+  * Special instruction to transfer the low 4 bits of `PC+1` to `M(SP - 1)`, while at the same time copying 8 bit immediate to `PCS`
     * Optionally copies `NPP` to `PCP`
     * Changes to PC are written on the fetch (first half) step, as to set PC before the next instruction is read
   * Decrement SP
   * 1 bit for `NPP` copy. If unset, `PCP` is set to 0, otherwise it's set to `NPP`
   * `101_00000_00000_00[NPP copy 0:0]`
+* `CALLSTART`
+  * Special instruction to transfer the mid or high 4 bits of `PC+1` to `M(SP - 1)`
+  * Decrement SP
+  * 1 bit for `PCP` vs `PCSH` copy. If unset, `PCSH` is copied, otherwise `PCP`
+  * `101_01000_00000_00[nibble select 0:0]`
 * `RETEND`
   * Special instruction to transfer `PCSH` and `PCP` to M(SP + 1) faster than normal
   * Increments SP

@@ -257,33 +257,48 @@ module microcode (
             micro_pc <= microcode_addr;
           end
           3'b101: begin
-            if (instruction[12]) begin
-              // RETEND
-              if (instruction[0]) begin
-                // PCP copy
-                bus_input_selector  <= REG_MSP;
-                bus_output_selector <= REG_PCP_EARLY;
-                increment_selector  <= REG_SP_INC;
-              end else begin
-                // PCSH copy
+            casex (instruction[12:11])
+              2'b00: begin
+                // CALLEND
+                if (instruction[0]) begin
+                  // Copy NPP to PCP
+                  bus_output_selector <= REG_CALLEND_SET_PCP;
+                end else begin
+                  // Zero PCP
+                  bus_output_selector <= REG_CALLEND_ZERO_PCP;
+                end
+
+                increment_selector <= REG_SP_DEC;
+              end
+              2'b01: begin
+                // CALLSTART
+                bus_output_selector <= REG_MSP_DEC;
+                increment_selector  <= REG_SP_DEC;
+
+                if (instruction[0]) begin
+                  // PCP copy
+                  bus_input_selector <= REG_PCP_INC;
+                end else begin
+                  // PCSH copy
+                  bus_input_selector <= REG_PCSH_INC;
+                end
+              end
+              2'b10: begin
+                // RETEND
                 bus_input_selector <= REG_MSP;
-                bus_output_selector <= REG_PCSH;
                 increment_selector <= REG_SP_INC;
 
-                temp_override_bus_input_selector <= REG_MSP_INC;
-              end
-            end else begin
-              // CALLEND
-              if (instruction[0]) begin
-                // Copy NPP to PCP
-                bus_output_selector <= REG_CALLEND_SET_PCP;
-              end else begin
-                // Zero PCP
-                bus_output_selector <= REG_CALLEND_ZERO_PCP;
-              end
+                if (instruction[0]) begin
+                  // PCP copy
+                  bus_output_selector <= REG_PCP_EARLY;
+                end else begin
+                  // PCSH copy
+                  bus_output_selector <= REG_PCSH;
 
-              increment_selector <= REG_SP_DEC;
-            end
+                  temp_override_bus_input_selector <= REG_MSP_INC;
+                end
+              end
+            endcase
           end
           3'b110: begin
             // JPBAEND

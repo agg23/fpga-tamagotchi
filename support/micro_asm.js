@@ -21,6 +21,7 @@ const transferRegex = new RegExp("^transfer" + transferRegexSuffix.source, "i");
 const transaluRegex = new RegExp("^transalu" + transferRegexSuffix.source, "i");
 const jmpRegex = /^jmp\s+(?:(n?(?:c|z))\s+)?#([0-9]+)/i;
 const callendRegex = /^callend\s+((?:zero)|(?:copy))/i;
+const callstartRegex = /^callstart\s+((?:pcp)|(?:pcsh))/i;
 const retendRegex = /^retend\s+((?:pcsh)|(?:pcp))/i;
 const haltRegex = /^halt\s*(sleep)?/i;
 
@@ -189,6 +190,18 @@ const instructions = {
         numberAtBitOffset(isCarry, 11) |
         numberAtBitOffset(conditionSet, 10) |
         actualAddress;
+
+      writeWord(opcode);
+    },
+  },
+  callstart: {
+    type: "regex",
+    regex: callstartRegex,
+    matches: ([_, source], writeWord) => {
+      const opcode =
+        numberAtBitOffset(5, 13) |
+        numberAtBitOffset(1, 11) | // Opcode
+        (source === "pcp");
 
       writeWord(opcode);
     },
