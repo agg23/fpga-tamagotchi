@@ -122,6 +122,43 @@ module interrupt_tb;
       bench.assert_ram(bench.prev_sp - 2, 4'h3);
       bench.assert_ram(bench.prev_sp - 3, 4'h5);
     end
+
+    `TEST_CASE("Interrupt should handle req staying high after interrupt starts") begin
+      bench.rom_data = 12'hEE0; // INC X
+      bench.cpu_uut.regs.x = 12'h0;
+      bench.cpu_uut.regs.pc = 13'h1234;
+      bench.cpu_uut.regs.np = 5'h1F;
+      bench.cpu_uut.regs.interrupt = 1;
+
+      // Wait some time for instruction to start
+      #2;
+      bench.interrupt_req = 15'h0001;
+
+      bench.run_until_complete();
+      #1;
+
+      `CHECK_EQUAL(bench.cpu_uut.microcode.performing_interrupt, 1);
+
+      @(posedge bench.clk iff bench.cpu_uut.microcode.stage == 3); // STEP2
+      #1;
+      bench.assert_interrupt(0);
+
+      bench.run_until_complete();
+      #1;
+      // Unassert interrupt
+      bench.interrupt_req = 15'h0;
+
+      bench.assert_cycle_length(12 + 5);
+      bench.assert_pc(13'h1101);
+      bench.assert_ram(bench.prev_sp - 1, 4'h2);
+      bench.assert_ram(bench.prev_sp - 2, 4'h3);
+      bench.assert_ram(bench.prev_sp - 3, 4'h5);
+
+      bench.run_until_complete();
+      #1;
+
+      bench.assert_x(12'h2);
+    end
   end;
 
   // The watchdog macro is optional, but recommended. If present, it

@@ -62,10 +62,14 @@ module microcode (
 
   wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
 
+  reg halt = 0;
+
   // Interrupts
   reg queued_interrupt = 0;
 
-  wire is_interrupt_requested = interrupt && |interrupt_req;
+  wire is_interrupt_requested = interrupt && |interrupt_req && ~performing_interrupt;
+  // Halt must go through the queue
+  wire should_begin_interrupt = queued_interrupt || (is_interrupt_requested && ~halt);
 
   instr_length actual_cycle_length;
   // Interrupt technically uses a 7 and a 5 cycle instruction, but for ease we collapse this into one 12
@@ -76,7 +80,6 @@ module microcode (
 
   // This is a dirty hack to provide memory data to the bus for the RET instruction
   reg_type temp_override_bus_input_selector;
-  reg halt = 0;
   reg disable_increment = 0;
   reg prevent_reset_np = 0;
   assign increment_pc = ~disable_increment && last_fetch_step;
@@ -103,7 +106,7 @@ module microcode (
         stage <= DECODE;
         performing_interrupt <= 0;
 
-        if (queued_interrupt || is_interrupt_requested) begin
+        if (should_begin_interrupt) begin
           // If incoming interrupt on the same cycle as enter decode, short circuit and start processing immediately
           performing_interrupt <= 1;
           queued_interrupt <= 0;
@@ -122,7 +125,7 @@ module microcode (
         $cast(stage, stage + 1);
       end
 
-      if (halt) begin
+      if (halt && ~should_begin_interrupt) begin
         stage <= STEP6_2;
       end
     end
