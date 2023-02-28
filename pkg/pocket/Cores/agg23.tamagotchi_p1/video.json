@@ -1,0 +1,79 @@
+{
+    "video": {
+        "magic": "APF_VER_1",
+        "scaler_modes": [
+            {
+                "width": 320,
+                "height": 240,
+                "aspect_w": 4,
+                "aspect_h": 3,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 320,
+                "height": 224,
+                "aspect_w": 10,
+                "aspect_h": 7,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 304,
+                "height": 224,
+                "aspect_w": 19,
+                "aspect_h": 14,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 288,
+                "height": 224,
+                "aspect_w": 6,
+                "aspect_h": 5,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 256,
+                "height": 248,
+                "aspect_w": 32,
+                "aspect_h": 31,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 256,
+                "height": 240,
+                "aspect_w": 16,
+                "aspect_h": 15,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 256,
+                "height": 224,
+                "aspect_w": 8,
+                "aspect_h": 7,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 240,
+                "height": 240,
+                "aspect_w": 1,
+                "aspect_h": 1,
+                "rotation": 0,
+                "mirror": 0
+            },
+            {
+                "width": 240,
+                "height": 224,
+                "aspect_w": 15,
+                "aspect_h": 14,
+                "rotation": 0,
+                "mirror": 0
+            }
+        ]
+    }
+}
