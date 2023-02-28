@@ -1,8 +1,8 @@
 {
-    "platform": {
-        "category": "Undefined",
-        "name": "Tamagotchi P1",
-        "manufacturer": "Bandai",
-        "year": 1996
-    }
+  "platform": {
+    "category": "Handheld",
+    "name": "Tamagotchi P1",
+    "manufacturer": "Bandai",
+    "year": 1996
+  }
 }

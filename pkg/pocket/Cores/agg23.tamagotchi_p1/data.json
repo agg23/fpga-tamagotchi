@@ -1,6 +1,16 @@
 {
-    "data": {
-        "magic": "APF_VER_1",
-        "data_slots": []
-    }
+  "data": {
+    "magic": "APF_VER_1",
+    "data_slots": [
+      {
+        "name": "ROM",
+        "id": 0,
+        "required": true,
+        "filename": "rom.bin",
+        "parameters": 0,
+        "extensions": ["bin"],
+        "address": "0x00000000"
+      }
+    ]
+  }
 }
