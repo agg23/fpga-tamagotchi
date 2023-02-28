@@ -26,11 +26,15 @@ module cpu (
   wire [6:0] microcode_start_addr;
   instr_length decode_cycle_length;
   instr_length cycle_length;
+  microcode_cycle current_cycle;
 
   wire [7:0] immed;
 
+  reg [11:0] instr_rom_data = 0;
+
   decode decoder (
-      .opcode(rom_data),
+      // Store ROM data so instruction doesn't change while we're working with it and setting PC
+      .opcode(current_cycle == CYCLE_NONE ? rom_data : instr_rom_data),
 
       .skip_pc_increment(decode_skip_pc_increment),
 
@@ -39,8 +43,6 @@ module cpu (
 
       .immed(immed)
   );
-
-  microcode_cycle current_cycle;
 
   reg_type bus_input_selector;
   reg_type bus_output_selector;
@@ -65,6 +67,8 @@ module cpu (
     if (current_cycle == CYCLE_NONE) begin
       skip_pc_increment <= decode_skip_pc_increment;
       cycle_length <= decode_cycle_length;
+
+      instr_rom_data <= rom_data;
     end
   end
 

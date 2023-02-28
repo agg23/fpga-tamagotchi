@@ -16,6 +16,10 @@ module ret_tb;
       bench.ram[8'h45] = 4'h4;  // PCSL
       bench.ram[8'h46] = 4'h7;  // PCP
 
+      #8;
+      // Changing the PC value shouldn't affect the instruction
+      bench.rom_data = 12'hFFF;
+
       bench.run_until_final_stage_fetch();
       #1;
       bench.assert_expected(13'h074D, bench.prev_a, bench.prev_b, 12'hXXX, bench.prev_y, 8'h47);
