@@ -1,0 +1,76 @@
+<html>
+  <head>
+    <script type="text/javascript">
+      const seg_pos = [
+        0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12, 13, 14, 15, 33, 34, 35,
+        31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37,
+        38, 39,
+      ];
+
+      function process(textarea) {
+        const segments = textarea.value
+          .trim()
+          .replace(/\s+/g, " ")
+          .split(" ")
+          .map((n) => parseInt(n, 16));
+
+        console.log(segments);
+
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "black";
+
+        let firstNibble = true;
+        let x = 0;
+
+        //   for (let i = 0; i < segments.length; i++) {
+        //     const value = segments[i];
+        //     const baseY = (firstNibble ? 0 : 4) + i >= 80 ? 8 : 0;
+
+        //     for (let j = 0; j < 4; j++) {
+        //       // Iterate over each bit
+        //       const bit = 1 << j;
+
+        //       if ((value & bit) > 0) {
+        //         const actualX = seg_pos[x];
+        //         ctx.fillRect(actualX * 10, (baseY + j) * 10, 10, 10);
+        //       }
+        //     }
+
+        //     if (!firstNibble) {
+        //       // Move to next column
+        //       x += 1;
+
+        //       if (x >= 40) {
+        //         x = 0;
+        //       }
+        //     }
+
+        //     firstNibble = !firstNibble;
+        //   }
+        // }
+        for (let i = 0; i < segments.length; i++) {
+          const value = segments[i];
+
+          const bit7addr = i > 80 ? i - 80 : i;
+          const x = bit7addr >> 1;
+          const y = i > 80 ? 8 : 0 + (i & 1) * 4;
+
+          for (let j = 0; j < 4; j++) {
+            const bit = 1 << j;
+
+            if ((value & bit) > 0) {
+              const actualX = seg_pos[x];
+              ctx.fillRect(actualX * 10, (y + j) * 10, 10, 10);
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <textarea id="input" oninput="process(this)"></textarea>
+    <canvas id="canvas" width="400" height="300"></canvas>
+  </body>
+</html>
