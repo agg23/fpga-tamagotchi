@@ -51,11 +51,11 @@ module regs (
   wire [3:0] flags_in = {interrupt, decimal, zero, carry};
 
   // Increment
-  wire [11:0] pc_inc = pc[11:0] + 1;
-  wire [7:0] x_inc = x[7:0] + 1;
-  wire [7:0] y_inc = y[7:0] + 1;
-  wire [7:0] sp_inc = sp + 1;
-  wire [7:0] sp_dec = sp - 1;
+  wire [11:0] pc_inc = pc[11:0] + 12'h1;
+  wire [7:0] x_inc = x[7:0] + 8'h1;
+  wire [7:0] y_inc = y[7:0] + 8'h1;
+  wire [7:0] sp_inc = sp + 8'h1;
+  wire [7:0] sp_dec = sp - 8'h1;
 
   // Bus
   wire [3:0] bus_input;
@@ -236,6 +236,9 @@ module regs (
           pc[12:8] <= np;
           pc[3:0]  <= a;
         end
+        default: begin
+          // Do nothing
+        end
       endcase
 
       if (bus_input_selector == REG_ALU_WITH_FLAGS && bus_output_selector != REG_FLAGS && current_cycle == CYCLE_REG_WRITE) begin
@@ -267,22 +270,6 @@ module regs (
           REG_SP_DEC: sp <= sp_dec;
         endcase
       end
-    end
-  end
-
-  // Post-increment
-  always @(posedge clk) begin
-    if (current_cycle == CYCLE_REG_WRITE) begin
-      // Increment any configured post-increment reg
-      case (increment_selector)
-        REG_NONE: begin
-          // Do nothing
-        end
-        REG_XHL: x[7:0] <= x_inc;
-        REG_YHL: y[7:0] <= y_inc;
-        REG_SP_INC: sp <= sp_inc;
-        REG_SP_DEC: sp <= sp_dec;
-      endcase
     end
   end
 endmodule

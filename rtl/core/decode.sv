@@ -18,6 +18,7 @@ module decode (
   always_comb begin
     skip_pc_increment <= 0;
     microcode_start_addr <= 0;
+    cycle_length <= CYCLE5;
 
     casex (opcode)
       12'h0XX: {microcode_start_addr, cycle_length} <= {7'd0, CYCLE5};  // JP s
@@ -112,6 +113,9 @@ module decode (
           // 8'b1101_XXXX: {microcode_start_addr, cycle_length} <= {52, CYCLE5}; // Invalid opcode
           8'b1110_XXXX: {microcode_start_addr, cycle_length} <= {7'd53, CYCLE5};  // LDPX r, q
           8'b1111_XXXX: {microcode_start_addr, cycle_length} <= {7'd54, CYCLE5};  // LDPY r, q
+          default: begin
+            // Do nothing
+          end
         endcase
       end
       12'hF0X: {microcode_start_addr, cycle_length} <= {7'd55, CYCLE7};  // CP r, q
@@ -120,12 +124,18 @@ module decode (
         casex (opcode[3:2])
           2'b10: {microcode_start_addr, cycle_length} <= {7'd57, CYCLE7};  // ACPX MX, r
           2'b11: {microcode_start_addr, cycle_length} <= {7'd58, CYCLE7};  // ACPY MY, r
+          default: begin
+            // Do nothing
+          end
         endcase
       end
       12'hF3X: begin
         casex (opcode[3:2])
           2'b10: {microcode_start_addr, cycle_length} <= {7'd59, CYCLE7};  // SCPX MX, r
           2'b11: {microcode_start_addr, cycle_length} <= {7'd60, CYCLE7};  // SCPY MY, r
+          default: begin
+            // Do nothing
+          end
         endcase
       end
       12'hF4X: {microcode_start_addr, cycle_length} <= {7'd61, CYCLE7};  // SET F, i
@@ -151,6 +161,9 @@ module decode (
           4'b1001: {microcode_start_addr, cycle_length} <= {7'd75, CYCLE5};  // PUSH YL
           4'b1010: {microcode_start_addr, cycle_length} <= {7'd76, CYCLE5};  // PUSH F
           4'b1011: {microcode_start_addr, cycle_length} <= {7'd77, CYCLE5};  // DEC SP
+          default: begin
+            // Do nothing
+          end
         endcase
       end
 
@@ -172,6 +185,9 @@ module decode (
 
             skip_pc_increment <= 1;
           end
+          default: begin
+            // Do nothing
+          end
         endcase
       end
 
@@ -185,6 +201,9 @@ module decode (
 
             skip_pc_increment <= 1;
           end
+          default: begin
+            // Do nothing
+          end
         endcase
       end
 
@@ -197,7 +216,13 @@ module decode (
           4'b1001: {microcode_start_addr, cycle_length} <= {7'd95, CYCLE5};  // SLP
           4'b1011: {microcode_start_addr, cycle_length} <= {7'd96, CYCLE5};  // NOP5
           4'b1111: {microcode_start_addr, cycle_length} <= {7'd97, CYCLE7};  // NOP7
+          default: begin
+            // Do nothing
+          end
         endcase
+      end
+      default: begin
+        // Do nothing
       end
     endcase
   end

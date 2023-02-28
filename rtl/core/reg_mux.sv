@@ -79,7 +79,7 @@ module reg_mux (
       end
       REG_MSP_INC: begin
         out = memory_read_data;
-        memory_addr = sp + 1;
+        memory_addr = sp + 8'h1;
         use_memory = 1;
       end
       REG_Mn: begin
@@ -98,6 +98,9 @@ module reg_mux (
 
       REG_PCP_INC:  out = pc_inc[11:8];
       REG_PCSH_INC: out = pc_inc[7:4];
+      default: begin
+        // Do nothing
+      end
     endcase
   end
 

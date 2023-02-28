@@ -57,7 +57,7 @@ module prog_timer (
 
       if (enable && divider_8khz && ~prev_reset) begin
         // Special case to prevent ticking on reset
-        counter_8khz <= counter_8khz + 1;
+        counter_8khz <= counter_8khz + 6'h1;
       end
     end
   end
@@ -74,7 +74,7 @@ module prog_timer (
 
       if (enable) begin
         if (~input_clock && prev_input_clock) begin
-          downcounter <= downcounter - 1;
+          downcounter <= downcounter - 8'h1;
         end
 
         if (downcounter == 0) begin

@@ -49,8 +49,7 @@ module microcode (
     STEP6_2
   } microcode_stage;
 
-  (* ram_init_file = "rom/microcode.mif" *)
-  reg [15:0] rom[1024];
+  reg [15:0] rom[512];
 
   // TODO: ModelSim only
   initial $readmemh("C:/Users/adam/code/fpga/tamagotchi/rtl/core/rom/microcode.hex", rom);
@@ -58,7 +57,7 @@ module microcode (
   microcode_stage stage = STEP6_2;
 
   reg [15:0] instruction_big_endian = 0;
-  reg [9:0] micro_pc = 0;
+  reg [8:0] micro_pc = 0;
 
   wire [15:0] instruction = {instruction_big_endian[7:0], instruction_big_endian[15:8]};
 
@@ -111,18 +110,15 @@ module microcode (
           performing_interrupt <= 1;
           queued_interrupt <= 0;
 
-          // End halt if we were halted
-          halt <= 0;
-
           interrupt_req_i = 14;
           while (interrupt_req_i > 0 && ~interrupt_req[interrupt_req_i]) begin
             interrupt_req_i = interrupt_req_i - 1;
           end
 
-          interrupt_address <= interrupt_req_i;
+          interrupt_address <= interrupt_req_i[3:0];
         end
       end else begin
-        $cast(stage, stage + 1);
+        stage <= microcode_stage'(stage + 1);
       end
 
       if (halt && ~should_begin_interrupt) begin
@@ -136,11 +132,7 @@ module microcode (
   reg cycle_second_step;
 
   always @(posedge clk_2x) begin
-    reg [9:0] microcode_addr;
-    reg_type temp_source;
-    reg_type temp_dest;
-    reg_inc_type temp_inc;
-    alu_op temp_op;
+    reg [8:0] microcode_addr;
 
     if (~reset_n) begin
       microcode_tick <= 0;
@@ -155,6 +147,11 @@ module microcode (
       prevent_reset_np <= 0;
     end else begin
       prev_stage <= stage;
+
+      if (performing_interrupt) begin
+        // End halt if we were halted
+        halt <= 0;
+      end
 
       if (stage != prev_stage) begin
         microcode_tick <= 0;
@@ -190,7 +187,7 @@ module microcode (
 
         temp_override_bus_input_selector <= REG_ALU;
 
-        micro_pc <= micro_pc + 1;
+        micro_pc <= micro_pc + 9'h1;
 
         casex (instruction[15:13])
           3'b000: begin
@@ -198,29 +195,21 @@ module microcode (
           end
           3'b001: begin
             // TRANSFER
-            $cast(temp_source, instruction[12:8]);
-            $cast(temp_dest, instruction[7:3]);
-            $cast(temp_inc, instruction[2:0]);
+            bus_input_selector  <= reg_type'(instruction[12:8]);
+            bus_output_selector <= reg_type'(instruction[7:3]);
+            increment_selector  <= reg_inc_type'(instruction[2:0]);
 
-            bus_input_selector  <= temp_source;
-            bus_output_selector <= temp_dest;
-            increment_selector  <= temp_inc;
-
-            if (temp_dest == REG_NPP) begin
+            if (reg_type'(instruction[7:3]) == REG_NPP) begin
               // If NPP was modified in this instruction, don't reset NP
               prevent_reset_np <= 1;
             end
           end
           3'b010: begin
             // TRANSALU
-            $cast(temp_op, instruction[11:8]);
-            $cast(temp_dest, instruction[7:3]);
-            $cast(temp_inc, instruction[2:0]);
-
-            alu_operation <= temp_op;
+            alu_operation <= alu_op'(instruction[11:8]);
             bus_input_selector <= REG_ALU_WITH_FLAGS;
-            bus_output_selector <= temp_dest;
-            increment_selector <= temp_inc;
+            bus_output_selector <= reg_type'(instruction[7:3]);
+            increment_selector <= reg_inc_type'(instruction[2:0]);
           end
           3'b011: begin
             if (instruction[12]) begin
@@ -246,14 +235,14 @@ module microcode (
               // Conditional
               if ((~flag_nzero_carry && (flag_set == zero)) || (flag_nzero_carry && (flag_set == carry))) begin
                 // Condition met
-                microcode_addr = instruction[9:0];
+                microcode_addr = instruction[8:0];
               end else begin
                 // Condition not met, move to next instr
-                microcode_addr = microcode_addr + 1;
+                microcode_addr = microcode_addr + 9'h1;
               end
             end else begin
               // Always jump
-              microcode_addr = instruction[9:0];
+              microcode_addr = instruction[8:0];
             end
 
             // JMP and immediately load new microcode address as well

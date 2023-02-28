@@ -48,17 +48,17 @@ module stopwatch (
     end else begin
       if (enable && timer_256_tick) begin
         // Tick 100hz
-        counter_100hz <= counter_100hz + 1;
+        counter_100hz <= counter_100hz + 4'h1;
 
         if (high_count_100hz ? counter_100hz == 2 : counter_100hz == 1) begin
           // ~100hz. Tick SWL
           counter_100hz <= 0;
-          counter_swl   <= counter_swl + 1;
+          counter_swl   <= counter_swl + 4'h1;
 
           if (counter_swl == 9) begin
             // ~10hz. Tick SWH
             counter_swl <= 0;
-            counter_swh <= counter_swh + 1;
+            counter_swh <= counter_swh + 4'h1;
             factor_flags[0] <= 1;
 
             if (counter_swh == 9) begin

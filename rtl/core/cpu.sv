@@ -48,7 +48,7 @@ module cpu (
   reg_type bus_output_selector;
   reg_inc_type increment_selector;
 
-  alu_op alu_op;
+  alu_op alu_operation;
 
   wire flag_zero;
   wire flag_carry;
@@ -100,7 +100,7 @@ module cpu (
       .bus_input_selector(bus_input_selector),
       .bus_output_selector(bus_output_selector),
       .increment_selector(increment_selector),
-      .alu_operation(alu_op),
+      .alu_operation(alu_operation),
 
       .override_memory_read_en(override_memory_read_en)
   );
@@ -114,7 +114,7 @@ module cpu (
   wire [3:0] alu_out;
 
   alu alu (
-      .op(alu_op),
+      .op(alu_operation),
 
       .temp_a(temp_a),
       .temp_b(temp_b),

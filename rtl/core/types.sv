@@ -101,6 +101,9 @@ package types;
       REG_IMM_ADDR_L: selected_imm = immed[1:0];
       REG_IMM_ADDR_H: selected_imm = immed[3:2];
       REG_IMM_ADDR_P: selected_imm = immed[5:4];
+      default: begin
+        // Do nothing
+      end
     endcase
 
     case (selected_imm)

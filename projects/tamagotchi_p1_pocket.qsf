@@ -20,7 +20,7 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 # ==============================================================================
 # Compiler Assignments
 # ==============================================================================
-set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
 set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT"
 set_global_assignment -name SAVE_DISK_SPACE OFF
 set_global_assignment -name SEED 1

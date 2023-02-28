@@ -32,11 +32,11 @@ module clock (
     end else begin
       timer_256_tick <= 0;
 
-      divider <= divider + 1;
+      divider <= divider + 7'h1;
 
       if (divider == 0 && ~prev_reset) begin
         // Special case to prevent ticking on reset
-        counter_256 <= counter_256 + 1;
+        counter_256 <= counter_256 + 8'h1;
 
         timer_256_tick <= 1;
       end

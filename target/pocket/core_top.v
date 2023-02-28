@@ -479,8 +479,8 @@ module core_top (
   //       .read_data(sd_buff_din)
   //   );
 
-  wire clk_core_32_768khz = clock_div == 0;
-  wire clk_core_65_536khz = clock_div == 50 || clock_div == 0;
+  reg clk_core_32_768khz = 0;
+  reg clk_core_65_536khz = 0;
 
   wire [12:0] rom_addr;
   reg [11:0] rom_data;
@@ -492,10 +492,18 @@ module core_top (
 
   // Clock divider
   always @(posedge clk_3_276mhz) begin
+    clk_core_32_768khz <= 0;
+    clk_core_65_536khz <= 0;
+
     clock_div <= clock_div - 1;
 
     if (clock_div == 0) begin
       clock_div <= 7'd100;
+
+      clk_core_32_768khz <= 1;
+      clk_core_65_536khz <= 1;
+    end else if (clock_div == 50) begin
+      clk_core_65_536khz <= 1;
     end
   end
 
@@ -648,7 +656,7 @@ module core_top (
           // data enable. this is the active region of the line
           vidout_de <= 1;
 
-          if (video_data) begin
+          if (video_data != 0) begin
             vidout_rgb[23:16] <= 8'd60;
             vidout_rgb[15:8]  <= 8'd60;
             vidout_rgb[7:0]   <= 8'd60;

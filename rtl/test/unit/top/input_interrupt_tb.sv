@@ -235,7 +235,7 @@ module input_interrupt_tb;
       bench.input_k0 = 4'h8;
       bench.cpu_uut.input_k0_mask = 4'hC;
 
-      #101;
+      #84;
       bench.input_k0 = 0;
       #12;
 

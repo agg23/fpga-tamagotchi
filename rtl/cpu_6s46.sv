@@ -1,6 +1,7 @@
 module cpu_6s46 (
     input wire clk,
     input wire clk_2x,
+    input wire clk_vid,
 
     input wire reset_n,
 
@@ -8,7 +9,10 @@ module cpu_6s46 (
     input wire [3:0] input_k1,
 
     output wire [12:0] rom_addr,
-    input  wire [11:0] rom_data
+    input  wire [11:0] rom_data,
+
+    input  wire [7:0] video_addr,
+    output reg  [3:0] video_data
 );
   wire memory_write_en;
   wire memory_read_en;
@@ -19,8 +23,7 @@ module cpu_6s46 (
   // RAM from 0x000 - 0x280
   reg [3:0] ram[256+256+128];
 
-  reg [3:0] video_low_ram['h50];
-  reg [3:0] video_high_ram['h50];
+  reg [3:0] video_ram[160];
 
   wire [14:0] interrupt_req;
 
@@ -177,6 +180,11 @@ module cpu_6s46 (
   reg [3:0] oscillation = 0;
   reg prog_timer_clock_output = 0;
 
+  // Video access
+  always @(posedge clk_vid) begin
+    video_data <= video_addr < 8'hA0 ? video_ram[video_addr] : 4'h0;
+  end
+
   // RAM bus
   always @(posedge clk) begin
     if (~reset_n) begin
@@ -235,16 +243,16 @@ module cpu_6s46 (
         end else if (memory_addr >= 12'hE00 && memory_addr < 12'hE50) begin
           // Display lower segment
           if (memory_write_en) begin
-            video_low_ram[memory_addr[6:0]] <= memory_write_data;
+            video_ram[{1'b0, memory_addr[6:0]}] <= memory_write_data;
           end else begin
-            memory_read_data <= video_low_ram[memory_addr[6:0]];
+            memory_read_data <= video_ram[{1'b0, memory_addr[6:0]}];
           end
         end else if (memory_addr >= 12'hE80 && memory_addr < 12'hED0) begin
           // Display upper segment
           if (memory_write_en) begin
-            video_high_ram[memory_addr[6:0]] <= memory_write_data;
+            video_ram[{1'b0, memory_addr[6:0]}+8'h50] <= memory_write_data;
           end else begin
-            memory_read_data <= video_high_ram[memory_addr[6:0]];
+            memory_read_data <= video_ram[{1'b0, memory_addr[6:0]}+8'h50];
           end
         end else if (memory_addr[11:8] == 4'hF) begin
           // I/O segment
