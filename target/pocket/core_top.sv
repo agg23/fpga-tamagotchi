@@ -441,16 +441,16 @@ module core_top (
   );
 
   wire ioctl_wr;
-  wire [12:0] ioctl_addr;
+  wire [13:0] ioctl_addr;
   wire [15:0] ioctl_dout;
 
   data_loader #(
       .ADDRESS_MASK_UPPER_4(4'h0),
-      .ADDRESS_SIZE(13),
+      .ADDRESS_SIZE(14),
       .OUTPUT_WORD_SIZE(2)
   ) data_loader (
       .clk_74a(clk_74a),
-      .clk_memory(clk_3_276mhz),
+      .clk_memory(clk_32_768),
 
       .bridge_wr(bridge_wr),
       .bridge_endian_little(bridge_endian_little),
@@ -479,43 +479,44 @@ module core_top (
   //       .read_data(sd_buff_din)
   //   );
 
-  reg clk_core_32_768khz = 0;
-  reg clk_core_65_536khz = 0;
+  reg clk_en_32_768khz = 0;
+  reg clk_en_65_536khz = 0;
 
   wire [12:0] rom_addr;
-  reg [11:0] rom_data;
+  reg [11:0] rom_data = 0;
 
   // ROM is 16 bit
   reg [15:0] rom[8192];
 
-  reg [6:0] clock_div = 7'd100;
+  reg [9:0] clock_div = 10'd1000;
 
   // Clock divider
-  always @(posedge clk_3_276mhz) begin
-    clk_core_32_768khz <= 0;
-    clk_core_65_536khz <= 0;
+  always @(posedge clk_32_768) begin
+    clk_en_32_768khz <= 0;
+    clk_en_65_536khz <= 0;
 
-    clock_div <= clock_div - 1;
+    clock_div <= clock_div - 10'h1;
 
     if (clock_div == 0) begin
-      clock_div <= 7'd100;
+      clock_div <= 10'd1000;
 
-      clk_core_32_768khz <= 1;
-      clk_core_65_536khz <= 1;
-    end else if (clock_div == 50) begin
-      clk_core_65_536khz <= 1;
+      clk_en_32_768khz <= 1;
+      clk_en_65_536khz <= 1;
+    end else if (clock_div == 500) begin
+      clk_en_65_536khz <= 1;
     end
   end
 
-  always @(posedge clk_core_32_768khz) begin
+  always @(posedge clk_32_768) begin
     // ROM access
     rom_data <= rom[rom_addr][11:0];
   end
 
-  always @(posedge clk_3_276mhz) begin
+  always @(posedge clk_32_768) begin
     // ROM initialization
     if (ioctl_wr) begin
-      rom[ioctl_addr] <= ioctl_dout;
+      // Word addressing
+      rom[ioctl_addr[13:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
     end
   end
 
@@ -527,7 +528,7 @@ module core_top (
   ) cont1_s (
       cont1_key,
       cont1_key_s,
-      clk_core_32_768khz
+      clk_32_768
   );
 
   synch_3 #(
@@ -535,12 +536,13 @@ module core_top (
   ) settings_s (
       reset_n,
       reset_n_s,
-      clk_core_32_768khz
+      clk_32_768
   );
 
-  cpu_6s46 cpu_uut (
-      .clk(clk_core_32_768khz),
-      .clk_2x(clk_core_65_536khz),
+  cpu_6s46 tamagotchi (
+      .clk(clk_32_768),
+      .clk_en(clk_en_32_768khz),
+      .clk_2x_en(clk_en_65_536khz),
       .clk_vid(clk_vid_13_107),
 
       .reset_n(reset_n_s),
@@ -605,6 +607,56 @@ module core_top (
   reg [9:0] square_x = 'd135;
   reg [9:0] square_y = 'd95;
 
+  function [5:0] lcd_column_addr(reg [5:0] x);
+    // const reverse_map = [
+    //       0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 36, 35, 34, 33,
+    //       32, 31, 30, 29, 27, 26, 25, 24, 23, 22, 21, 20, 8, 17, 18, 19, 28, 37,
+    //       38, 39,
+    //     ];
+    case (x)
+      0:  return 0;
+      1:  return 1;
+      2:  return 2;
+      3:  return 3;
+      4:  return 4;
+      5:  return 5;
+      6:  return 6;
+      7:  return 7;
+      8:  return 9;
+      9:  return 10;
+      10: return 11;
+      11: return 12;
+      12: return 13;
+      13: return 14;
+      14: return 15;
+      15: return 16;
+      16: return 36;
+      17: return 35;
+      18: return 34;
+      19: return 33;
+      20: return 32;
+      21: return 31;
+      22: return 30;
+      23: return 29;
+      24: return 27;
+      25: return 26;
+      26: return 25;
+      27: return 24;
+      28: return 23;
+      29: return 22;
+      30: return 21;
+      31: return 20;
+      32: return 8;
+      33: return 17;
+      34: return 18;
+      35: return 19;
+      36: return 28;
+      37: return 37;
+      38: return 38;
+      39: return 39;
+    endcase
+  endfunction
+
   always @(posedge clk_vid_13_107 or negedge reset_n) begin
 
     if (~reset_n) begin
@@ -613,6 +665,9 @@ module core_top (
       y_count <= 0;
 
     end else begin
+      reg [7:0] temp_video_addr;
+      reg temp_video_bit;
+
       vidout_de <= 0;
       vidout_skip <= 0;
       vidout_vs <= 0;
@@ -656,13 +711,36 @@ module core_top (
           // data enable. this is the active region of the line
           vidout_de <= 1;
 
-          if (video_data != 0) begin
-            vidout_rgb[23:16] <= 8'd60;
-            vidout_rgb[15:8]  <= 8'd60;
-            vidout_rgb[7:0]   <= 8'd60;
+          case (visible_y[1:0])
+            0: temp_video_bit = video_data[0];
+            1: temp_video_bit = video_data[1];
+            2: temp_video_bit = video_data[2];
+            3: temp_video_bit = video_data[3];
+          endcase
+
+          if (temp_video_bit) begin
+            vidout_rgb[23:16] <= 8'd200;
+            vidout_rgb[15:8]  <= 8'd200;
+            vidout_rgb[7:0]   <= 8'd200;
           end
 
-          video_addr <= video_addr + 1;
+          video_addr <= 0;
+
+          if (visible_x < 40 && visible_y < 16) begin
+            // Upper bits of column address
+            temp_video_addr = {1'b0, lcd_column_addr(visible_x[5:0]), 1'b0};
+            // Lowest bit is whether it's Y=0 or Y=4
+            if (visible_y[2]) begin
+              temp_video_addr = temp_video_addr | 8'b1;
+            end
+
+            // If Y >= 8, it's in second RAM bank
+            if (visible_y >= 8) begin
+              temp_video_addr = temp_video_addr + 8'h50;
+            end
+
+            video_addr <= temp_video_addr;
+          end
         end
       end
     end
@@ -689,7 +767,8 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire clk_3_276mhz;
+  wire clk_32_768;
+  // TODO: Choose actual video clock
   wire clk_vid_13_107;
   wire clk_vid_13_107_90deg;
 
@@ -699,7 +778,7 @@ module core_top (
       .refclk(clk_74a),
       .rst   (0),
 
-      .outclk_0(clk_3_276mhz),
+      .outclk_0(clk_32_768),
       .outclk_1(clk_vid_13_107),
       .outclk_2(clk_vid_13_107_90deg),
 

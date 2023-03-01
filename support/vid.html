@@ -7,6 +7,36 @@
         38, 39,
       ];
 
+      // From
+      const reverse_map = [
+        0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 36, 35, 34, 33,
+        32, 31, 30, 29, 27, 26, 25, 24, 23, 22, 21, 20, 8, 17, 18, 19, 28, 37,
+        38, 39,
+      ];
+
+      function test() {
+        const outputArray = new Array(seg_pos.length);
+
+        for (let i = 0; i < seg_pos.length; i++) {
+          const value = seg_pos[i];
+
+          outputArray[value] = i;
+        }
+
+        console.log(outputArray.join(", "));
+      }
+
+      function test2() {
+        let outputString = "";
+        for (let i = 0; i < reverse_map.length; i++) {
+          const value = reverse_map[i];
+
+          outputString += `${i}: return ${value};\n`;
+        }
+
+        console.log(outputString);
+      }
+
       function process(textarea) {
         const segments = textarea.value
           .trim()
@@ -14,15 +44,13 @@
           .split(" ")
           .map((n) => parseInt(n, 16));
 
-        console.log(segments);
-
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "black";
 
-        let firstNibble = true;
-        let x = 0;
+        // let firstNibble = true;
+        // let x = 0;
 
         //   for (let i = 0; i < segments.length; i++) {
         //     const value = segments[i];
@@ -66,11 +94,38 @@
             }
           }
         }
+
+        const canvasXY = document.getElementById("canvasXY");
+        const ctxXY = canvasXY.getContext("2d");
+        ctxXY.clearRect(0, 0, canvasXY.width, canvasXY.height);
+        ctxXY.fillStyle = "black";
+
+        for (let x = 0; x < 40; x++) {
+          for (let y = 0; y < 16; y++) {
+            let addr = reverse_map[x] << 1;
+
+            if ((y & 4) != 0) {
+              addr |= 1;
+            }
+
+            if (y >= 8) {
+              addr += 80;
+            }
+
+            const memVal = segments[addr];
+            const bit = 1 << (y & 3);
+
+            if ((memVal & bit) > 0) {
+              ctxXY.fillRect(x * 10, y * 10, 10, 10);
+            }
+          }
+        }
       }
     </script>
   </head>
   <body>
     <textarea id="input" oninput="process(this)"></textarea>
     <canvas id="canvas" width="400" height="300"></canvas>
+    <canvas id="canvasXY" width="400" height="300"></canvas>
   </body>
 </html>
