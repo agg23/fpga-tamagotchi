@@ -667,6 +667,8 @@ module core_top (
     end else begin
       reg [7:0] temp_video_addr;
       reg temp_video_bit;
+      reg [6:0] lcd_x;
+      reg [6:0] lcd_y;
 
       vidout_de <= 0;
       vidout_skip <= 0;
@@ -678,12 +680,17 @@ module core_top (
 
       // x and y counters
       x_count <= x_count + 1'b1;
+      lcd_x = visible_x[9:3] + 1'b1;
+      lcd_y = visible_y[9:3];
       if (x_count == VID_H_TOTAL - 1) begin
         x_count <= 0;
+        lcd_x = 0;
 
         y_count <= y_count + 1'b1;
+        lcd_y = visible_y[9:3] + 1'b1;
         if (y_count == VID_V_TOTAL - 1) begin
           y_count <= 0;
+          lcd_y = 0;
         end
       end
 
@@ -711,31 +718,23 @@ module core_top (
           // data enable. this is the active region of the line
           vidout_de <= 1;
 
-          case (visible_y[1:0])
-            0: temp_video_bit = video_data[0];
-            1: temp_video_bit = video_data[1];
-            2: temp_video_bit = video_data[2];
-            3: temp_video_bit = video_data[3];
-          endcase
-
-          if (temp_video_bit) begin
-            vidout_rgb[23:16] <= 8'd200;
-            vidout_rgb[15:8]  <= 8'd200;
-            vidout_rgb[7:0]   <= 8'd200;
+          if (visible_x < 40 * 8 && visible_y < 16 * 8) begin
+            // Current XY
+            if (video_data[lcd_y[1:0]]) begin
+              vidout_rgb[23:16] <= 8'd200;
+              vidout_rgb[15:8]  <= 8'd200;
+              vidout_rgb[7:0]   <= 8'd200;
+            end
           end
 
           video_addr <= 0;
 
-          if (visible_x < 40 && visible_y < 16) begin
-            // Upper bits of column address
-            temp_video_addr = {1'b0, lcd_column_addr(visible_x[5:0]), 1'b0};
-            // Lowest bit is whether it's Y=0 or Y=4
-            if (visible_y[2]) begin
-              temp_video_addr = temp_video_addr | 8'b1;
-            end
+          if (lcd_x < 40 * 8 && lcd_y < 16 * 8) begin
+            // Upper bits are column address, lowest bit is whether it's Y=0 or Y=4
+            temp_video_addr = {1'b0, lcd_column_addr(lcd_x[5:0]), lcd_y[2]};
 
             // If Y >= 8, it's in second RAM bank
-            if (visible_y >= 8) begin
+            if (lcd_y >= 8) begin
               temp_video_addr = temp_video_addr + 8'h50;
             end
 
