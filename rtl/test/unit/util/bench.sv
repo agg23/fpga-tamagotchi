@@ -15,8 +15,9 @@ module bench;
   reg [3:0] input_k1 = 0;
 
   cpu_6s46 cpu_uut (
-      .clk(clk),
-      .clk_2x(clk_2x),
+      .clk(clk_2x),
+      .clk_en(clk),
+      .clk_2x_en(clk_2x),
 
       .reset_n(reset_n),
 

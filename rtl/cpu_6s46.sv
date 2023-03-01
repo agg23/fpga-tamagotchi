@@ -1,7 +1,9 @@
 module cpu_6s46 (
     input wire clk,
-    input wire clk_2x,
     input wire clk_vid,
+
+    input wire clk_en,
+    input wire clk_2x_en,
 
     input wire reset_n,
 
@@ -29,7 +31,8 @@ module cpu_6s46 (
 
   cpu core (
       .clk(clk),
-      .clk_2x(clk_2x),
+      .clk_en(clk_en),
+      .clk_2x_en(clk_2x_en),
 
       .reset_n(reset_n),
 
@@ -80,6 +83,7 @@ module cpu_6s46 (
 
   timers timers (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 
@@ -123,6 +127,7 @@ module cpu_6s46 (
 
   interrupt interrupt (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 
@@ -151,6 +156,7 @@ module cpu_6s46 (
 
   input_lines input_lines (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 
@@ -218,7 +224,7 @@ module cpu_6s46 (
       serial_data <= 0;
       oscillation <= 0;
       prog_timer_clock_output <= 0;
-    end else begin
+    end else if (clk_en) begin
       reset_clock_timer <= 0;
       reset_stopwatch <= 0;
       reset_prog_timer <= 0;

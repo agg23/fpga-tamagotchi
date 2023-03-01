@@ -1,5 +1,6 @@
 module stopwatch (
     input wire clk,
+    input wire clk_en,
 
     input wire reset_n,
 
@@ -39,13 +40,13 @@ module stopwatch (
   end
 
   always @(posedge clk) begin
-    if (~reset_n || reset) begin
+    if (~reset_n || (reset && clk_en)) begin
       counter_100hz <= 0;
       counter_swl   <= 0;
       counter_swh   <= 0;
 
       factor_flags  <= 0;
-    end else begin
+    end else if (clk_en) begin
       if (enable && timer_256_tick) begin
         // Tick 100hz
         counter_100hz <= counter_100hz + 4'h1;

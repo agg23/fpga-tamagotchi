@@ -1,5 +1,6 @@
 module clock (
     input wire clk,
+    input wire clk_en,
 
     input wire reset_n,
 
@@ -22,23 +23,25 @@ module clock (
   reg [7:0] counter_256 = 0;
 
   always @(posedge clk) begin
-    prev_reset <= ~reset_n || reset_clock_timer;
+    if (clk_en) begin
+      prev_reset <= ~reset_n || reset_clock_timer;
 
-    if (~reset_n || reset_clock_timer) begin
-      divider <= 0;
-      counter_256 <= 0;
+      if (~reset_n || reset_clock_timer) begin
+        divider <= 0;
+        counter_256 <= 0;
 
-      timer_256_tick <= 0;
-    end else begin
-      timer_256_tick <= 0;
+        timer_256_tick <= 0;
+      end else begin
+        timer_256_tick <= 0;
 
-      divider <= divider + 7'h1;
+        divider <= divider + 7'h1;
 
-      if (divider == 0 && ~prev_reset) begin
-        // Special case to prevent ticking on reset
-        counter_256 <= counter_256 + 8'h1;
+        if (divider == 0 && ~prev_reset) begin
+          // Special case to prevent ticking on reset
+          counter_256 <= counter_256 + 8'h1;
 
-        timer_256_tick <= 1;
+          timer_256_tick <= 1;
+        end
       end
     end
   end

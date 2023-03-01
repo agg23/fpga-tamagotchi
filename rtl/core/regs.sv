@@ -2,6 +2,8 @@ import types::*;
 
 module regs (
     input wire clk,
+    input wire clk_en,
+
     input microcode_cycle current_cycle,
 
     input wire reset_n,
@@ -106,7 +108,7 @@ module regs (
       np <= 5'h01;
 
       interrupt <= 0;
-    end else begin
+    end else if (clk_en) begin
       if (current_cycle != CYCLE_REG_WRITE) begin
         memory_write_en <= 0;
       end

@@ -2,7 +2,8 @@ import types::*;
 
 module microcode (
     input wire clk,
-    input wire clk_2x,
+    input wire clk_en,
+    input wire clk_2x_en,
 
     input wire reset_n,
 
@@ -94,7 +95,7 @@ module microcode (
 
       queued_interrupt <= 0;
       performing_interrupt <= 0;
-    end else begin
+    end else if (clk_en) begin
       if (is_interrupt_requested) begin
         // Interrupt flag set and an interrupt requested
         queued_interrupt <= 1;
@@ -131,7 +132,7 @@ module microcode (
   microcode_stage prev_stage = STEP6_2;
   reg cycle_second_step;
 
-  always @(posedge clk_2x) begin
+  always @(posedge clk) begin
     reg [8:0] microcode_addr;
 
     if (~reset_n) begin
@@ -145,7 +146,7 @@ module microcode (
       halt <= 0;
       disable_increment <= 0;
       prevent_reset_np <= 0;
-    end else begin
+    end else if (clk_2x_en) begin
       prev_stage <= stage;
 
       if (performing_interrupt) begin

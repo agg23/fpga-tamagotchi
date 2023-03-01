@@ -20,8 +20,9 @@ module core_bench;
   reg [3:0] ram[4096];
 
   cpu cpu_uut (
-      .clk(clk),
-      .clk_2x(clk_2x),
+      .clk(clk_2x),
+      .clk_en(clk),
+      .clk_2x_en(clk_2x),
 
       .reset_n(reset_n),
 

@@ -2,7 +2,8 @@ import types::*;
 
 module cpu (
     input wire clk,
-    input wire clk_2x,
+    input wire clk_en,
+    input wire clk_2x_en,
 
     input wire reset_n,
 
@@ -63,8 +64,8 @@ module cpu (
 
   assign memory_read_en = override_memory_read_en | internal_memory_read_en;
 
-  always @(posedge clk_2x) begin
-    if (current_cycle == CYCLE_NONE) begin
+  always @(posedge clk) begin
+    if (clk_2x_en && current_cycle == CYCLE_NONE) begin
       skip_pc_increment <= decode_skip_pc_increment;
       cycle_length <= decode_cycle_length;
 
@@ -74,7 +75,8 @@ module cpu (
 
   microcode microcode (
       .clk(clk),
-      .clk_2x(clk_2x),
+      .clk_en(clk_en),
+      .clk_2x_en(clk_2x_en),
 
       .reset_n(reset_n),
 
@@ -129,6 +131,7 @@ module cpu (
 
   regs regs (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 

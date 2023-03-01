@@ -1,5 +1,6 @@
 module interrupt (
     input wire clk,
+    input wire clk_en,
 
     input wire reset_n,
 
@@ -53,7 +54,7 @@ module interrupt (
       prev_timer_1hz <= 0;
 
       clock_factor <= 0;
-    end else begin
+    end else if (clk_en) begin
       prev_timer_32hz <= timer_32hz;
       prev_timer_8hz  <= timer_8hz;
       prev_timer_2hz  <= timer_2hz;

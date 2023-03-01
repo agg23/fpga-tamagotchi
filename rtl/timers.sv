@@ -1,5 +1,6 @@
 module timers (
     input wire clk,
+    input wire clk_en,
 
     input wire reset_n,
 
@@ -37,6 +38,7 @@ module timers (
 
   clock clock (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 
@@ -56,6 +58,7 @@ module timers (
 
   stopwatch stopwatch (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 
@@ -72,6 +75,7 @@ module timers (
 
   prog_timer prog_timer (
       .clk(clk),
+      .clk_en(clk_en),
 
       .reset_n(reset_n),
 

@@ -1,5 +1,6 @@
 module prog_timer (
     input wire clk,
+    input wire clk_en,
 
     input wire reset_n,
 
@@ -46,12 +47,14 @@ module prog_timer (
   wire [7:0] counter_reload_value = counter_reload == 0 ? 8'd255 : counter_reload;
 
   always @(posedge clk) begin
-    prev_reset <= ~reset_n;
+    if (clk_en) begin
+      prev_reset <= ~reset_n;
+    end
 
     if (~reset_n) begin
       divider_8khz <= 0;
       counter_8khz <= 0;
-    end else begin
+    end else if (clk_en) begin
       // Every 2 ticks, we're at 2x 8,192Hz
       divider_8khz <= ~divider_8khz;
 
@@ -69,7 +72,7 @@ module prog_timer (
       downcounter  <= 255;
 
       factor_flags <= 0;
-    end else begin
+    end else if (clk_en) begin
       prev_input_clock <= input_clock;
 
       if (enable) begin

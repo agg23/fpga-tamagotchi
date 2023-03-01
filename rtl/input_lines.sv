@@ -1,5 +1,6 @@
 module input_lines (
     input wire clk,
+    input wire clk_en,
 
     input wire reset_n,
 
@@ -19,7 +20,7 @@ module input_lines (
   always @(posedge clk) begin
     if (~reset_n) begin
       factor_flags <= 0;
-    end else begin
+    end else if (clk_en) begin
       reg k00_factor;
       reg k01_factor;
       reg k02_factor;
