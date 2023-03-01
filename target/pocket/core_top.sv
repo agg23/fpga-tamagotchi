@@ -543,7 +543,7 @@ module core_top (
       .clk(clk_32_768),
       .clk_en(clk_en_32_768khz),
       .clk_2x_en(clk_en_65_536khz),
-      .clk_vid(clk_vid_13_107),
+      .clk_vid(clk_32_768),
 
       .reset_n(reset_n_s),
 
@@ -561,190 +561,34 @@ module core_top (
 
 
   // video generation
-  // ~12,288,000 hz pixel clock
-  //
-  // we want our video mode of 320x240 @ 60hz, this results in 204800 clocks per frame
-  // we need to add hblank and vblank times to this, so there will be a nondisplay area. 
-  // it can be thought of as a border around the visible area.
-  // to make numbers simple, we can have 400 total clocks per line, and 320 visible.
-  // dividing 204800 by 400 results in 512 total lines per frame, and 240 visible.
-  // this pixel clock is fairly high for the relatively low resolution, but that's fine.
-  // PLL output has a minimum output frequency anyway.
 
+  wire vsync;
+  wire hsync;
+  wire de;
+  wire [23:0] rgb;
 
-  assign video_rgb_clock = clk_vid_13_107;
-  assign video_rgb_clock_90 = clk_vid_13_107_90deg;
-  assign video_rgb = vidout_rgb;
-  assign video_de = vidout_de;
-  assign video_skip = vidout_skip;
-  assign video_vs = vidout_vs;
-  assign video_hs = vidout_hs;
+  assign video_rgb_clock = clk_32_768;
+  assign video_rgb_clock_90 = clk_vid_32_768_90deg;
+  assign video_rgb = de ? rgb : 24'h0;
+  assign video_de = de;
+  assign video_skip = 0;
+  assign video_vs = vsync;
+  assign video_hs = hsync;
 
-  localparam VID_V_BPORCH = 'd10;
-  localparam VID_V_ACTIVE = 'd240;
-  localparam VID_V_TOTAL = 'd512;
-  localparam VID_H_BPORCH = 'd10;
-  localparam VID_H_ACTIVE = 'd320;
-  localparam VID_H_TOTAL = 'd400;
-
-  reg [7:0] video_addr = 0;
+  wire [7:0] video_addr;
   wire [3:0] video_data;
 
-  reg [15:0] frame_count;
+  video video (
+      .clk(clk_32_768),
 
-  reg [9:0] x_count;
-  reg [9:0] y_count;
+      .video_addr(video_addr),
+      .video_data(video_data),
 
-  wire [9:0] visible_x = x_count - VID_H_BPORCH;
-  wire [9:0] visible_y = y_count - VID_V_BPORCH;
-
-  reg [23:0] vidout_rgb;
-  reg vidout_de, vidout_de_1;
-  reg vidout_skip;
-  reg vidout_vs;
-  reg vidout_hs, vidout_hs_1;
-
-  reg [9:0] square_x = 'd135;
-  reg [9:0] square_y = 'd95;
-
-  function [5:0] lcd_column_addr(reg [5:0] x);
-    // const reverse_map = [
-    //       0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 36, 35, 34, 33,
-    //       32, 31, 30, 29, 27, 26, 25, 24, 23, 22, 21, 20, 8, 17, 18, 19, 28, 37,
-    //       38, 39,
-    //     ];
-    case (x)
-      0:  return 0;
-      1:  return 1;
-      2:  return 2;
-      3:  return 3;
-      4:  return 4;
-      5:  return 5;
-      6:  return 6;
-      7:  return 7;
-      8:  return 9;
-      9:  return 10;
-      10: return 11;
-      11: return 12;
-      12: return 13;
-      13: return 14;
-      14: return 15;
-      15: return 16;
-      16: return 36;
-      17: return 35;
-      18: return 34;
-      19: return 33;
-      20: return 32;
-      21: return 31;
-      22: return 30;
-      23: return 29;
-      24: return 27;
-      25: return 26;
-      26: return 25;
-      27: return 24;
-      28: return 23;
-      29: return 22;
-      30: return 21;
-      31: return 20;
-      32: return 8;
-      33: return 17;
-      34: return 18;
-      35: return 19;
-      36: return 28;
-      37: return 37;
-      38: return 38;
-      39: return 39;
-    endcase
-  endfunction
-
-  always @(posedge clk_vid_13_107 or negedge reset_n) begin
-
-    if (~reset_n) begin
-
-      x_count <= 0;
-      y_count <= 0;
-
-    end else begin
-      reg [7:0] temp_video_addr;
-      reg temp_video_bit;
-      reg [6:0] lcd_x;
-      reg [6:0] lcd_y;
-
-      vidout_de <= 0;
-      vidout_skip <= 0;
-      vidout_vs <= 0;
-      vidout_hs <= 0;
-
-      vidout_hs_1 <= vidout_hs;
-      vidout_de_1 <= vidout_de;
-
-      // x and y counters
-      x_count <= x_count + 1'b1;
-      lcd_x = visible_x[9:3] + 1'b1;
-      lcd_y = visible_y[9:3];
-      if (x_count == VID_H_TOTAL - 1) begin
-        x_count <= 0;
-        lcd_x = 0;
-
-        y_count <= y_count + 1'b1;
-        lcd_y = visible_y[9:3] + 1'b1;
-        if (y_count == VID_V_TOTAL - 1) begin
-          y_count <= 0;
-          lcd_y = 0;
-        end
-      end
-
-      // generate sync 
-      if (x_count == 0 && y_count == 0) begin
-        // sync signal in back porch
-        // new frame
-        vidout_vs   <= 1;
-        frame_count <= frame_count + 1'b1;
-      end
-
-      // we want HS to occur a bit after VS, not on the same cycle
-      if (x_count == 3) begin
-        // sync signal in back porch
-        // new line
-        vidout_hs <= 1;
-      end
-
-      // inactive screen areas are black
-      vidout_rgb <= 24'h0;
-      // generate active video
-      if (x_count >= VID_H_BPORCH && x_count < VID_H_ACTIVE + VID_H_BPORCH) begin
-
-        if (y_count >= VID_V_BPORCH && y_count < VID_V_ACTIVE + VID_V_BPORCH) begin
-          // data enable. this is the active region of the line
-          vidout_de <= 1;
-
-          if (visible_x < 40 * 8 && visible_y < 16 * 8) begin
-            // Current XY
-            if (video_data[lcd_y[1:0]]) begin
-              vidout_rgb[23:16] <= 8'd200;
-              vidout_rgb[15:8]  <= 8'd200;
-              vidout_rgb[7:0]   <= 8'd200;
-            end
-          end
-
-          video_addr <= 0;
-
-          if (lcd_x < 40 * 8 && lcd_y < 16 * 8) begin
-            // Upper bits are column address, lowest bit is whether it's Y=0 or Y=4
-            temp_video_addr = {1'b0, lcd_column_addr(lcd_x[5:0]), lcd_y[2]};
-
-            // If Y >= 8, it's in second RAM bank
-            if (lcd_y >= 8) begin
-              temp_video_addr = temp_video_addr + 8'h50;
-            end
-
-            video_addr <= temp_video_addr;
-          end
-        end
-      end
-    end
-  end
-
+      .vsync(vsync),
+      .hsync(hsync),
+      .de(de),
+      .rgb(rgb)
+  );
 
   ///////////////////////////////////////////////
 
@@ -754,7 +598,7 @@ module core_top (
       .CHANNEL_WIDTH(15)
   ) sound_i2s (
       .clk_74a  (clk_74a),
-      .clk_audio(clk_vid_13_107),
+      .clk_audio(clk_32_768),
 
       .audio_l(audio_l[15:1]),
       .audio_r(audio_l[15:1]),
@@ -767,9 +611,7 @@ module core_top (
   ///////////////////////////////////////////////
 
   wire clk_32_768;
-  // TODO: Choose actual video clock
-  wire clk_vid_13_107;
-  wire clk_vid_13_107_90deg;
+  wire clk_vid_32_768_90deg;
 
   wire pll_core_locked;
 
@@ -778,8 +620,7 @@ module core_top (
       .rst   (0),
 
       .outclk_0(clk_32_768),
-      .outclk_1(clk_vid_13_107),
-      .outclk_2(clk_vid_13_107_90deg),
+      .outclk_1(clk_vid_32_768_90deg),
 
       .locked(pll_core_locked)
   );
