@@ -788,6 +788,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "single_value_channel"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5dac3e54a6fb2c64489607c294b41d4a1cef34c58e05e6bc4050fb4831588b6"
+
+[[package]]
 name = "slotmap"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -976,7 +982,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75fc6dd4b98e0d993edc1d343579d0be679f1fbd002711e28412a84c2381eb2d"
 dependencies = [
  "cc",
- "verilator 0.1.6",
+ "verilator",
 ]
 
 [[package]]
@@ -991,18 +997,6 @@ dependencies = [
 
 [[package]]
 name = "verilator"
-version = "0.1.0"
-dependencies = [
- "glob",
- "softbuffer",
- "verilated",
- "verilated-module",
- "verilator 0.1.6",
- "winit",
-]
-
-[[package]]
-name = "verilator"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13e46bfe915a966ca1bd7cdb30a283c9917e67c643b47605bfce429668cf1c50"
@@ -1011,6 +1005,19 @@ dependencies = [
  "fnv",
  "regex",
  "syn 0.13.11",
+]
+
+[[package]]
+name = "verilator_tb"
+version = "0.1.0"
+dependencies = [
+ "glob",
+ "single_value_channel",
+ "softbuffer",
+ "verilated",
+ "verilated-module",
+ "verilator",
+ "winit",
 ]
 
 [[package]]

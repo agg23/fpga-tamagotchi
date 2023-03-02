@@ -1,4 +1,14 @@
-module video (
+module video #(
+    parameter WIDTH = 10'd720,
+    parameter HEIGHT = 10'd720,
+    parameter PIXEL_SIZE = 5'd22,
+
+    parameter VBLANK_LEN = 10'd19,
+    parameter HBLANK_LEN = 10'd19,
+
+    parameter VBLANK_OFFSET = 10'd5,
+    parameter HBLANK_OFFSET = 10'd5
+) (
     input wire clk,
 
     output reg  [7:0] video_addr = 0,
@@ -9,6 +19,14 @@ module video (
     output wire de,
     output reg [23:0] rgb = 0
 );
+  parameter VBLANK_TIME = HEIGHT + VBLANK_OFFSET;
+  parameter HBLANK_TIME = WIDTH + HBLANK_OFFSET;
+
+  parameter MAX_X = WIDTH + HBLANK_LEN;
+  parameter MAX_Y = WIDTH + VBLANK_LEN;
+
+  parameter LCD_X_OFFSET = (WIDTH - 32 * PIXEL_SIZE) / 2;
+  parameter LCD_Y_OFFSET = (HEIGHT - 16 * PIXEL_SIZE) / 2;
 
   reg [9:0] x = 0;
   reg [9:0] y = 0;
@@ -26,7 +44,7 @@ module video (
   // reg [4:0] test_lcd_x = 0  /* synthesis noprune */;
   // reg [4:0] test_lcd_y = 0  /* synthesis noprune */;
 
-  assign de = x < 10'd720 && y < 10'd720;
+  assign de = x < WIDTH && y < HEIGHT;
 
   function [5:0] lcd_column_addr(reg [5:0] x_coord);
     // const reverse_map = [
@@ -92,21 +110,21 @@ module video (
     next_x = x + 10'b1;
     next_y = y;
 
-    if (next_y == 10'd725 && next_x == 10'd720) begin
+    if (next_y == VBLANK_TIME && next_x == WIDTH + 10'b1) begin
       // VSync
       vsync <= 1;
       lcd_y <= 0;
       pixel_count_y <= 0;
-    end else if (next_x == 10'd725) begin
+    end else if (next_x == HBLANK_TIME) begin
       // HSync
       hsync <= 1;
       lcd_x <= 0;
       pixel_count_x <= 0;
-    end else if (next_x == 10'd739) begin
+    end else if (next_x == MAX_X) begin
       next_x = 10'h0;
       next_y = y + 10'b1;
 
-      if (next_y == 10'd739) begin
+      if (next_y == MAX_Y) begin
         next_y = 10'h0;
       end
     end
@@ -118,10 +136,10 @@ module video (
     // test_lcd_x <= next_lcd_x;
     // test_lcd_y <= next_lcd_y;
 
-    if (next_x >= 8 && next_x < 712 && next_y >= 184 && next_y < 536) begin
+    if (next_x >= LCD_X_OFFSET && next_x < WIDTH - LCD_X_OFFSET && next_y >= LCD_Y_OFFSET && next_y < HEIGHT - LCD_Y_OFFSET) begin
       pixel_count_x <= pixel_count_x + 5'b1;
 
-      if (pixel_count_x == 5'd21) begin
+      if (pixel_count_x == PIXEL_SIZE - 5'b1) begin
         // End of this pixel horizontally
         pixel_count_x <= 0;
 
@@ -133,7 +151,7 @@ module video (
 
           pixel_count_y <= pixel_count_y + 5'b1;
 
-          if (pixel_count_y == 5'd21) begin
+          if (pixel_count_y == PIXEL_SIZE - 5'b1) begin
             // End of this pixel vertically
             pixel_count_y <= 0;
 
@@ -151,7 +169,7 @@ module video (
       lcd_y <= next_lcd_y;
     end
 
-    if (x >= 8 && x < 712 && y >= 184 && y < 536) begin
+    if (x >= LCD_X_OFFSET && x < WIDTH - LCD_X_OFFSET && y >= LCD_Y_OFFSET && y < HEIGHT - LCD_Y_OFFSET) begin
       // Horizontal and vertical range of main LCD
       if (video_data[lcd_y[1:0]]) begin
         rgb[23:16] <= 8'd10;

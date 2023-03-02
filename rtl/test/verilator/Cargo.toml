@@ -1,5 +1,5 @@
 [package]
-name = "verilator"
+name = "verilator_tb"
 version = "0.1.0"
 edition = "2021"
 publish = false
@@ -15,4 +15,4 @@ softbuffer = { version = "0.2.0", features = ["x11"] }
 verilated = "0.1.2"
 verilated-module = "0.1.1"
 winit = { version = "0.28.2", features = ["x11"] }
-
+single_value_channel = "1.2.2"
