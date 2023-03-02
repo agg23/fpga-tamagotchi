@@ -1,0 +1,18 @@
+[package]
+name = "verilator"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+build = "build.rs"
+
+[build-dependencies]
+verilator = { version = "0.1.6", features = ["gen", "module"] }
+glob = "0.3.1"
+
+[dependencies]
+softbuffer = { version = "0.2.0", features = ["x11"] }
+verilated = "0.1.2"
+verilated-module = "0.1.1"
+winit = { version = "0.28.2", features = ["x11"] }
+

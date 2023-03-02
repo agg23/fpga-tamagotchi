@@ -6,7 +6,7 @@ module video (
 
     output reg vsync = 0,
     output reg hsync = 0,
-    output wire de = 0,
+    output wire de,
     output reg [23:0] rgb = 0
 );
 

@@ -263,7 +263,7 @@ module cpu_6s46 (
         end else if (memory_addr[11:8] == 4'hF) begin
           // I/O segment
           // TODO: Remove
-          $display("Accessing I/O address 0x%h. Writing: %b", memory_addr, memory_write_en);
+          // $display("Accessing I/O address 0x%h. Writing: %b", memory_addr, memory_write_en);
 
           casex ({
             memory_addr[7:0], memory_write_en

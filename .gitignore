@@ -5,9 +5,12 @@ bass/*.rom
 bass/tama.*
 **/vunit_out
 **/__pycache__
+rtl/test/verilator/target
 
 *.hex
 *.rbf_r
+*.wlf
+*.vcd
 db
 greybox_tmp
 hps_isw_handoff
