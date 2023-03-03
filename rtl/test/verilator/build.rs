@@ -9,6 +9,7 @@ fn main() {
     let standard_verilog_version = Standard::Verilog2005;
     let system_verilog_version = Standard::SystemVerilog2012;
 
+    // Can't use glob because Verilator wants the imports to be ordered
     let rtl_files = [
         "top.sv",
         "../../core/types.sv",
@@ -44,6 +45,7 @@ fn main() {
         .no_warn("casex")
         .no_warn("width")
         .no_warn("caseincomplete")
+        .no_warn("unsigned")
         .with_trace(true);
 
     for rtl in rtl_files {

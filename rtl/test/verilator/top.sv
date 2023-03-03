@@ -1,5 +1,6 @@
 module top (
-    input wire clk,
+    input  wire clk,
+    output wire clk_65_536khz,
 
     input wire reset_n,
 
@@ -20,22 +21,33 @@ module top (
   wire [3:0] video_data;
 
   reg clk_en_32_768khz = 0;
+  reg clk_en_65_536khz = 0;
 
-  reg clock_div = 1;
+  reg [9:0] clock_div = 10'd100;
 
-  // Clock divider that uses both edges of the clock to align the divided clock
-  always @(negedge clk) begin
-    clock_div <= ~clock_div;
-  end
-
+  // Clock divider
   always @(posedge clk) begin
-    clk_en_32_768khz <= clock_div;
+    clk_en_32_768khz <= 0;
+    clk_en_65_536khz <= 0;
+
+    clock_div <= clock_div - 10'h1;
+
+    if (clock_div == 0) begin
+      clock_div <= 10'd100;
+
+      clk_en_32_768khz <= 1;
+      clk_en_65_536khz <= 1;
+    end else if (clock_div == 50) begin
+      clk_en_65_536khz <= 1;
+    end
   end
+
+  assign clk_65_536khz = clk_en_65_536khz;
 
   cpu_6s46 tamagotchi (
       .clk(clk),
       .clk_en(clk_en_32_768khz),
-      .clk_2x_en(clk),
+      .clk_2x_en(clk_en_65_536khz),
       .clk_vid(clk),
 
       .reset_n(reset_n),
@@ -51,12 +63,12 @@ module top (
   );
 
   video #(
-      .WIDTH(240),
-      .HEIGHT(240),
+      .WIDTH(228),
+      .HEIGHT(228),
       .PIXEL_SIZE(7),
 
-      .VBLANK_LEN(16),
-      .HBLANK_LEN(16)
+      .VBLANK_LEN(6),
+      .HBLANK_LEN(6)
   ) video (
       .clk(clk),
 

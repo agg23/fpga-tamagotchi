@@ -585,7 +585,12 @@ module cpu_6s46 (
               end
             end
             // 7A-7E is unused I/O
+            default: begin
+              $display("Unused I/O access at 0x%h. Writing: %b", memory_addr, memory_write_en);
+            end
           endcase
+        end else begin
+          $display("Unhandled memory access at 0x%h. Writing: %b", memory_addr, memory_write_en);
         end
       end
     end

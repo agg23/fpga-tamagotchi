@@ -17,6 +17,8 @@ use verilated_module::module;
 pub struct Top {
     #[port(clock)]
     pub clk: bool,
+    #[port(output)]
+    pub clk_65_536khz: bool,
 
     #[port(input)]
     pub reset_n: bool,
@@ -35,14 +37,47 @@ pub struct Top {
 }
 
 impl Top {
-    fn cycle_eval(&mut self, i: u64) {
+    fn edge_eval(&mut self) {
         self.clock_toggle();
         self.eval();
-        self.trace_at(Duration::from_nanos(7600 * 2 * i));
+    }
 
-        self.clock_toggle();
-        self.eval();
-        self.trace_at(Duration::from_nanos(7600 * ((2 * i) + 1)));
+    fn cycle(&mut self) -> bool {
+        self.edge_eval();
+        self.edge_eval();
+
+        self.clk_65_536khz() == 1
+    }
+
+    fn cycle_one_65khz(&mut self, i: u64) {
+        while self.clk_65_536khz() == 0 {
+            // Clock until 65kHz goes high
+            self.edge_eval();
+        }
+
+        // Trace this timestamp
+        self.log_state(i, false);
+
+        while self.clk_65_536khz() == 1 {
+            // Clock until 65kHz goes low
+            self.edge_eval();
+        }
+
+        // Trace this timestamp
+        self.log_state(i, true);
+    }
+
+    fn trace(&mut self, rate: u64, cycle: u64, falling_edge: bool) {
+        let addend = if falling_edge { 1 } else { 0 };
+        self.trace_at(Duration::from_nanos(rate * ((2 * cycle) + addend)));
+    }
+
+    fn log_state(&mut self, cycle: u64, falling_edge: bool) {
+        self.trace(15259, cycle, falling_edge);
+    }
+
+    fn log_full_rate_state(&mut self, cycle: u64, falling_edge: bool) {
+        self.trace(153, cycle, falling_edge);
     }
 }
 
@@ -57,19 +92,19 @@ enum TBEvent {
     StartPause,
 }
 
-const HEIGHT: usize = 240;
+const HEIGHT: usize = 228;
 const WIDTH: usize = HEIGHT;
 
 fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Receiver<TBEvent>) {
     thread::spawn(move || {
         let mut tb = Top::default();
-        // tb.open_trace("trace.vcd", 99).unwrap();
+        tb.open_trace("trace.vcd", 99).unwrap();
 
         let mut cycle_counter: u64 = 0;
 
         // Initialize core
         while cycle_counter < 4 {
-            tb.cycle_eval(cycle_counter);
+            tb.cycle_one_65khz(cycle_counter);
 
             cycle_counter += 1;
         }
@@ -93,12 +128,23 @@ fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Recei
         let mut next_frame_pixel_x = 0;
         let mut next_frame_pixel_y = 0;
 
+        let mut last_tick_did_log_high = false;
+
         loop {
             // Run one 60Hz tick
             let mut did_vsync = false;
             while !did_vsync {
-                tb.cycle_eval(cycle_counter);
-                cycle_counter += 1;
+                let clk_is_high = tb.cycle();
+                if !last_tick_did_log_high && clk_is_high {
+                    // 65kHz clock rose
+                    tb.log_state(cycle_counter, false);
+                    last_tick_did_log_high = true;
+                } else if last_tick_did_log_high && !clk_is_high {
+                    // 65kHz clock fell
+                    tb.log_state(cycle_counter, true);
+                    last_tick_did_log_high = false;
+                    cycle_counter += 1;
+                }
 
                 if tb.de() == 1 {
                     // Pixel enabled, write to buffer
@@ -110,8 +156,9 @@ fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Recei
                     } else {
                         next_frame_buffer[next_frame_pixel_y * WIDTH + next_frame_pixel_x] =
                             tb.rgb();
-                        next_frame_pixel_x += 1;
                     }
+
+                    next_frame_pixel_x += 1;
                 }
 
                 if tb.hsync() == 1 {
@@ -148,7 +195,7 @@ fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Recei
             }
 
             // Send latest buffer
-            println!("Frame {frame_id} available, sending");
+            // println!("Frame {frame_id} available, sending");
             buffer_transmitter
                 .update(Frame {
                     data: next_frame_buffer.clone(),
@@ -197,7 +244,7 @@ pub fn main() {
                 let difference = current_timestamp.checked_duration_since(last_timestamp);
                 last_timestamp = current_timestamp;
 
-                println!("Rendering window after {difference:?}");
+                // println!("Rendering window after {difference:?}");
 
                 graphics_context.set_buffer(
                     &buffer_receiver.latest().data,
@@ -221,10 +268,17 @@ pub fn main() {
                         is_synthetic: _,
                     },
             } => {
-                if window_id == window.id()
-                    && input.virtual_keycode == Some(winit::event::VirtualKeyCode::Space)
-                {
-                    let _ = event_transmitter.send(TBEvent::StartPause);
+                if window_id == window.id() {
+                    match input.virtual_keycode {
+                        Some(winit::event::VirtualKeyCode::Space) => {
+                            let _ = event_transmitter.send(TBEvent::StartPause);
+                        }
+                        Some(winit::event::VirtualKeyCode::Escape) => {
+                            *control_flow = ControlFlow::Exit;
+                            event_transmitter.send(TBEvent::Quit).unwrap();
+                        }
+                        _ => {}
+                    }
                 }
             }
             _ => {}

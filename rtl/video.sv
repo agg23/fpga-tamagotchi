@@ -28,6 +28,12 @@ module video #(
   parameter LCD_X_OFFSET = (WIDTH - 32 * PIXEL_SIZE) / 2;
   parameter LCD_Y_OFFSET = (HEIGHT - 16 * PIXEL_SIZE) / 2;
 
+  initial begin
+    $display("VBLANK at: %d, HBLANK at: %d", VBLANK_TIME, HBLANK_TIME);
+    $display("Max x, y: %d, %d", MAX_X, MAX_Y);
+    $display("LCD Centering X: %d, Y: %d", LCD_X_OFFSET, LCD_Y_OFFSET);
+  end
+
   reg [9:0] x = 0;
   reg [9:0] y = 0;
 
