@@ -547,7 +547,8 @@ module core_top (
 
       .reset_n(reset_n_s),
 
-      .input_k0({1'b0, ~cont1_key_s[4], ~cont1_key_s[5], ~cont1_key_s[6]}),
+      // Left, middle, right
+      .input_k0({1'b0, ~cont1_key_s[7], ~cont1_key_s[5], ~cont1_key_s[4]}),
       .input_k1(4'h0),
 
       .rom_addr(rom_addr),

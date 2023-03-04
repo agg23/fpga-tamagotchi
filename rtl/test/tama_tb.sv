@@ -56,7 +56,9 @@ module tama_tb;
 
   // initial begin
   //   int fd;
+  //   int ft;
   //   fd = $fopen("log.txt", "w");
+  //   ft = $fopen("timestamps.txt", "w");
 
   //   // Actually zero values for better logging
   //   cpu_uut.core.regs.sp = 0;
@@ -91,14 +93,17 @@ module tama_tb;
   //               rom[pc], rom[pc], pc, cpu_uut.core.regs.sp, cpu_uut.core.regs.np,
   //               cpu_uut.core.regs.x, cpu_uut.core.regs.y, cpu_uut.core.regs.a, cpu_uut.core.regs.b,
   //               cpu_uut.core.regs.flags_in);
+
+  //           $fwrite(ft, "%t\n", $time());
   //         end
   //       end
   //     end
 
   //     begin : watchdog
   //       // Run for ~5s
-  //       #(131072 * 5);
+  //       #(131072 * 10);
   //       $fclose(fd);
+  //       $fclose(ft);
   //     end
   //   join_any
   // end

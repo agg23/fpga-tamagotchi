@@ -47,6 +47,43 @@ module pset_tb;
       bench.assert_expected(13'h01A5, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_np(5'h01);
     end
+
+    `TEST_CASE("Interrupt should wait until after instruction after PSET") begin
+      bench.rom_data = 12'hE59; // PSET p
+      bench.cpu_uut.regs.interrupt = 1;
+      
+      // Wait some time for instruction to start
+      #2;
+      bench.interrupt_req = 15'h0001;
+
+      bench.run_until_complete();
+      bench.rom_data = 12'h0E1; // JP 0xE1
+
+      #1;
+      // JP is executing
+      `CHECK_EQUAL(bench.cpu_uut.microcode.performing_interrupt, 0);
+
+      bench.run_until_complete();
+      #1;
+      // Unassert interrupt
+      bench.interrupt_req = 15'h0;
+
+      #1;
+      `CHECK_EQUAL(bench.cpu_uut.microcode.performing_interrupt, 1);
+
+      @(posedge bench.clk iff bench.cpu_uut.microcode.stage == 3); // STEP2
+      #1;
+      bench.assert_interrupt(0);
+
+      bench.run_until_complete();
+      // Interrupt should start
+      #1;
+      bench.assert_cycle_length(12 + 5 + 5);
+      bench.assert_pc(13'h1101);
+      bench.assert_ram(bench.prev_sp - 1, 4'h9);
+      bench.assert_ram(bench.prev_sp - 2, 4'hE);
+      bench.assert_ram(bench.prev_sp - 3, 4'h1);
+    end
   end;
 
   // The watchdog macro is optional, but recommended. If present, it
