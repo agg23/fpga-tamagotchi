@@ -1,14 +1,13 @@
 import types::*;
 
 module decode (
-    // input wire clk,
-
     input wire [11:0] opcode,
 
     output reg skip_pc_increment,
 
     output reg [6:0] microcode_start_addr,
     output instr_length cycle_length,
+    output reg disable_interrupt,
 
     output wire [7:0] immed
 );
@@ -19,6 +18,7 @@ module decode (
     skip_pc_increment = 0;
     microcode_start_addr = 0;
     cycle_length = CYCLE5;
+    disable_interrupt = 0;
 
     casex (opcode)
       12'h0XX: {microcode_start_addr, cycle_length} = {7'd0, CYCLE5};  // JP s
@@ -85,7 +85,11 @@ module decode (
       12'hEXX: begin
         casex (opcode[7:0])
           8'b00XX_XXXX: {microcode_start_addr, cycle_length} = {7'd35, CYCLE5};  // LD r, i
-          8'b010X_XXXX: {microcode_start_addr, cycle_length} = {7'd36, CYCLE5};  // PSET p
+          8'b010X_XXXX: begin  // PSET p
+            {microcode_start_addr, cycle_length} = {7'd36, CYCLE5};
+
+            disable_interrupt = 1;
+          end
           8'b0110_XXXX: {microcode_start_addr, cycle_length} = {7'd37, CYCLE5};  // LDPX MX, i
           8'b0111_XXXX: {microcode_start_addr, cycle_length} = {7'd38, CYCLE5};  // LDPY MY, i
 

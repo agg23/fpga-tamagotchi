@@ -22,6 +22,7 @@ module cpu (
   reg skip_pc_increment;
   wire decode_skip_pc_increment;
   wire increment_pc;
+  wire disable_interrupt;
   wire reset_np;
 
   wire [6:0] microcode_start_addr;
@@ -41,6 +42,7 @@ module cpu (
 
       .microcode_start_addr(microcode_start_addr),
       .cycle_length(decode_cycle_length),
+      .disable_interrupt(disable_interrupt),
 
       .immed(immed)
   );
@@ -88,6 +90,7 @@ module cpu (
       .increment_pc(increment_pc),
       .reset_np(reset_np),
 
+      .disable_interrupt(disable_interrupt),
       .microcode_start_addr(microcode_start_addr),
       .cycle_length(cycle_length),
 

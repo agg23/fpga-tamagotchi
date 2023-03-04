@@ -16,6 +16,7 @@ module microcode (
     output wire increment_pc,
     output wire reset_np,
 
+    input wire disable_interrupt,
     input wire [6:0] microcode_start_addr,
     input instr_length cycle_length,
 
@@ -68,7 +69,7 @@ module microcode (
   // Interrupts
   reg queued_interrupt = 0;
 
-  wire is_interrupt_requested = interrupt && |interrupt_req && ~performing_interrupt;
+  wire is_interrupt_requested = interrupt && |interrupt_req && ~performing_interrupt && ~disable_interrupt;
   // Halt must go through the queue
   wire should_begin_interrupt = queued_interrupt || (is_interrupt_requested && ~halt);
 
