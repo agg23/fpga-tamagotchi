@@ -26,6 +26,8 @@ fn main() {
         "../../stopwatch.sv",
         "../../timers.sv",
         "../../video.sv",
+        "../libraries/main_ram.sv",
+        "../libraries/video_ram.sv",
         "../../cpu_6s46.sv",
     ];
 
