@@ -98,7 +98,7 @@ module bench;
     cpu_uut.core.regs.interrupt = 0;
 
     for (int i = 0; i < 256 + 256 + 128; i = i + 1) begin
-      cpu_uut.ram[i] = 0;
+      cpu_uut.ram.memory[i] = 0;
     end
 
     update_prevs();
@@ -168,7 +168,7 @@ module bench;
 
   task assert_ram(reg [11:0] addr, reg [3:0] expected);
     if (expected !== 4'hX) begin
-      `CHECK_EQUAL(cpu_uut.ram[addr], expected);
+      `CHECK_EQUAL(cpu_uut.ram.memory[addr], expected);
     end
   endtask
 
@@ -208,8 +208,8 @@ module bench;
     case (r)
       0: get_r_value = cpu_uut.core.regs.a;
       1: get_r_value = cpu_uut.core.regs.b;
-      2: get_r_value = cpu_uut.ram[cpu_uut.core.regs.x];
-      3: get_r_value = cpu_uut.ram[cpu_uut.core.regs.y];
+      2: get_r_value = cpu_uut.ram.memory[cpu_uut.core.regs.x];
+      3: get_r_value = cpu_uut.ram.memory[cpu_uut.core.regs.y];
     endcase
   endfunction
 endmodule

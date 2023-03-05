@@ -13,7 +13,8 @@ def run_vunit(test_glob):
   lib = vu.add_library("lib")
 
   # Add all RTL
-  lib.add_source_files(["../../*.sv", "../../core/*.sv"], allow_empty=True)
+  # Last group adds fake Intel specific IP
+  lib.add_source_files(["../../*.sv", "../../core/*.sv", "../../test/libraries/*.sv"], allow_empty=True)
 
   # Add all TBs
   lib.add_source_files(test_glob)

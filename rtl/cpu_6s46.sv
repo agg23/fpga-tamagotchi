@@ -14,18 +14,13 @@ module cpu_6s46 (
     input  wire [11:0] rom_data,
 
     input  wire [7:0] video_addr,
-    output reg  [3:0] video_data
+    output wire [3:0] video_data
 );
   wire memory_write_en;
   wire memory_read_en;
   wire [11:0] memory_addr;
   wire [3:0] memory_write_data;
   reg [3:0] memory_read_data;
-
-  // RAM from 0x000 - 0x280
-  reg [3:0] ram[256+256+128];
-
-  reg [3:0] video_ram[160];
 
   wire [14:0] interrupt_req;
 
@@ -186,12 +181,42 @@ module cpu_6s46 (
   reg [3:0] oscillation = 0;
   reg prog_timer_clock_output = 0;
 
-  // Video access
-  always @(posedge clk_vid) begin
-    video_data <= video_addr < 8'hA0 ? video_ram[video_addr] : 4'h0;
-  end
-
   // RAM bus
+
+  wire cpu_video_write_en = memory_write_en && ((memory_addr >= 12'hE00 && memory_addr < 12'hE50) || (memory_addr >= 12'hE80 && memory_addr < 12'hED0));
+  wire [7:0] cpu_video_addr = (memory_addr >= 12'hE00 && memory_addr < 12'hE50) ? {1'b0, memory_addr[6:0]} :
+                              (memory_addr >= 12'hE80 && memory_addr < 12'hED0) ? {1'b0, memory_addr[6:0]} + 8'h50 : 8'b0;
+
+  wire [3:0] cpu_video_out;
+
+  // Sys and video RAM split out and not inferred due to massive synthesis size improvement using Quartus
+  video_ram video_ram (
+      .clock(clk),
+
+      .address_a(cpu_video_addr),
+      .data_a(memory_write_data),
+      .q_a(cpu_video_out),
+      .wren_a(cpu_video_write_en),
+
+      // Video access
+      .address_b(video_addr < 8'hA0 ? video_addr : 8'h0),
+      .data_b(4'h0),
+      .q_b(video_data),
+      .wren_b(1'b0)
+  );
+
+  wire [3:0] cpu_ram_out;
+
+  // RAM from 0x000 - 0x280
+  main_ram ram (
+      .clock(clk),
+
+      .address(memory_addr[9:0]),
+      .data(memory_write_data),
+      .q(cpu_ram_out),
+      .wren(memory_write_en && memory_addr < 12'h280)
+  );
+
   always @(posedge clk) begin
     if (~reset_n) begin
       reset_clock_factor <= 0;
@@ -234,32 +259,17 @@ module cpu_6s46 (
       reset_prog_timer_factor <= 0;
       reset_input_factor <= 0;
 
-      if (~memory_write_en) begin
+      if ((memory_write_en || memory_read_en)) begin
         memory_read_data <= 0;
-      end
 
-      if (memory_write_en || memory_read_en) begin
         if (memory_addr < 12'h280) begin
-          // Actual RAM space
-          if (memory_write_en) begin
-            ram[memory_addr[9:0]] <= memory_write_data;
-          end else begin
-            memory_read_data <= ram[memory_addr[9:0]];
-          end
+          memory_read_data <= cpu_ram_out;
         end else if (memory_addr >= 12'hE00 && memory_addr < 12'hE50) begin
           // Display lower segment
-          if (memory_write_en) begin
-            video_ram[{1'b0, memory_addr[6:0]}] <= memory_write_data;
-          end else begin
-            memory_read_data <= video_ram[{1'b0, memory_addr[6:0]}];
-          end
+          memory_read_data <= cpu_video_out;
         end else if (memory_addr >= 12'hE80 && memory_addr < 12'hED0) begin
           // Display upper segment
-          if (memory_write_en) begin
-            video_ram[{1'b0, memory_addr[6:0]}+8'h50] <= memory_write_data;
-          end else begin
-            memory_read_data <= video_ram[{1'b0, memory_addr[6:0]}+8'h50];
-          end
+          memory_read_data <= cpu_video_out;
         end else if (memory_addr[11:8] == 4'hF) begin
           // I/O segment
           // TODO: Remove

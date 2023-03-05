@@ -60,6 +60,8 @@ source ../platform/pocket/pocket.tcl
 set_global_assignment -name QIP_FILE tamagotchi_p1_pocket.qip
 set_global_assignment -name SDC_FILE tamagotchi_p1_pocket.sdc
 set_global_assignment -name QIP_FILE ../rtl/tamagotchi_p1.qip
+set_global_assignment -name QIP_FILE main_ram.qip
+set_global_assignment -name QIP_FILE video_ram.qip
 
 # ==============================================================================
 
