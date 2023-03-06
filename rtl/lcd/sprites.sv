@@ -11,22 +11,29 @@ module sprites (
     output wire active_pixel,
     output wire [31:0] pixel
 );
-  localparam x_0 = 10'd100;
-  localparam x_1 = 10'd200;
-  localparam x_2 = 10'd300;
-  localparam x_3 = 10'd400;
+  localparam SCREEN_WIDTH = 10'd720;
+  localparam SPRITE_WIDTH = 10'd100;
+  localparam SPRITE_SPACING = 10'd50;
 
-  localparam y_0 = 10'd10;
-  localparam y_1 = 10'd600;
+  localparam INITIAL_X_SPACING = (SCREEN_WIDTH - ((SPRITE_WIDTH + SPRITE_SPACING) * 4 - SPRITE_SPACING)) / 2;
+  localparam INITIAL_Y_SPACING = 10'd55;
+
+  localparam x_0 = INITIAL_X_SPACING;
+  localparam x_1 = x_0 + SPRITE_WIDTH + SPRITE_SPACING;
+  localparam x_2 = x_1 + SPRITE_WIDTH + SPRITE_SPACING;
+  localparam x_3 = x_2 + SPRITE_WIDTH + SPRITE_SPACING;
+
+  localparam y_0 = INITIAL_Y_SPACING;
+  localparam y_1 = SCREEN_WIDTH - SPRITE_WIDTH - INITIAL_Y_SPACING;
   // ------------------
 
-  wire sprite_0_x = video_x >= x_0 && video_x < x_0 + 100;
-  wire sprite_1_x = video_x >= x_1 && video_x < x_1 + 100;
-  wire sprite_2_x = video_x >= x_2 && video_x < x_2 + 100;
-  wire sprite_3_x = video_x >= x_3 && video_x < x_3 + 100;
+  wire sprite_0_x = video_x >= x_0 && video_x < x_0 + SPRITE_WIDTH;
+  wire sprite_1_x = video_x >= x_1 && video_x < x_1 + SPRITE_WIDTH;
+  wire sprite_2_x = video_x >= x_2 && video_x < x_2 + SPRITE_WIDTH;
+  wire sprite_3_x = video_x >= x_3 && video_x < x_3 + SPRITE_WIDTH;
 
-  wire sprite_top_y = video_y >= y_0 && video_y < y_0 + 100;
-  wire sprite_bottom_y = video_y >= y_1 && video_y < y_1 + 100;
+  wire sprite_top_y = video_y >= y_0 && video_y < y_0 + SPRITE_WIDTH;
+  wire sprite_bottom_y = video_y >= y_1 && video_y < y_1 + SPRITE_WIDTH;
 
   wire active_sprite = (sprite_top_y || sprite_bottom_y) && (sprite_0_x || sprite_1_x || sprite_2_x || sprite_3_x);
   assign active_pixel = active_sprite && pixel != 0;

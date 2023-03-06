@@ -29,6 +29,7 @@ fn main() {
         "../../lcd/image_memory.sv",
         "../../lcd/sprites.sv",
         "../../lcd/video_gen.sv",
+        "../../lcd/lcd.sv",
         "../../lcd/video.sv",
         "../libraries/main_ram.sv",
         "../libraries/video_ram.sv",

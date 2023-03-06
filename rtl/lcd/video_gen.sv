@@ -7,29 +7,29 @@ module video_gen #(
     parameter HBLANK_LEN = 10'd19,
 
     parameter VBLANK_OFFSET = 10'd5,
-    parameter HBLANK_OFFSET = 10'd5
+    parameter HBLANK_OFFSET = 10'd5,
+
+    parameter LCD_X_OFFSET = 10'd0,
+    parameter LCD_Y_OFFSET = 10'd0
 ) (
     input wire clk,
 
-    output reg  [7:0] video_addr = 0,
-    input  wire [3:0] video_data,
+    output reg [7:0] video_addr = 0,
 
     output reg [9:0] x = 0,
     output reg [9:0] y = 0,
 
-    output reg vsync = 0,
-    output reg hsync = 0,
-    output wire de,
-    output reg [23:0] rgb = 0
+    output wire [1:0] lcd_segment_row,
+
+    output reg  vsync = 0,
+    output reg  hsync = 0,
+    output wire de
 );
-  parameter VBLANK_TIME = HEIGHT + VBLANK_OFFSET;
-  parameter HBLANK_TIME = WIDTH + HBLANK_OFFSET;
+  localparam VBLANK_TIME = HEIGHT + VBLANK_OFFSET;
+  localparam HBLANK_TIME = WIDTH + HBLANK_OFFSET;
 
-  parameter MAX_X = WIDTH + HBLANK_LEN;
-  parameter MAX_Y = WIDTH + VBLANK_LEN;
-
-  parameter LCD_X_OFFSET = (WIDTH - 32 * PIXEL_SIZE) / 2;
-  parameter LCD_Y_OFFSET = (HEIGHT - 16 * PIXEL_SIZE) / 2;
+  localparam MAX_X = WIDTH + HBLANK_LEN;
+  localparam MAX_Y = WIDTH + VBLANK_LEN;
 
   initial begin
     $display("VBLANK at: %d, HBLANK at: %d", VBLANK_TIME, HBLANK_TIME);
@@ -46,6 +46,8 @@ module video_gen #(
   // wire [4:0] lcd_y = lcd_y_base[9:5];
   reg [4:0] lcd_x = 0;
   reg [3:0] lcd_y = 0;
+
+  assign lcd_segment_row = lcd_y[1:0];
 
   // reg [4:0] test_lcd_x = 0  /* synthesis noprune */;
   // reg [4:0] test_lcd_y = 0  /* synthesis noprune */;
@@ -109,7 +111,6 @@ module video_gen #(
     reg [3:0] next_lcd_y;
     reg [7:0] temp_video_addr;
 
-    rgb   <= 24'hE1E6A3;
     hsync <= 0;
     vsync <= 0;
 
@@ -173,17 +174,6 @@ module video_gen #(
 
       lcd_x <= next_lcd_x;
       lcd_y <= next_lcd_y;
-    end
-
-    if (x >= LCD_X_OFFSET && x < WIDTH - LCD_X_OFFSET && y >= LCD_Y_OFFSET && y < HEIGHT - LCD_Y_OFFSET) begin
-      // Horizontal and vertical range of main LCD
-      if (video_data[lcd_y[1:0]]) begin
-        rgb[23:16] <= 8'd10;
-        rgb[15:8]  <= 8'd10;
-        rgb[7:0]   <= 8'd10;
-      end else begin
-        rgb <= 24'hA7C9D9;
-      end
     end
 
     // Upper bits are column address, lowest bit is whether it's Y=0 or Y=4

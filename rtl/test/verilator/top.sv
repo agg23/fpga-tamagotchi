@@ -15,6 +15,7 @@ module top (
   initial begin
     $readmemh("../../../bass/tama.hex", rom);
     $readmemh("../../../assets/bin/spritesheet.hex", video.sprites.sprite_mem.memory);
+    $readmemh("../../../assets/bin/background.hex", video.background.memory);
   end
 
   wire [12:0] rom_addr;
@@ -47,23 +48,23 @@ module top (
 
   assign clk_65_536khz = clk_en_65_536khz;
 
-  // cpu_6s46 tamagotchi (
-  //     .clk(clk),
-  //     .clk_en(clk_en_32_768khz),
-  //     .clk_2x_en(clk_en_65_536khz),
-  //     .clk_vid(clk),
+  cpu_6s46 tamagotchi (
+      .clk(clk),
+      .clk_en(clk_en_32_768khz),
+      .clk_2x_en(clk_en_65_536khz),
+      .clk_vid(clk),
 
-  //     .reset_n(reset_n),
+      .reset_n(reset_n),
 
-  //     .input_k0(4'h7),
-  //     .input_k1(4'h0),
+      .input_k0(4'h7),
+      .input_k1(4'h0),
 
-  //     .rom_addr(rom_addr),
-  //     .rom_data(rom_data),
+      .rom_addr(rom_addr),
+      .rom_data(rom_data),
 
-  //     .video_addr(video_addr),
-  //     .video_data(video_data)
-  // );
+      .video_addr(video_addr),
+      .video_data(video_data)
+  );
 
   video 
   // #(
