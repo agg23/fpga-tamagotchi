@@ -92,13 +92,14 @@ enum TBEvent {
     StartPause,
 }
 
-const HEIGHT: usize = 228;
+// const HEIGHT: usize = 228;
+const HEIGHT: usize = 720;
 const WIDTH: usize = HEIGHT;
 
 fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Receiver<TBEvent>) {
     thread::spawn(move || {
         let mut tb = Top::default();
-        tb.open_trace("trace.vcd", 99).unwrap();
+        // tb.open_trace("trace.vcd", 99).unwrap();
 
         let mut cycle_counter: u64 = 0;
 

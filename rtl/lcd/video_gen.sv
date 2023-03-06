@@ -1,4 +1,4 @@
-module video #(
+module video_gen #(
     parameter WIDTH = 10'd720,
     parameter HEIGHT = 10'd720,
     parameter PIXEL_SIZE = 5'd22,
@@ -13,6 +13,9 @@ module video #(
 
     output reg  [7:0] video_addr = 0,
     input  wire [3:0] video_data,
+
+    output reg [9:0] x = 0,
+    output reg [9:0] y = 0,
 
     output reg vsync = 0,
     output reg hsync = 0,
@@ -33,9 +36,6 @@ module video #(
     $display("Max x, y: %d, %d", MAX_X, MAX_Y);
     $display("LCD Centering X: %d, Y: %d", LCD_X_OFFSET, LCD_Y_OFFSET);
   end
-
-  reg [9:0] x = 0;
-  reg [9:0] y = 0;
 
   reg [4:0] pixel_count_x = 0;
   reg [4:0] pixel_count_y = 0;

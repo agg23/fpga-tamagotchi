@@ -12,7 +12,10 @@ module top (
 
   reg [15:0] rom[8192];
 
-  initial $readmemh("../../../bass/tama.hex", rom);
+  initial begin
+    $readmemh("../../../bass/tama.hex", rom);
+    $readmemh("../../../assets/bin/spritesheet.hex", video.sprites.sprite_mem.memory);
+  end
 
   wire [12:0] rom_addr;
   reg [11:0] rom_data = 0;
@@ -44,32 +47,34 @@ module top (
 
   assign clk_65_536khz = clk_en_65_536khz;
 
-  cpu_6s46 tamagotchi (
-      .clk(clk),
-      .clk_en(clk_en_32_768khz),
-      .clk_2x_en(clk_en_65_536khz),
-      .clk_vid(clk),
+  // cpu_6s46 tamagotchi (
+  //     .clk(clk),
+  //     .clk_en(clk_en_32_768khz),
+  //     .clk_2x_en(clk_en_65_536khz),
+  //     .clk_vid(clk),
 
-      .reset_n(reset_n),
+  //     .reset_n(reset_n),
 
-      .input_k0(4'h7),
-      .input_k1(4'h0),
+  //     .input_k0(4'h7),
+  //     .input_k1(4'h0),
 
-      .rom_addr(rom_addr),
-      .rom_data(rom_data),
+  //     .rom_addr(rom_addr),
+  //     .rom_data(rom_data),
 
-      .video_addr(video_addr),
-      .video_data(video_data)
-  );
+  //     .video_addr(video_addr),
+  //     .video_data(video_data)
+  // );
 
-  video #(
-      .WIDTH(228),
-      .HEIGHT(228),
-      .PIXEL_SIZE(7),
+  video 
+  // #(
+  //     .WIDTH(228),
+  //     .HEIGHT(228),
+  //     .PIXEL_SIZE(7),
 
-      .VBLANK_LEN(6),
-      .HBLANK_LEN(6)
-  ) video (
+  //     .VBLANK_LEN(6),
+  //     .HBLANK_LEN(6)
+  // ) 
+  video (
       .clk(clk),
 
       .video_addr(video_addr),
