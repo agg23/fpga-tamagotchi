@@ -13,11 +13,11 @@ module sprites #(
     output wire active_pixel,
     output wire [7:0] pixel_alpha
 );
-  localparam SPRITE_WIDTH = 10'd46;
-  localparam SPRITE_SPACING = 10'd50;  // 34
+  localparam SPRITE_WIDTH = 10'd50;
+  localparam SPRITE_SPACING = 10'd30;
 
   localparam INITIAL_X_SPACING = (WIDTH - ((SPRITE_WIDTH + SPRITE_SPACING) * 4 - SPRITE_SPACING)) / 2;
-  localparam INITIAL_Y_SPACING = 10'd55;
+  localparam INITIAL_Y_SPACING = 10'd26;
 
   localparam x_0 = INITIAL_X_SPACING;
   localparam x_1 = x_0 + SPRITE_WIDTH + SPRITE_SPACING;

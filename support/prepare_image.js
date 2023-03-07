@@ -30,7 +30,7 @@ const getDataOptions = () => {
       const blue5 = (blue * 249 + 1014) >> 11;
 
       const word = (red5 << 11) | (green6 << 5) | blue5;
-      return [word & 0xff, (word & 0xff00) >> 8];
+      return [(word & 0xff00) >> 8, word & 0xff];
     };
 
     return { dataWidth, processPixel };

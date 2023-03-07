@@ -466,6 +466,8 @@ module core_top (
       .write_data(ioctl_dout)
   );
 
+  wire [15:0] ioctl_dout_reversed = {ioctl_dout[7:0], ioctl_dout[15:8]};
+
   //   data_unloader #(
   //       .ADDRESS_MASK_UPPER_4(4'h2),
   //       .ADDRESS_SIZE(25)
@@ -522,7 +524,7 @@ module core_top (
     // ROM initialization
     if (ioctl_wr && rom_download) begin
       // Word addressing
-      rom[ioctl_addr[13:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
+      rom[ioctl_addr[13:1]] <= ioctl_dout_reversed;
     end
   end
 
@@ -593,20 +595,13 @@ module core_top (
     write_spritesheet_high <= 0;
 
     if (ioctl_wr) begin
-      // They're byte addresses, so trigger on 16 bit word address
-      // if (ioctl_addr[1]) begin
-      //   // High word
-      //   image_pixel[31:16] <= ioctl_dout;
-      // end else begin
-      //   // Low word
-      //   image_pixel[15:0] <= ioctl_dout;
-      // end
       image_pixel_high <= ioctl_dout[15:8];
       write_spritesheet_high <= spritesheet_download;
     end
   end
 
   wire [16:0] spritesheet_write_addr = ioctl_addr[16:0] + {16'b0, write_spritesheet_high};
+  wire [15:0] spritesheet_write_data = write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_dout;
 
   video video (
       .clk(clk_32_768),
@@ -615,10 +610,10 @@ module core_top (
       .video_data(video_data),
 
       .background_write_en(ioctl_wr && background_download),
-      .spritesheet_write_en(ioctl_wr && spritesheet_download),
+      .spritesheet_write_en((ioctl_wr || write_spritesheet_high) && spritesheet_download),
       // Top bit is used to determine which memory it goes to
       .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_addr[17:1]),
-      .image_write_data(write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_dout),
+      .image_write_data(spritesheet_download ? spritesheet_write_data : ioctl_dout_reversed),
 
       .vsync(vsync),
       .hsync(hsync),
