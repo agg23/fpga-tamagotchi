@@ -441,12 +441,16 @@ module core_top (
   );
 
   wire ioctl_wr;
-  wire [13:0] ioctl_addr;
+  wire [20:0] ioctl_addr;
   wire [15:0] ioctl_dout;
+
+  wire rom_download = dataslot_requestwrite_id == 0;
+  wire background_download = dataslot_requestwrite_id == 10;
+  wire spritesheet_download = dataslot_requestwrite_id == 11;
 
   data_loader #(
       .ADDRESS_MASK_UPPER_4(4'h0),
-      .ADDRESS_SIZE(14),
+      .ADDRESS_SIZE(18),
       .OUTPUT_WORD_SIZE(2)
   ) data_loader (
       .clk_74a(clk_74a),
@@ -488,7 +492,9 @@ module core_top (
   // ROM is 16 bit
   reg [15:0] rom[8192];
 
-  reg [9:0] clock_div = 10'd1000;
+  localparam CLOCK_DIV_COUNT = 10'd400;
+
+  reg [9:0] clock_div = CLOCK_DIV_COUNT;
 
   // Clock divider
   always @(posedge clk_32_768) begin
@@ -498,11 +504,11 @@ module core_top (
     clock_div <= clock_div - 10'h1;
 
     if (clock_div == 0) begin
-      clock_div <= 10'd1000;
+      clock_div <= CLOCK_DIV_COUNT;
 
       clk_en_32_768khz <= 1;
       clk_en_65_536khz <= 1;
-    end else if (clock_div == 500) begin
+    end else if (clock_div == CLOCK_DIV_COUNT / 2) begin
       clk_en_65_536khz <= 1;
     end
   end
@@ -514,7 +520,7 @@ module core_top (
 
   always @(posedge clk_32_768) begin
     // ROM initialization
-    if (ioctl_wr) begin
+    if (ioctl_wr && rom_download) begin
       // Word addressing
       rom[ioctl_addr[13:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
     end
@@ -579,11 +585,40 @@ module core_top (
   wire [7:0] video_addr;
   wire [3:0] video_data;
 
+  reg write_spritesheet_high = 0;
+  reg [7:0] image_pixel_high = 0;
+
+  always @(posedge clk_32_768) begin
+    // Always run this, regardless of whether or not its image data
+    write_spritesheet_high <= 0;
+
+    if (ioctl_wr) begin
+      // They're byte addresses, so trigger on 16 bit word address
+      // if (ioctl_addr[1]) begin
+      //   // High word
+      //   image_pixel[31:16] <= ioctl_dout;
+      // end else begin
+      //   // Low word
+      //   image_pixel[15:0] <= ioctl_dout;
+      // end
+      image_pixel_high <= ioctl_dout[15:8];
+      write_spritesheet_high <= spritesheet_download;
+    end
+  end
+
+  wire [16:0] spritesheet_write_addr = ioctl_addr[16:0] + {16'b0, write_spritesheet_high};
+
   video video (
       .clk(clk_32_768),
 
       .video_addr(video_addr),
       .video_data(video_data),
+
+      .background_write_en(ioctl_wr && background_download),
+      .spritesheet_write_en(ioctl_wr && spritesheet_download),
+      // Top bit is used to determine which memory it goes to
+      .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_addr[17:1]),
+      .image_write_data(write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_dout),
 
       .vsync(vsync),
       .hsync(hsync),

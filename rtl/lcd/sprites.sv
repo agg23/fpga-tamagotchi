@@ -1,21 +1,22 @@
-module sprites (
+module sprites #(
+    parameter WIDTH = 10'd320
+) (
     input wire clk,
 
     input wire [9:0] video_x,
     input wire [9:0] video_y,
 
-    input wire pixel_write_en,
-    input wire [16:0] pixel_write_addr,
-    input wire [31:0] pixel_write_data,
+    input wire image_write_en,
+    input wire [14:0] image_write_addr,
+    input wire [7:0] image_write_data,
 
     output wire active_pixel,
-    output wire [31:0] pixel
+    output wire [7:0] pixel_alpha
 );
-  localparam SCREEN_WIDTH = 10'd720;
-  localparam SPRITE_WIDTH = 10'd100;
-  localparam SPRITE_SPACING = 10'd50;
+  localparam SPRITE_WIDTH = 10'd46;
+  localparam SPRITE_SPACING = 10'd50;  // 34
 
-  localparam INITIAL_X_SPACING = (SCREEN_WIDTH - ((SPRITE_WIDTH + SPRITE_SPACING) * 4 - SPRITE_SPACING)) / 2;
+  localparam INITIAL_X_SPACING = (WIDTH - ((SPRITE_WIDTH + SPRITE_SPACING) * 4 - SPRITE_SPACING)) / 2;
   localparam INITIAL_Y_SPACING = 10'd55;
 
   localparam x_0 = INITIAL_X_SPACING;
@@ -24,7 +25,7 @@ module sprites (
   localparam x_3 = x_2 + SPRITE_WIDTH + SPRITE_SPACING;
 
   localparam y_0 = INITIAL_Y_SPACING;
-  localparam y_1 = SCREEN_WIDTH - SPRITE_WIDTH - INITIAL_Y_SPACING;
+  localparam y_1 = WIDTH - SPRITE_WIDTH - INITIAL_Y_SPACING;
   // ------------------
 
   wire sprite_0_x = video_x >= x_0 && video_x < x_0 + SPRITE_WIDTH;
@@ -36,7 +37,7 @@ module sprites (
   wire sprite_bottom_y = video_y >= y_1 && video_y < y_1 + SPRITE_WIDTH;
 
   wire active_sprite = (sprite_top_y || sprite_bottom_y) && (sprite_0_x || sprite_1_x || sprite_2_x || sprite_3_x);
-  assign active_pixel = active_sprite && pixel != 0;
+  assign active_pixel = active_sprite && pixel_alpha != 0;
 
   // Comb
   reg [2:0] sprite;
@@ -80,22 +81,23 @@ module sprites (
   end
 
   image_memory #(
-      .MEM_WIDTH(800),
-      .MEM_HEIGHT(100),
-      .SPRITE_WIDTH(100),
-      .SPRITE_HEIGHT(100)
+      .MEM_WIDTH(SPRITE_WIDTH * 8),
+      .MEM_HEIGHT(SPRITE_WIDTH),
+      .SPRITE_WIDTH(SPRITE_WIDTH),
+      .SPRITE_HEIGHT(SPRITE_WIDTH),
+      .PIXEL_BIT_COUNT(8)
   ) sprite_mem (
       .clk(clk),
 
-      .pixel_write_en  (pixel_write_en),
-      .pixel_write_addr(pixel_write_addr),
-      .pixel_write_data(pixel_write_data),
+      .image_write_en  (image_write_en),
+      .image_write_addr(image_write_addr),
+      .image_write_data(image_write_data),
 
       .sprite(sprite),
       .x(sprite_x),
       .y(sprite_y),
 
-      .pixel(pixel)
+      .pixel(pixel_alpha)
   );
 
 endmodule

@@ -37,6 +37,31 @@
         console.log(outputString);
       }
 
+      function getOptimalBlanks() {
+        const goal = 13107200 / 60;
+
+        let bestX = 500;
+        let bestY = 500;
+        let bestDiff = bestX * bestY - goal;
+
+        for (let x = 360; x < 500; x++) {
+          for (let y = 360; y < 500; y++) {
+            const frame = x * y;
+
+            const diff = Math.abs(frame - goal);
+
+            if (diff < bestDiff) {
+              bestDiff = diff;
+              bestX = x;
+              bestY = y;
+            }
+          }
+        }
+
+        console.log(`Best match X: ${bestX}, Y: ${bestY}, diff: ${bestDiff}`);
+        console.log(`Frequency: ${bestX * bestY * 60}`);
+      }
+
       function process(textarea) {
         const segments = textarea.value
           .trim()

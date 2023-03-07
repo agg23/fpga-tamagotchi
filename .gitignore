@@ -6,6 +6,7 @@ bass/tama.*
 **/vunit_out
 **/__pycache__
 rtl/test/verilator/target
+node_modules
 
 *.hex
 *.rbf_r

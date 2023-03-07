@@ -11,5 +11,8 @@
   "type": "module",
   "author": "",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "get-pixels": "^3.3.3",
+    "glob": "^9.2.1"
+  }
 }

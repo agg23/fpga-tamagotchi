@@ -1,10 +1,10 @@
 module video_gen #(
-    parameter WIDTH = 10'd720,
-    parameter HEIGHT = 10'd720,
-    parameter PIXEL_SIZE = 5'd22,
+    parameter WIDTH = 10'd360,
+    parameter HEIGHT = 10'd360,
+    parameter LCD_PIXEL_SIZE = 5'd11,
 
-    parameter VBLANK_LEN = 10'd19,
-    parameter HBLANK_LEN = 10'd19,
+    parameter VBLANK_LEN = 10'd132,
+    parameter HBLANK_LEN = 10'd84,
 
     parameter VBLANK_OFFSET = 10'd5,
     parameter HBLANK_OFFSET = 10'd5,
@@ -146,7 +146,7 @@ module video_gen #(
     if (next_x >= LCD_X_OFFSET && next_x < WIDTH - LCD_X_OFFSET && next_y >= LCD_Y_OFFSET && next_y < HEIGHT - LCD_Y_OFFSET) begin
       pixel_count_x <= pixel_count_x + 5'b1;
 
-      if (pixel_count_x == PIXEL_SIZE - 5'b1) begin
+      if (pixel_count_x == LCD_PIXEL_SIZE - 5'b1) begin
         // End of this pixel horizontally
         pixel_count_x <= 0;
 
@@ -158,7 +158,7 @@ module video_gen #(
 
           pixel_count_y <= pixel_count_y + 5'b1;
 
-          if (pixel_count_y == PIXEL_SIZE - 5'b1) begin
+          if (pixel_count_y == LCD_PIXEL_SIZE - 5'b1) begin
             // End of this pixel vertically
             pixel_count_y <= 0;
 

@@ -10,6 +10,24 @@
         "parameters": 0,
         "extensions": ["bin"],
         "address": "0x00000000"
+      },
+      {
+        "name": "Background",
+        "id": 10,
+        "required": true,
+        "filename": "background.bin",
+        "parameters": 0,
+        "extensions": ["bin"],
+        "address": "0x00000000"
+      },
+      {
+        "name": "Spritesheet",
+        "id": 11,
+        "required": true,
+        "filename": "spritesheet.bin",
+        "parameters": 0,
+        "extensions": ["bin"],
+        "address": "0x00000000"
       }
     ]
   }

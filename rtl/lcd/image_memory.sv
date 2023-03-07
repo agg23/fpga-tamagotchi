@@ -12,9 +12,9 @@ module image_memory #(
     input wire [SPRITE_X_SIZE - 1:0] x,
     input wire [SPRITE_Y_SIZE - 1:0] y,
 
-    input wire pixel_write_en,
-    input wire [ADDR_SIZE-1:0] pixel_write_addr,
-    input wire [PIXEL_BIT_COUNT-1:0] pixel_write_data,
+    input wire image_write_en,
+    input wire [ADDR_SIZE-1:0] image_write_addr,
+    input wire [PIXEL_BIT_COUNT-1:0] image_write_data,
 
     output reg [PIXEL_BIT_COUNT -1:0] pixel = 0
 );
@@ -41,8 +41,8 @@ module image_memory #(
   wire [ADDR_SIZE - 1:0] sprite_addr = sprite_y_base_addr + {{ADDR_SIZE - SPRITE_X_SIZE{1'b0}}, x};
 
   always @(posedge clk) begin
-    if (pixel_write_en) begin
-      memory[pixel_write_addr] <= pixel_write_data;
+    if (image_write_en) begin
+      memory[image_write_addr] <= image_write_data;
     end else begin
       pixel <= memory[sprite_addr];
     end
