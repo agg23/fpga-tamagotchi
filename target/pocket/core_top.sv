@@ -325,6 +325,15 @@ module core_top (
     endcase
   end
 
+  always @(posedge clk_74a) begin
+    if (bridge_wr && bridge_addr[31:28] == 4'h1) begin
+      casex (bridge_addr)
+        32'h10: begin
+          disable_sound <= bridge_wr_data[0];
+        end
+      endcase
+    end
+  end
 
   //
   // host/target command handler
@@ -528,8 +537,14 @@ module core_top (
     end
   end
 
+  // Settings
+  reg disable_sound = 0;
+
+  // Synced settings
   wire reset_n_s;
   wire [15:0] cont1_key_s;
+
+  wire disable_sound_s;
 
   synch_3 #(
       .WIDTH(32)
@@ -540,12 +555,14 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(1)
+      .WIDTH(2)
   ) settings_s (
-      reset_n,
-      reset_n_s,
+      {disable_sound, reset_n},
+      {disable_sound_s, reset_n_s},
       clk_32_768
   );
+
+  wire buzzer;
 
   wire lcd_all_off_setting;
   wire lcd_all_on_setting;
@@ -567,6 +584,8 @@ module core_top (
 
       .video_addr(video_addr),
       .video_data(video_data),
+
+      .buzzer(buzzer),
 
       // Settings
       .lcd_all_off_setting(lcd_all_off_setting),
@@ -634,7 +653,7 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire [15:0] audio_l = 0;
+  wire [14:0] audio_l = ~disable_sound_s ? {1'b0, {14{buzzer}}} : 0;
 
   sound_i2s #(
       .CHANNEL_WIDTH(15)
@@ -642,8 +661,8 @@ module core_top (
       .clk_74a  (clk_74a),
       .clk_audio(clk_32_768),
 
-      .audio_l(audio_l[15:1]),
-      .audio_r(audio_l[15:1]),
+      .audio_l(audio_l),
+      .audio_r(audio_l),
 
       .audio_mclk(audio_mclk),
       .audio_lrck(audio_lrck),

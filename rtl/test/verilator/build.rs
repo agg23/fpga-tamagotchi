@@ -19,6 +19,7 @@ fn main() {
         "../../core/reg_mux.sv",
         "../../core/regs.sv",
         "../../core/cpu.sv",
+        "../../buzzer.sv",
         "../../clock.sv",
         "../../input_lines.sv",
         "../../interrupt.sv",

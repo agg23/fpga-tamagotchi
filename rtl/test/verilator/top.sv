@@ -52,6 +52,8 @@ module top (
 
   assign clk_65_536khz = clk_en_65_536khz;
 
+  wire buzzer;
+
   wire lcd_all_off_setting;
   wire lcd_all_on_setting;
 
@@ -72,6 +74,8 @@ module top (
 
       .video_addr(video_addr),
       .video_data(video_data),
+
+      .buzzer(buzzer),
 
       // Settings
       .lcd_all_off_setting(lcd_all_off_setting),

@@ -16,6 +16,8 @@ module cpu_6s46 (
     input  wire [7:0] video_addr,
     output wire [3:0] video_data,
 
+    output wire buzzer,
+
     // Settings
     // Probably unused
     output wire lcd_all_off_setting,
@@ -171,11 +173,22 @@ module cpu_6s46 (
       .factor_flags(input_factor)
   );
 
-  reg [3:0] lcd_contrast = 4'h8;
-
   reg [3:0] buzzer_output_control = 4'hF;
-  reg [3:0] buzzer_selection = 4'hF;
-  reg [1:0] buzzer_envelope = 2'b0;
+  reg [3:0] buzzer_frequency_selection = 4'hF;
+
+  buzzer buzzer_sound (
+      .clk(clk),
+      .clk_en(clk_en),
+
+      .reset_n(reset_n),
+
+      .buzzer_enabled  (~buzzer_output_control[3]),
+      .buzzer_frequency(buzzer_frequency_selection[2:0]),
+
+      .buzzer_output(buzzer)
+  );
+
+  reg [2:0] lcd_control = 3'b100;
 
   // Unused registers
   reg [2:0] svd_status = 0;
@@ -184,7 +197,8 @@ module cpu_6s46 (
   reg [7:0] serial_data = 0;
   reg [3:0] oscillation = 0;
   reg prog_timer_clock_output = 0;
-  reg [2:0] lcd_control = 3'b100;
+  reg [3:0] lcd_contrast = 4'h8;
+  reg [1:0] buzzer_envelope = 2'b0;
 
   // Settings
   assign lcd_all_off_setting = lcd_control[2];
@@ -251,6 +265,7 @@ module cpu_6s46 (
       lcd_contrast <= 4'h8;
 
       buzzer_output_control <= 4'hF;
+      buzzer_frequency_selection <= 4'hF;
 
       svd_status <= 0;
       heavy_load_protection <= 0;
@@ -542,18 +557,16 @@ module cpu_6s46 (
               8'h74, 1'bX
             } : begin
               // Buzzer frequency
-              // TODO: Implement
               if (memory_write_en) begin
-                buzzer_selection <= memory_write_data;
+                buzzer_frequency_selection <= memory_write_data;
               end else begin
-                memory_read_data <= buzzer_selection;
+                memory_read_data <= buzzer_frequency_selection;
               end
             end
             {
               8'h75, 1'bX
             } : begin
               // Buzzer settings
-              // TODO: Implement
               if (memory_write_en) begin
                 // TODO: Handle trigger and reset
                 buzzer_envelope <= memory_write_data[1:0];
