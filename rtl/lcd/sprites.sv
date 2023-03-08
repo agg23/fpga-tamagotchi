@@ -6,6 +6,8 @@ module sprites #(
     input wire [9:0] video_x,
     input wire [9:0] video_y,
 
+    input wire [7:0] sprite_enable_status,
+
     input wire image_write_en,
     input wire [14:0] image_write_addr,
     input wire [7:0] image_write_data,
@@ -43,6 +45,13 @@ module sprites #(
   reg [2:0] sprite;
   reg [6:0] sprite_x;
   reg [6:0] sprite_y;
+
+  wire is_sprite_active = sprite_enable_status[sprite];
+
+  wire [7:0] stored_pixel_alpha;
+  wire [15:0] final_pixel_alpha = is_sprite_active ? {stored_pixel_alpha, 8'b0} : stored_pixel_alpha * 8'h30;
+
+  assign pixel_alpha = final_pixel_alpha[15:8];
 
   always_comb begin
     reg [2:0] selected_sprite;
@@ -97,7 +106,7 @@ module sprites #(
       .x(sprite_x),
       .y(sprite_y),
 
-      .pixel(pixel_alpha)
+      .pixel(stored_pixel_alpha)
   );
 
 endmodule
