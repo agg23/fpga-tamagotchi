@@ -7,6 +7,7 @@ use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 use winit::dpi::{PhysicalPosition, PhysicalSize};
+use winit::event::{ElementState, VirtualKeyCode};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -22,6 +23,13 @@ pub struct Top {
 
     #[port(input)]
     pub reset_n: bool,
+
+    #[port(input)]
+    pub left_button: bool,
+    #[port(input)]
+    pub middle_button: bool,
+    #[port(input)]
+    pub right_button: bool,
 
     #[port(output)]
     pub vsync: bool,
@@ -87,13 +95,21 @@ struct Frame {
     id: u64,
 }
 
+#[derive(Debug)]
+enum TamaButton {
+    Left,
+    Middle,
+    Right,
+}
+
 enum TBEvent {
     Quit,
     StartPause,
+    ButtonDown(TamaButton),
+    ButtonUp(TamaButton),
 }
 
-// const HEIGHT: usize = 228;
-const HEIGHT: usize = 720;
+const HEIGHT: usize = 360;
 const WIDTH: usize = HEIGHT;
 
 fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Receiver<TBEvent>) {
@@ -190,6 +206,16 @@ fn create_tb_processor(buffer_transmitter: Updater<Frame>, event_receiver: Recei
                     TBEvent::StartPause => {
                         // TODO
                     }
+                    TBEvent::ButtonDown(button) => match button {
+                        TamaButton::Left => tb.set_left_button(1),
+                        TamaButton::Middle => tb.set_middle_button(1),
+                        TamaButton::Right => tb.set_right_button(1),
+                    },
+                    TBEvent::ButtonUp(button) => match button {
+                        TamaButton::Left => tb.set_left_button(0),
+                        TamaButton::Middle => tb.set_middle_button(0),
+                        TamaButton::Right => tb.set_right_button(0),
+                    },
                     _ => {}
                 },
                 _ => {}
@@ -270,13 +296,46 @@ pub fn main() {
                     },
             } => {
                 if window_id == window.id() {
-                    match input.virtual_keycode {
-                        Some(winit::event::VirtualKeyCode::Space) => {
-                            let _ = event_transmitter.send(TBEvent::StartPause);
+                    match (input.virtual_keycode, input.state) {
+                        (Some(VirtualKeyCode::Space), ElementState::Pressed) => {
+                            event_transmitter.send(TBEvent::StartPause).unwrap();
                         }
-                        Some(winit::event::VirtualKeyCode::Escape) => {
+                        (Some(VirtualKeyCode::Escape), ElementState::Pressed) => {
                             *control_flow = ControlFlow::Exit;
                             event_transmitter.send(TBEvent::Quit).unwrap();
+                        }
+                        (Some(VirtualKeyCode::W), _) => {
+                            if input.state == ElementState::Pressed {
+                                event_transmitter
+                                    .send(TBEvent::ButtonDown(TamaButton::Middle))
+                                    .unwrap();
+                            } else {
+                                event_transmitter
+                                    .send(TBEvent::ButtonUp(TamaButton::Middle))
+                                    .unwrap();
+                            }
+                        }
+                        (Some(VirtualKeyCode::A), _) => {
+                            if input.state == ElementState::Pressed {
+                                event_transmitter
+                                    .send(TBEvent::ButtonDown(TamaButton::Left))
+                                    .unwrap();
+                            } else {
+                                event_transmitter
+                                    .send(TBEvent::ButtonUp(TamaButton::Left))
+                                    .unwrap();
+                            }
+                        }
+                        (Some(VirtualKeyCode::D), _) => {
+                            if input.state == ElementState::Pressed {
+                                event_transmitter
+                                    .send(TBEvent::ButtonDown(TamaButton::Right))
+                                    .unwrap();
+                            } else {
+                                event_transmitter
+                                    .send(TBEvent::ButtonUp(TamaButton::Right))
+                                    .unwrap();
+                            }
                         }
                         _ => {}
                     }

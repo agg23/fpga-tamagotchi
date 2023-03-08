@@ -4,6 +4,10 @@ module top (
 
     input wire reset_n,
 
+    input wire left_button,
+    input wire middle_button,
+    input wire right_button,
+
     output wire vsync,
     output wire hsync,
     output wire de,
@@ -56,7 +60,8 @@ module top (
 
       .reset_n(reset_n),
 
-      .input_k0(4'h7),
+      // Left, middle, right
+      .input_k0({1'b0, ~left_button, ~middle_button, ~right_button}),
       .input_k1(4'h0),
 
       .rom_addr(rom_addr),
@@ -80,6 +85,11 @@ module top (
 
       .video_addr(video_addr),
       .video_data(video_data),
+
+      .background_write_en(0),
+      .spritesheet_write_en(0),
+      .image_write_addr(0),
+      .image_write_data(0),
 
       .vsync(vsync),
       .hsync(hsync),

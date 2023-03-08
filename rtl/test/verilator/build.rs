@@ -30,6 +30,7 @@ fn main() {
         "../../lcd/sprites.sv",
         "../../lcd/video_gen.sv",
         "../../lcd/lcd.sv",
+        "../../lcd/rgb565_to_rgb888.sv",
         "../../lcd/video.sv",
         "../libraries/main_ram.sv",
         "../libraries/video_ram.sv",
