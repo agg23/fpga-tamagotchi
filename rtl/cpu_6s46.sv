@@ -14,7 +14,12 @@ module cpu_6s46 (
     input  wire [11:0] rom_data,
 
     input  wire [7:0] video_addr,
-    output wire [3:0] video_data
+    output wire [3:0] video_data,
+
+    // Settings
+    // Probably unused
+    output wire lcd_all_off_setting,
+    output wire lcd_all_on_setting
 );
   wire memory_write_en;
   wire memory_read_en;
@@ -166,7 +171,6 @@ module cpu_6s46 (
       .factor_flags(input_factor)
   );
 
-  reg [2:0] lcd_control = 3'b100;
   reg [3:0] lcd_contrast = 4'h8;
 
   reg [3:0] buzzer_output_control = 4'hF;
@@ -180,6 +184,11 @@ module cpu_6s46 (
   reg [7:0] serial_data = 0;
   reg [3:0] oscillation = 0;
   reg prog_timer_clock_output = 0;
+  reg [2:0] lcd_control = 3'b100;
+
+  // Settings
+  assign lcd_all_off_setting = lcd_control[2];
+  assign lcd_all_on_setting  = lcd_control[1];
 
   // RAM bus
 

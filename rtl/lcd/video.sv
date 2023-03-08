@@ -19,6 +19,10 @@ module video #(
     input wire [16:0] image_write_addr,
     input wire [15:0] image_write_data,
 
+    // Settings
+    input wire lcd_all_off_setting,
+    input wire lcd_all_on_setting,
+
     output wire vsync,
     output wire hsync,
     output wire de,
@@ -34,7 +38,8 @@ module video #(
   wire [9:0] video_y;
   wire [1:0] lcd_segment_row;
 
-  wire lcd_active;
+  wire gen_lcd_pixel_active;
+  wire lcd_active = lcd_all_on_setting || (~lcd_all_off_setting && gen_lcd_pixel_active);
   wire active_sprite_pixel;
   wire [7:0] sprite_alpha_pixel;
 
@@ -47,7 +52,7 @@ module video #(
       .rgb888(background_pixel_rgb888)
   );
 
-  alpha_blend alpha_blend (
+  alpha_blend sprite_alpha_blend (
       .background_pixel(background_pixel_with_lcd),
       .forground_pixel(active_sprite_pixel ? {24'b0, sprite_alpha_pixel} : 0),
       .output_pixel(rgb)
@@ -106,7 +111,7 @@ module video #(
 
       .video_data(video_data),
 
-      .lcd_active(lcd_active)
+      .lcd_active(gen_lcd_pixel_active)
   );
 
   wire [7:0] lcd_video_addr;

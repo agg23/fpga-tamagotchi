@@ -52,6 +52,9 @@ module top (
 
   assign clk_65_536khz = clk_en_65_536khz;
 
+  wire lcd_all_off_setting;
+  wire lcd_all_on_setting;
+
   cpu_6s46 tamagotchi (
       .clk(clk),
       .clk_en(clk_en_32_768khz),
@@ -68,19 +71,14 @@ module top (
       .rom_data(rom_data),
 
       .video_addr(video_addr),
-      .video_data(video_data)
+      .video_data(video_data),
+
+      // Settings
+      .lcd_all_off_setting(lcd_all_off_setting),
+      .lcd_all_on_setting (lcd_all_on_setting)
   );
 
-  video 
-  // #(
-  //     .WIDTH(228),
-  //     .HEIGHT(228),
-  //     .PIXEL_SIZE(7),
-
-  //     .VBLANK_LEN(6),
-  //     .HBLANK_LEN(6)
-  // ) 
-  video (
+  video video (
       .clk(clk),
 
       .video_addr(video_addr),
@@ -90,6 +88,10 @@ module top (
       .spritesheet_write_en(0),
       .image_write_addr(0),
       .image_write_data(0),
+
+      // Settings
+      .lcd_all_off_setting(lcd_all_off_setting),
+      .lcd_all_on_setting (lcd_all_on_setting),
 
       .vsync(vsync),
       .hsync(hsync),

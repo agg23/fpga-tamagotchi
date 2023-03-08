@@ -547,6 +547,9 @@ module core_top (
       clk_32_768
   );
 
+  wire lcd_all_off_setting;
+  wire lcd_all_on_setting;
+
   cpu_6s46 tamagotchi (
       .clk(clk_32_768),
       .clk_en(clk_en_32_768khz),
@@ -563,7 +566,11 @@ module core_top (
       .rom_data(rom_data),
 
       .video_addr(video_addr),
-      .video_data(video_data)
+      .video_data(video_data),
+
+      // Settings
+      .lcd_all_off_setting(lcd_all_off_setting),
+      .lcd_all_on_setting (lcd_all_on_setting)
   );
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -614,6 +621,10 @@ module core_top (
       // Top bit is used to determine which memory it goes to
       .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_addr[17:1]),
       .image_write_data(spritesheet_download ? spritesheet_write_data : ioctl_dout_reversed),
+
+      // Settings
+      .lcd_all_off_setting(lcd_all_off_setting),
+      .lcd_all_on_setting (lcd_all_on_setting),
 
       .vsync(vsync),
       .hsync(hsync),
