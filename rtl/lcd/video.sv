@@ -155,15 +155,19 @@ module video #(
 
     case (icon_stage)
       1: begin
+        // Delay stage, getting data
         icon_stage <= 2;
-
-        // Data from upper row
-        sprite_enable_status[3:0] <= video_data;
 
         // Second RAM bank, y = 12
         sprite_icon_video_addr <= {1'b0, 6'd28, 1'b1} + 8'h50;
       end
       2: begin
+        icon_stage <= 3;
+
+        // Data from upper row
+        sprite_enable_status[3:0] <= video_data;
+      end
+      3: begin
         icon_stage <= 0;
 
         // Data from lower row
