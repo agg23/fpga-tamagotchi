@@ -326,7 +326,7 @@ module core_top (
   end
 
   always @(posedge clk_74a) begin
-    if (bridge_wr && bridge_addr[31:28] == 4'h1) begin
+    if (bridge_wr) begin
       casex (bridge_addr)
         32'h10: begin
           disable_sound <= bridge_wr_data[0];
@@ -458,7 +458,7 @@ module core_top (
   wire spritesheet_download = dataslot_requestwrite_id == 11;
 
   data_loader #(
-      .ADDRESS_MASK_UPPER_4(4'h0),
+      .ADDRESS_MASK_UPPER_4(4'h1),
       .ADDRESS_SIZE(18),
       .OUTPUT_WORD_SIZE(2)
   ) data_loader (
