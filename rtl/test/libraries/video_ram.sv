@@ -3,12 +3,12 @@ module video_ram (
 
     input wire [7:0] address_a,
     input wire [3:0] data_a,
-    output wire [3:0] q_a,
+    output reg [3:0] q_a = 0,
     input wire wren_a,
 
     input wire [7:0] address_b,
     input wire [3:0] data_b,
-    output wire [3:0] q_b,
+    output reg [3:0] q_b = 0,
     input wire wren_b
 );
   reg [3:0] memory[256];
@@ -21,8 +21,8 @@ module video_ram (
     if (wren_b) begin
       memory[address_b] <= data_b;
     end
-  end
 
-  assign q_a = memory[address_a];
-  assign q_b = memory[address_b];
+    q_a <= memory[address_a];
+    q_b <= memory[address_b];
+  end
 endmodule

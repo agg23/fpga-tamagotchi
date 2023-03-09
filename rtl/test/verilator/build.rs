@@ -27,6 +27,7 @@ fn main() {
         "../../stopwatch.sv",
         "../../timers.sv",
         "../../lcd/alpha_blend.sv",
+        "../../lcd/frame_ram.sv",
         "../../lcd/image_memory.sv",
         "../../lcd/sprites.sv",
         "../../lcd/video_gen.sv",
