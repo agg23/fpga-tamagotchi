@@ -16,7 +16,14 @@ module cpu (
     output reg [3:0] memory_write_data,
     input wire [3:0] memory_read_data,
 
-    input wire [14:0] interrupt_req
+    input wire [14:0] interrupt_req,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   // Microcode
   reg skip_pc_increment;
@@ -166,6 +173,13 @@ module cpu (
       .zero(flag_zero),
       .carry(flag_carry),
       .decimal(flag_decimal),
-      .interrupt(flag_interrupt)
+      .interrupt(flag_interrupt),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out)
   );
 endmodule

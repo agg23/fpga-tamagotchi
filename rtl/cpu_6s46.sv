@@ -21,7 +21,14 @@ module cpu_6s46 (
     // Settings
     // Probably unused
     output wire lcd_all_off_setting,
-    output wire lcd_all_on_setting
+    output wire lcd_all_on_setting,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   wire memory_write_en;
   wire memory_read_en;
@@ -47,7 +54,14 @@ module cpu_6s46 (
       .memory_write_data(memory_write_data),
       .memory_read_data(memory_read_data),
 
-      .interrupt_req(interrupt_req)
+      .interrupt_req(interrupt_req),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out)
   );
 
   reg reset_clock_timer = 0;

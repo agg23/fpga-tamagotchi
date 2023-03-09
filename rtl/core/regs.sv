@@ -1,4 +1,5 @@
 import types::*;
+import ss_addresses::*;
 
 module regs (
     input wire clk,
@@ -35,7 +36,14 @@ module regs (
     output reg zero,
     output reg carry,
     output reg decimal,
-    output reg interrupt = 0
+    output reg interrupt = 0,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   // Registers
   // Start at page 1
@@ -70,6 +78,48 @@ module regs (
 
   assign memory_read_en = use_bus_input_memory_addr && current_cycle == CYCLE_REG_FETCH;
 
+  wire [31:0] ss_current_data1 = {2'b0, np, pc, a, b, interrupt, decimal, zero, carry};
+  wire [31:0] ss_current_data2 = {x, y, sp};
+
+  wire [31:0] ss_new_data1;
+  wire [31:0] ss_new_data2;
+
+  wire [31:0] ss_bus_out1;
+  wire [31:0] ss_bus_out2;
+
+  assign ss_bus_out = ss_bus_out1 | ss_bus_out2;
+
+  bus_connector #(
+      .ADDRESS(SS_REGS1),
+      .DEFAULT_VALUE({2'b0, 5'h01, 13'h0_1_00, 12'b0})
+  ) ss1 (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out1),
+
+      .current_data(ss_current_data1),
+      .new_data(ss_new_data1)
+  );
+
+  bus_connector #(
+      .ADDRESS(SS_REGS2)
+  ) ss2 (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out2),
+
+      .current_data(ss_current_data2),
+      .new_data(ss_new_data2)
+  );
+
   reg_mux bus_input_mux (
       .selector(bus_input_selector),
 
@@ -103,11 +153,8 @@ module regs (
     reg_type modified_selector;
 
     if (~reset_n) begin
-      // Start at page 1, for reset vector
-      pc <= 13'h0_1_00;
-      np <= 5'h01;
-
-      interrupt <= 0;
+      {np, pc, a, b, interrupt, decimal, zero, carry} <= ss_new_data1[29:0];
+      {x, y, sp} <= ss_new_data2;
     end else if (clk_en) begin
       if (current_cycle != CYCLE_REG_WRITE) begin
         memory_write_en <= 0;

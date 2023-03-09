@@ -14,10 +14,23 @@ module bench;
   reg [3:0] input_k0 = 0;
   reg [3:0] input_k1 = 0;
 
+  wire [3:0] video_data;
+  wire buzzer;
+  wire lcd_all_off_setting;
+  wire lcd_all_on_setting;
+
+  // Savestates
+  reg [31:0] ss_bus_in = 0;
+  reg [7:0] ss_bus_addr = 0;
+  reg ss_bus_wren = 0;
+  reg ss_bus_reset_n = 1;
+  wire [31:0] ss_bus_out;
+
   cpu_6s46 cpu_uut (
       .clk(clk_2x),
       .clk_en(clk),
       .clk_2x_en(clk_2x),
+      .clk_vid(1'b0),
 
       .reset_n(reset_n),
 
@@ -25,7 +38,22 @@ module bench;
       .input_k1(input_k1),
 
       .rom_addr(rom_addr),
-      .rom_data(rom_data)
+      .rom_data(rom_data),
+
+      .video_addr(8'b0),
+      .video_data(video_data),
+
+      .buzzer(buzzer),
+
+      .lcd_all_off_setting(lcd_all_off_setting),
+      .lcd_all_on_setting (lcd_all_on_setting),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out)
   );
 
   // task half_cycle();
@@ -124,6 +152,17 @@ module bench;
     @(posedge clk iff cpu_uut.core.microcode.halt);
   endtask
 
+  task ss_write(reg [7:0] addr, reg [31:0] data);
+    bench.ss_bus_addr = addr;
+    bench.ss_bus_in   = data;
+    bench.ss_bus_wren = 1;
+
+    #4;
+    bench.ss_bus_addr = 0;
+    bench.ss_bus_in   = 0;
+    bench.ss_bus_wren = 0;
+  endtask
+
   task assert_pc(reg [12:0] expected);
     if (expected !== 13'hXXXX) begin
       `CHECK_EQUAL(cpu_uut.core.regs.pc, expected);
@@ -190,6 +229,10 @@ module bench;
 
   task assert_decimal(reg expected);
     `CHECK_EQUAL(cpu_uut.core.regs.decimal, expected);
+  endtask
+
+  task assert_ss_bus_out(reg [31:0] expected);
+    `CHECK_EQUAL(ss_bus_out, expected);
   endtask
 
   task assert_expected(reg [12:0] expected_pc, reg [3:0] expected_a, reg [3:0] expected_b,
