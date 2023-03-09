@@ -12,6 +12,45 @@
         "writeonly": true,
         "defaultval": 0,
         "value": 1
+      },
+      {
+        "name": "Emulation Speed",
+        "id": 40,
+        "type": "list",
+        "enabled": true,
+        "persist": true,
+        "writeonly": false,
+        "address": "0x100",
+        "defaultval": 0,
+        "options": [
+          {
+            "value": 0,
+            "name": "Normal"
+          },
+          {
+            "value": 1,
+            "name": "4x"
+          },
+          {
+            "value": 2,
+            "name": "50x"
+          },
+          {
+            "value": 3,
+            "name": "Max"
+          }
+        ]
+      },
+      {
+        "name": "End Turbo on Event",
+        "id": 41,
+        "type": "check",
+        "enabled": true,
+        "address": "0x104",
+        "persist": true,
+        "writeonly": true,
+        "defaultval": 1,
+        "value": 1
       }
     ],
     "messages": []

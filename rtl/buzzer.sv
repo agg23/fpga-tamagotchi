@@ -51,6 +51,7 @@ module buzzer (
       end else begin
         // Always set counter value
         divider <= frequency_count_value(buzzer_frequency);
+        buzzer_output <= 0;
       end
     end
   end

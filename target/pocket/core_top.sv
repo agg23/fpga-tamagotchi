@@ -314,11 +314,7 @@ module core_top (
       default: begin
         bridge_rd_data <= 0;
       end
-      32'h10xxxxxx: begin
-        // example
-        // bridge_rd_data <= example_device_data;
-        bridge_rd_data <= 0;
-      end
+      32'h100: bridge_rd_data <= {30'b0, turbo_speed};
       32'hF8xxxxxx: begin
         bridge_rd_data <= cmd_bridge_rd_data;
       end
@@ -326,14 +322,34 @@ module core_top (
   end
 
   always @(posedge clk_74a) begin
+    if (reset_turbo_s) begin
+      turbo_speed <= 0;
+    end
+
     if (bridge_wr) begin
       casex (bridge_addr)
         32'h10: begin
           disable_sound <= bridge_wr_data[0];
         end
+        32'h100: begin
+          turbo_speed <= bridge_wr_data[1:0];
+        end
+        32'h104: begin
+          cancel_turbo_on_event <= bridge_wr_data[0];
+        end
       endcase
     end
   end
+
+  wire reset_turbo_s;
+
+  synch_3 #(
+      .WIDTH(1)
+  ) bridge_resets_s (
+      reset_turbo,
+      reset_turbo_s,
+      clk_74a
+  );
 
   //
   // host/target command handler
@@ -505,6 +521,22 @@ module core_top (
 
   localparam CLOCK_DIV_COUNT = 10'd400;
 
+  // Comb
+  reg [9:0] clock_div_reset_value;
+
+  always_comb begin
+    case (turbo_speed_s)
+      // 1x
+      0: clock_div_reset_value = 10'd400;
+      // 4x
+      1: clock_div_reset_value = 10'd100;
+      // 50x
+      2: clock_div_reset_value = 10'd8;
+      // TODO: Implement Max
+      3: clock_div_reset_value = 10'd8;
+    endcase
+  end
+
   reg [9:0] clock_div = CLOCK_DIV_COUNT;
 
   // Clock divider
@@ -515,11 +547,11 @@ module core_top (
     clock_div <= clock_div - 10'h1;
 
     if (clock_div == 0) begin
-      clock_div <= CLOCK_DIV_COUNT;
+      clock_div <= clock_div_reset_value;
 
       clk_en_32_768khz <= 1;
       clk_en_65_536khz <= 1;
-    end else if (clock_div == CLOCK_DIV_COUNT / 2) begin
+    end else if (clock_div == clock_div_reset_value / 2) begin
       clk_en_65_536khz <= 1;
     end
   end
@@ -537,14 +569,20 @@ module core_top (
     end
   end
 
+  reg reset_turbo = 0;
+
   // Settings
   reg disable_sound = 0;
+  reg [1:0] turbo_speed = 0;
+  reg cancel_turbo_on_event = 0;
 
   // Synced settings
   wire reset_n_s;
   wire [15:0] cont1_key_s;
 
   wire disable_sound_s;
+  wire [1:0] turbo_speed_s;
+  wire cancel_turbo_on_event_s;
 
   synch_3 #(
       .WIDTH(32)
@@ -555,10 +593,10 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(2)
+      .WIDTH(5)
   ) settings_s (
-      {disable_sound, reset_n},
-      {disable_sound_s, reset_n_s},
+      {cancel_turbo_on_event, turbo_speed, disable_sound, reset_n},
+      {cancel_turbo_on_event_s, turbo_speed_s, disable_sound_s, reset_n_s},
       clk_32_768
   );
 
@@ -566,6 +604,15 @@ module core_top (
 
   wire lcd_all_off_setting;
   wire lcd_all_on_setting;
+
+  always @(posedge clk_32_768) begin
+    reset_turbo <= 0;
+
+    if (cancel_turbo_on_event_s && buzzer) begin
+      // Reset turbo
+      reset_turbo <= 1;
+    end
+  end
 
   cpu_6s46 tamagotchi (
       .clk(clk_32_768),
