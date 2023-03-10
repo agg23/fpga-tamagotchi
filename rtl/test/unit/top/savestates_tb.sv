@@ -192,6 +192,26 @@ module savestates_tb;
       bench.assert_ss_bus_out({16'b0, 1'b1, 8'hEA, 1'b1, 6'h25});
     end
 
+    `TEST_CASE("Prog timer data should initalize to expected defaults") begin
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reload SS buffers with default values
+      bench.ss_bus_reset_n = 0;
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      // Wait one cycle
+      #4;
+
+      // Release reset
+      bench.ss_bus_reset_n = 1;
+      bench.reset_n = 1;
+
+      #1;
+
+      `CHECK_EQUAL(bench.cpu_uut.timers.prog_timer.downcounter, 8'hFF);
+    end
+
     `TEST_CASE("Interrupt clock data should be set by SS address 0x5") begin
       bench.rom_data = 12'hFFF; // NOP7
 
@@ -258,6 +278,156 @@ module savestates_tb;
 
       // {30'b0, factor_flags}
       bench.assert_ss_bus_out({30'b0, 2'h3});
+    end
+
+    `TEST_CASE("CPU memmap regs should initalize to expected defaults") begin
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reload SS buffers with default values
+      bench.ss_bus_reset_n = 0;
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      // Wait one cycle
+      #4;
+
+      // Release reset
+      bench.ss_bus_reset_n = 1;
+      bench.reset_n = 1;
+
+      #1;
+
+      `CHECK_EQUAL(bench.cpu_uut.input_relation_k0, 4'hF);
+      `CHECK_EQUAL(bench.cpu_uut.buzzer_output_control, 4'hF);
+      `CHECK_EQUAL(bench.cpu_uut.buzzer_frequency_selection, 4'hF);
+      `CHECK_EQUAL(bench.cpu_uut.lcd_control, 3'b100);
+      `CHECK_EQUAL(bench.cpu_uut.lcd_contrast, 4'h8);
+    end
+
+    `TEST_CASE("CPU memmap regs set 1 should be set by SS address 0x7") begin
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      #4;
+      #1;
+
+      // {enable_stopwatch, enable_prog_timer, prog_timer_clock_selection, prog_timer_reload, clock_mask, stopwatch_mask, prog_timer_mask, input_k0_mask, input_k1_mask, input_relation_k0}
+      bench.ss_write(8'h7, {1'b1, 1'b0, 3'h5, 8'hAF, 4'h9, 2'h3, 1'b1, 4'hD, 4'hA, 4'h7});
+
+      #4;
+      `CHECK_EQUAL(bench.cpu_uut.enable_stopwatch, 1'b1);
+      `CHECK_EQUAL(bench.cpu_uut.enable_prog_timer, 1'b0);
+      `CHECK_EQUAL(bench.cpu_uut.prog_timer_clock_selection, 3'h5);
+      `CHECK_EQUAL(bench.cpu_uut.prog_timer_reload, 8'hAF);
+      `CHECK_EQUAL(bench.cpu_uut.clock_mask, 4'h9);
+      `CHECK_EQUAL(bench.cpu_uut.stopwatch_mask, 2'h3);
+      `CHECK_EQUAL(bench.cpu_uut.prog_timer_mask, 1'b1);
+      `CHECK_EQUAL(bench.cpu_uut.input_k0_mask, 4'hD);
+      `CHECK_EQUAL(bench.cpu_uut.input_k1_mask, 4'hA);
+      `CHECK_EQUAL(bench.cpu_uut.input_relation_k0, 4'h7);
+    end
+
+    `TEST_CASE("CPU memmap regs set 1 should be read by SS address 0x7") begin
+      bench.rom_data = 12'hFFF; // NOP7
+      bench.ss_bus_addr = 8'h7;
+
+      #1;
+
+      bench.cpu_uut.enable_stopwatch = 1'b1;
+      bench.cpu_uut.enable_prog_timer = 1'b0;
+      bench.cpu_uut.prog_timer_clock_selection = 3'h5;
+      bench.cpu_uut.prog_timer_reload = 8'hAF;
+      bench.cpu_uut.clock_mask = 4'h9;
+      bench.cpu_uut.stopwatch_mask = 2'h3;
+      bench.cpu_uut.prog_timer_mask = 1'b1;
+      bench.cpu_uut.input_k0_mask = 4'hD;
+      bench.cpu_uut.input_k1_mask = 4'hA;
+      bench.cpu_uut.input_relation_k0 = 4'h7;
+
+      #3;
+
+      // {enable_stopwatch, enable_prog_timer, prog_timer_clock_selection, prog_timer_reload, clock_mask, stopwatch_mask, prog_timer_mask, input_k0_mask, input_k1_mask, input_relation_k0}
+      bench.assert_ss_bus_out({1'b1, 1'b0, 3'h5, 8'hAF, 4'h9, 2'h3, 1'b1, 4'hD, 4'hA, 4'h7});
+    end
+
+    `TEST_CASE("CPU memmap regs set 2 should be set by SS address 0x8") begin
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      #4;
+      #1;
+
+      // {buzzer_output_control, buzzer_frequency_selection, lcd_control, svd_status, heavy_load_protection, serial_mask, serial_data, oscillation, prog_timer_clock_output, buzzer_envelope}
+      bench.ss_write(8'h8, {4'hC, 4'h8, 3'h7, 3'h5, 1'b1, 1'b0, 8'hAA, 4'hB, 1'b1, 2'h2});
+
+      #4;
+      `CHECK_EQUAL(bench.cpu_uut.buzzer_output_control, 4'hC);
+      `CHECK_EQUAL(bench.cpu_uut.buzzer_frequency_selection, 4'h8);
+      `CHECK_EQUAL(bench.cpu_uut.lcd_control, 3'h7);
+      `CHECK_EQUAL(bench.cpu_uut.svd_status, 3'h5);
+      `CHECK_EQUAL(bench.cpu_uut.heavy_load_protection, 1'b1);
+      `CHECK_EQUAL(bench.cpu_uut.serial_mask, 1'b0);
+      `CHECK_EQUAL(bench.cpu_uut.serial_data, 8'hAA);
+      `CHECK_EQUAL(bench.cpu_uut.oscillation, 4'hB);
+      `CHECK_EQUAL(bench.cpu_uut.prog_timer_clock_output, 1'b1);
+      `CHECK_EQUAL(bench.cpu_uut.buzzer_envelope, 2'h2);
+    end
+
+    `TEST_CASE("CPU memmap regs set 2 should be read by SS address 0x8") begin
+      bench.rom_data = 12'hFFF; // NOP7
+      bench.ss_bus_addr = 8'h8;
+
+      #1;
+
+      bench.cpu_uut.buzzer_output_control = 4'hC;
+      bench.cpu_uut.buzzer_frequency_selection = 4'h8;
+      bench.cpu_uut.lcd_control = 3'h7;
+      bench.cpu_uut.svd_status = 3'h5;
+      bench.cpu_uut.heavy_load_protection = 1'b1;
+      bench.cpu_uut.serial_mask = 1'b0;
+      bench.cpu_uut.serial_data = 8'hAA;
+      bench.cpu_uut.oscillation = 4'hB;
+      bench.cpu_uut.prog_timer_clock_output = 1'b1;
+      bench.cpu_uut.buzzer_envelope = 2'h2;
+
+      #3;
+
+      // {buzzer_output_control, buzzer_frequency_selection, lcd_control, svd_status, heavy_load_protection, serial_mask, serial_data, oscillation, prog_timer_clock_output, buzzer_envelope}
+      bench.assert_ss_bus_out({4'hC, 4'h8, 3'h7, 3'h5, 1'b1, 1'b0, 8'hAA, 4'hB, 1'b1, 2'h2});
+    end
+
+    `TEST_CASE("CPU memmap regs set 3 should be set by SS address 0x9") begin
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      #4;
+      #1;
+
+      // {lcd_contrast}
+      bench.ss_write(8'h9, {28'h0, 4'h9});
+
+      #4;
+      `CHECK_EQUAL(bench.cpu_uut.lcd_contrast, 4'h9);
+    end
+
+    `TEST_CASE("CPU memmap regs set 3 should be read by SS address 0x9") begin
+      bench.rom_data = 12'hFFF; // NOP7
+      bench.ss_bus_addr = 8'h9;
+
+      #1;
+
+      bench.cpu_uut.lcd_contrast = 4'h9;
+
+      #3;
+
+      // {buzzer_output_control, buzzer_frequency_selection, lcd_control, svd_status, heavy_load_protection, serial_mask, serial_data, oscillation, prog_timer_clock_output, buzzer_envelope}
+      bench.assert_ss_bus_out({28'b0, 4'h9});
     end
   end;
 

@@ -14,4 +14,8 @@ package ss_addresses;
 
   parameter [WIDTH:0] SS_INTERRUPT = 8'h5;  // prev_timer_32hz, prev_timer_8hz, prev_timer_2hz, prev_timer_1hz, clock_factor: 8
   parameter [WIDTH:0] SS_INPUT = 8'h6;  // factor_flags: 2
+
+  parameter [WIDTH:0] SS_MEMMAP1 = 8'h7; // enable_stopwatch, enable_prog_timer, prog_timer_clock_selection, prog_timer_reload, clock_mask, stopwatch_mask, prog_timer_mask, input_k0_mask, input_k1_mask, input_relation_k0: 32
+  parameter [WIDTH:0] SS_MEMMAP2 = 8'h8; // buzzer_output_control, buzzer_frequency_selection, lcd_control, svd_status, heavy_load_protection, serial_mask, serial_data, oscillation, prog_timer_clock_output, buzzer_envelope: 31
+  parameter [WIDTH:0] SS_MEMMAP3 = 8'h9;  // lcd_contrast: 4
 endpackage

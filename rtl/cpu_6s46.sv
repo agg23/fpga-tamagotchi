@@ -1,3 +1,5 @@
+import ss_addresses::*;
+
 module cpu_6s46 (
     input wire clk,
     input wire clk_vid,
@@ -36,7 +38,11 @@ module cpu_6s46 (
   wire [31:0] ss_bus_out_interrupt;
   wire [31:0] ss_bus_out_input;
 
-  assign ss_bus_out = ss_bus_out_core | ss_bus_out_timers | ss_bus_out_interrupt | ss_bus_out_input;
+  wire [31:0] ss_bus_out1;
+  wire [31:0] ss_bus_out2;
+  wire [31:0] ss_bus_out3;
+
+  assign ss_bus_out = ss_bus_out_core | ss_bus_out_timers | ss_bus_out_interrupt | ss_bus_out_input | ss_bus_out1 | ss_bus_out2 | ss_bus_out3;
 
   wire memory_write_en;
   wire memory_read_en;
@@ -283,6 +289,39 @@ module cpu_6s46 (
       .wren(memory_write_en && memory_addr < 12'h280)
   );
 
+  wire [31:0] ss_current_data1 = {
+    enable_stopwatch,
+    enable_prog_timer,
+    prog_timer_clock_selection,
+    prog_timer_reload,
+    clock_mask,
+    stopwatch_mask,
+    prog_timer_mask,
+    input_k0_mask,
+    input_k1_mask,
+    input_relation_k0
+  };
+
+  wire [31:0] ss_current_data2 = {
+    1'b0,
+    buzzer_output_control,
+    buzzer_frequency_selection,
+    lcd_control,
+    svd_status,
+    heavy_load_protection,
+    serial_mask,
+    serial_data,
+    oscillation,
+    prog_timer_clock_output,
+    buzzer_envelope
+  };
+
+  wire [31:0] ss_current_data3 = {28'b0, lcd_contrast};
+
+  wire [31:0] ss_new_data1;
+  wire [31:0] ss_new_data2;
+  wire [31:0] ss_new_data3;
+
   always @(posedge clk) begin
     if (~reset_n) begin
       reset_clock_factor <= 0;
@@ -291,31 +330,32 @@ module cpu_6s46 (
 
       reset_stopwatch_factor <= 0;
 
-      enable_stopwatch <= 0;
+      { enable_stopwatch,
+        enable_prog_timer,
+        prog_timer_clock_selection,
+        prog_timer_reload,
+        clock_mask,
+        stopwatch_mask,
+        prog_timer_mask,
+        input_k0_mask,
+        input_k1_mask,
+        input_relation_k0
+      } <= ss_new_data1;
 
-      clock_mask <= 0;
-      stopwatch_mask <= 0;
-      prog_timer_mask <= 0;
-      input_k0_mask <= 0;
-      input_k1_mask <= 0;
+      {
+        buzzer_output_control,
+        buzzer_frequency_selection,
+        lcd_control,
+        svd_status,
+        heavy_load_protection,
+        serial_mask,
+        serial_data,
+        oscillation,
+        prog_timer_clock_output,
+        buzzer_envelope
+      } <= ss_new_data2[30:0];
 
-      input_relation_k0 <= 4'hF;
-
-      prog_timer_clock_selection <= 0;
-      prog_timer_reload <= 0;
-
-      lcd_control <= 3'b100;
-      lcd_contrast <= 4'h8;
-
-      buzzer_output_control <= 4'hF;
-      buzzer_frequency_selection <= 4'hF;
-
-      svd_status <= 0;
-      heavy_load_protection <= 0;
-      serial_mask <= 0;
-      serial_data <= 0;
-      oscillation <= 0;
-      prog_timer_clock_output <= 0;
+      {lcd_contrast} <= ss_new_data3[3:0];
     end else if (clk_en) begin
       reset_clock_timer <= 0;
       reset_stopwatch <= 0;
@@ -339,7 +379,6 @@ module cpu_6s46 (
           memory_read_data <= cpu_video_out;
         end else if (memory_addr[11:8] == 4'hF) begin
           // I/O segment
-          // TODO: Remove
           // $display("Accessing I/O address 0x%h. Writing: %b", memory_addr, memory_write_en);
 
           casex ({
@@ -670,4 +709,54 @@ module cpu_6s46 (
     end
   end
 
+  bus_connector #(
+      .ADDRESS(SS_MEMMAP1),
+      // Last 4 bits are input_relation_k0
+      .DEFAULT_VALUE({28'b0, 4'hF})
+  ) ss1 (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out1),
+
+      .current_data(ss_current_data1),
+      .new_data(ss_new_data1)
+  );
+
+  bus_connector #(
+      .ADDRESS(SS_MEMMAP2),
+      // {1'b0, buzzer_output_control, buzzer_frequency_selection, lcd_control, svd_status, heavy_load_protection, serial_mask, serial_data, oscillation, prog_timer_clock_output, buzzer_envelope}
+      .DEFAULT_VALUE({1'b0, 4'hF, 4'hF, 3'b100, 20'b0})
+  ) ss2 (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out2),
+
+      .current_data(ss_current_data2),
+      .new_data(ss_new_data2)
+  );
+
+  bus_connector #(
+      .ADDRESS(SS_MEMMAP3),
+      // {lcd_contrast}
+      .DEFAULT_VALUE({28'b0, 4'h8})
+  ) ss3 (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out3),
+
+      .current_data(ss_current_data3),
+      .new_data(ss_new_data3)
+  );
 endmodule
