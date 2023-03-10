@@ -1,3 +1,5 @@
+import ss_addresses::*;
+
 module stopwatch (
     input wire clk,
     input wire clk_en,
@@ -12,7 +14,14 @@ module stopwatch (
     output reg [1:0] factor_flags = 0,
 
     output wire [3:0] swl,
-    output wire [3:0] swh
+    output wire [3:0] swh,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   reg [3:0] counter_100hz = 0;
 
@@ -28,6 +37,9 @@ module stopwatch (
   assign swl = counter_swl;
   assign swh = counter_swh;
 
+  wire [31:0] ss_current_data = {18'b0, factor_flags, counter_100hz, counter_swh, counter_swl};
+  wire [31:0] ss_new_data;
+
   always_comb begin
     // If 0, count to 25. Otherwise count to 26
     reg count_26;
@@ -40,14 +52,16 @@ module stopwatch (
   end
 
   always @(posedge clk) begin
-    if (~reset_n || (reset && clk_en)) begin
-      counter_100hz <= 0;
-      counter_swl   <= 0;
-      counter_swh   <= 0;
-
-      factor_flags  <= 0;
+    if (~reset_n) begin
+      {factor_flags, counter_100hz, counter_swh, counter_swl} <= ss_new_data[13:0];
     end else if (clk_en) begin
-      if (enable && timer_256_tick) begin
+      if (reset) begin
+        counter_100hz <= 0;
+        counter_swl   <= 0;
+        counter_swh   <= 0;
+
+        factor_flags  <= 0;
+      end else if (enable && timer_256_tick) begin
         // Tick 100hz
         counter_100hz <= counter_100hz + 4'h1;
 
@@ -77,4 +91,19 @@ module stopwatch (
     end
   end
 
+  bus_connector #(
+      .ADDRESS(SS_STOPWATCH),
+      .DEFAULT_VALUE(0)
+  ) ss (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out),
+
+      .current_data(ss_current_data),
+      .new_data(ss_new_data)
+  );
 endmodule

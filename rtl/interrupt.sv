@@ -1,3 +1,5 @@
+import ss_addresses::*;
+
 module interrupt (
     input wire clk,
     input wire clk_en,
@@ -23,7 +25,15 @@ module interrupt (
     input wire prog_timer_factor,
     input wire [1:0] input_factor,
 
-    output reg [14:0] interrupt_req = 0
+    // Comb
+    output reg [14:0] interrupt_req = 0,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   always_comb begin
     interrupt_req = 0;
@@ -46,14 +56,14 @@ module interrupt (
   reg prev_timer_2hz = 0;
   reg prev_timer_1hz = 0;
 
+  wire [31:0] ss_current_data = {
+    24'b0, prev_timer_32hz, prev_timer_8hz, prev_timer_2hz, prev_timer_1hz, clock_factor
+  };
+  wire [31:0] ss_new_data;
+
   always @(posedge clk) begin
     if (~reset_n) begin
-      prev_timer_32hz <= 0;
-      prev_timer_8hz <= 0;
-      prev_timer_2hz <= 0;
-      prev_timer_1hz <= 0;
-
-      clock_factor <= 0;
+      {prev_timer_32hz, prev_timer_8hz, prev_timer_2hz, prev_timer_1hz, clock_factor} <= ss_new_data[7:0];
     end else if (clk_en) begin
       prev_timer_32hz <= timer_32hz;
       prev_timer_8hz  <= timer_8hz;
@@ -82,4 +92,19 @@ module interrupt (
     end
   end
 
+  bus_connector #(
+      .ADDRESS(SS_INTERRUPT),
+      .DEFAULT_VALUE(0)
+  ) ss (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out),
+
+      .current_data(ss_current_data),
+      .new_data(ss_new_data)
+  );
 endmodule

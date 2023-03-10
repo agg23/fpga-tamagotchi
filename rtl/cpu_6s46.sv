@@ -30,6 +30,14 @@ module cpu_6s46 (
     input wire ss_bus_reset_n,
     output wire [31:0] ss_bus_out
 );
+  // Savestates
+  wire [31:0] ss_bus_out_core;
+  wire [31:0] ss_bus_out_timers;
+  wire [31:0] ss_bus_out_interrupt;
+  wire [31:0] ss_bus_out_input;
+
+  assign ss_bus_out = ss_bus_out_core | ss_bus_out_timers | ss_bus_out_interrupt | ss_bus_out_input;
+
   wire memory_write_en;
   wire memory_read_en;
   wire [11:0] memory_addr;
@@ -61,7 +69,7 @@ module cpu_6s46 (
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
       .ss_bus_reset_n(ss_bus_reset_n),
-      .ss_bus_out(ss_bus_out)
+      .ss_bus_out(ss_bus_out_core)
   );
 
   reg reset_clock_timer = 0;
@@ -131,7 +139,14 @@ module cpu_6s46 (
       .prog_timer_downcounter(prog_timer_downcounter),
 
       .stopwatch_factor (stopwatch_factor),
-      .prog_timer_factor(prog_timer_factor)
+      .prog_timer_factor(prog_timer_factor),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out_timers)
   );
 
   // Interrupt masks
@@ -165,7 +180,14 @@ module cpu_6s46 (
       .prog_timer_factor(prog_timer_factor),
       .input_factor(input_factor),
 
-      .interrupt_req(interrupt_req)
+      .interrupt_req(interrupt_req),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out_interrupt)
   );
 
   reg [3:0] input_relation_k0 = 4'hF;
@@ -184,7 +206,14 @@ module cpu_6s46 (
       .input_k1_mask(input_k1_mask),
 
       .reset_factor(reset_input_factor),
-      .factor_flags(input_factor)
+      .factor_flags(input_factor),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out_input)
   );
 
   reg [3:0] buzzer_output_control = 4'hF;
@@ -515,7 +544,6 @@ module cpu_6s46 (
               8'h54, 1'bX
             } : begin
               // Output ports R4, buzzer control
-              // TODO: Handle buzzer enable
               if (memory_write_en) begin
                 buzzer_output_control <= memory_write_data;
               end else begin

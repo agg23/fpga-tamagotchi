@@ -1,3 +1,5 @@
+import ss_addresses::*;
+
 module input_lines (
     input wire clk,
     input wire clk_en,
@@ -12,14 +14,24 @@ module input_lines (
     input wire [3:0] input_k1_mask,
 
     input wire reset_factor,
-    output reg [1:0] factor_flags = 0
+    output reg [1:0] factor_flags = 0,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   reg [3:0] prev_input_k0 = 0;
   reg [3:0] prev_input_k1 = 0;
 
+  wire [31:0] ss_current_data = {30'b0, factor_flags};
+  wire [31:0] ss_new_data;
+
   always @(posedge clk) begin
     if (~reset_n) begin
-      factor_flags <= 0;
+      factor_flags <= ss_new_data[1:0];
     end else if (clk_en) begin
       reg k00_factor;
       reg k01_factor;
@@ -55,4 +67,19 @@ module input_lines (
     end
   end
 
+  bus_connector #(
+      .ADDRESS(SS_INPUT),
+      .DEFAULT_VALUE(0)
+  ) ss (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out),
+
+      .current_data(ss_current_data),
+      .new_data(ss_new_data)
+  );
 endmodule

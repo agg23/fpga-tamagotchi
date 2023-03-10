@@ -32,9 +32,22 @@ module timers (
     output wire [7:0] prog_timer_downcounter,
 
     output wire [1:0] stopwatch_factor,
-    output wire prog_timer_factor
+    output wire prog_timer_factor,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   wire timer_256_tick;
+
+  wire [31:0] ss_bus_out_clock;
+  wire [31:0] ss_bus_out_stopwatch;
+  wire [31:0] ss_bus_out_prog_timer;
+
+  assign ss_bus_out = ss_bus_out_clock | ss_bus_out_stopwatch | ss_bus_out_prog_timer;
 
   clock clock (
       .clk(clk),
@@ -53,7 +66,14 @@ module timers (
       .timer_2hz  (timer_2hz),
       .timer_1hz  (timer_1hz),
 
-      .timer_256_tick(timer_256_tick)
+      .timer_256_tick(timer_256_tick),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out_clock)
   );
 
   stopwatch stopwatch (
@@ -70,7 +90,14 @@ module timers (
       .factor_flags(stopwatch_factor),
 
       .swl(stopwatch_swl),
-      .swh(stopwatch_swh)
+      .swh(stopwatch_swh),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out_stopwatch)
   );
 
   prog_timer prog_timer (
@@ -89,6 +116,13 @@ module timers (
       .reset_factor(reset_prog_timer_factor),
       .factor_flags(prog_timer_factor),
 
-      .downcounter(prog_timer_downcounter)
+      .downcounter(prog_timer_downcounter),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out_prog_timer)
   );
 endmodule

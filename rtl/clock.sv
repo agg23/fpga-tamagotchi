@@ -1,3 +1,5 @@
+import ss_addresses::*;
+
 module clock (
     input wire clk,
     input wire clk_en,
@@ -15,18 +17,30 @@ module clock (
     output wire timer_2hz,
     output wire timer_1hz,
 
-    output reg timer_256_tick = 0
+    output reg timer_256_tick = 0,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   reg prev_reset = 0;
 
   reg [6:0] divider = 0;
   reg [7:0] counter_256 = 0;
 
+  wire [31:0] ss_current_data = {16'b0, timer_256_tick, divider, counter_256};
+  wire [31:0] ss_new_data;
+
   always @(posedge clk) begin
-    if (clk_en) begin
+    if (~reset_n) begin
+      {timer_256_tick, divider, counter_256} <= ss_new_data[15:0];
+    end else if (clk_en) begin
       prev_reset <= ~reset_n || reset_clock_timer;
 
-      if (~reset_n || reset_clock_timer) begin
+      if (reset_clock_timer) begin
         divider <= 0;
         counter_256 <= 0;
 
@@ -54,4 +68,20 @@ module clock (
   assign timer_4hz   = counter_256[5];
   assign timer_2hz   = counter_256[6];
   assign timer_1hz   = counter_256[7];
+
+  bus_connector #(
+      .ADDRESS(SS_CLOCK),
+      .DEFAULT_VALUE(0)
+  ) ss (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out),
+
+      .current_data(ss_current_data),
+      .new_data(ss_new_data)
+  );
 endmodule

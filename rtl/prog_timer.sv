@@ -1,3 +1,5 @@
+import ss_addresses::*;
+
 module prog_timer (
     input wire clk,
     input wire clk_en,
@@ -14,7 +16,14 @@ module prog_timer (
     input  wire reset_factor,
     output reg  factor_flags = 0,
 
-    output reg [7:0] downcounter = 0
+    output reg [7:0] downcounter = 0,
+
+    // Savestates
+    input wire [31:0] ss_bus_in,
+    input wire [7:0] ss_bus_addr,
+    input wire ss_bus_wren,
+    input wire ss_bus_reset_n,
+    output wire [31:0] ss_bus_out
 );
   reg divider_8khz = 0;
   reg [5:0] counter_8khz = 0;
@@ -23,6 +32,9 @@ module prog_timer (
   reg input_clock = 0;
 
   reg prev_reset = 0;
+
+  wire [31:0] ss_current_data = {16'b0, factor_flags, downcounter, divider_8khz, counter_8khz};
+  wire [31:0] ss_new_data;
 
   always_comb begin
     case (clock_selection)
@@ -52,8 +64,7 @@ module prog_timer (
     end
 
     if (~reset_n) begin
-      divider_8khz <= 0;
-      counter_8khz <= 0;
+      {divider_8khz, counter_8khz} <= ss_new_data[6:0];
     end else if (clk_en) begin
       // Every 2 ticks, we're at 2x 8,192Hz
       divider_8khz <= ~divider_8khz;
@@ -69,9 +80,7 @@ module prog_timer (
 
   always @(posedge clk) begin
     if (~reset_n) begin
-      downcounter  <= 255;
-
-      factor_flags <= 0;
+      {factor_flags, downcounter} <= ss_new_data[15:7];
     end else if (clk_en) begin
       prev_input_clock <= input_clock;
 
@@ -98,4 +107,20 @@ module prog_timer (
     end
   end
 
+  bus_connector #(
+      .ADDRESS(SS_PROG_TIMER),
+      // Downcounter starts at 255
+      .DEFAULT_VALUE({17'b0, 8'hFF, 7'b0})
+  ) ss (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out),
+
+      .current_data(ss_current_data),
+      .new_data(ss_new_data)
+  );
 endmodule
