@@ -429,9 +429,84 @@ module savestates_tb;
       // {buzzer_output_control, buzzer_frequency_selection, lcd_control, svd_status, heavy_load_protection, serial_mask, serial_data, oscillation, prog_timer_clock_output, buzzer_envelope}
       bench.assert_ss_bus_out({28'b0, 4'h9});
     end
+
+    `TEST_CASE("CPU RAM should be set by SS addresses 0x10-0x60") begin
+      int seed;
+      reg [31:0] write_value;
+      write_value = 0;
+
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      #4;
+      #1;
+
+      seed = 2;
+
+      for (int i = 0; i < 80; i++) begin
+        for (int j = 0; j < 8; j++) begin
+          seed = (1103515245 * seed + 12345) % 2147483647;
+          write_value = {seed[29:26], write_value[31:4]};
+        end
+
+        // Write
+        bench.ss_bus_wren = 1;
+        bench.ss_bus_addr = 8'h10 + i;
+        bench.ss_bus_in = write_value;
+
+        #(10 * 2);
+      end
+
+      // Read the random values back
+      seed = 2;
+
+      for (int i = 0; i < 640; i++) begin
+        seed = (1103515245 * seed + 12345) % 2147483647;
+
+        bench.assert_ram(i, seed[29:26]);
+      end
+    end
+
+    `TEST_CASE("CPU RAM should be read by SS addresses 0x10-0x60") begin
+      int seed;
+      reg [31:0] write_value;
+      write_value = 0;
+
+      bench.rom_data = 12'hFFF; // NOP7
+
+      #1;
+
+      seed = 1039;
+
+      for (int i = 0; i < 640; i++) begin
+        seed = (1103515245 * seed + 12345) % 2147483647;
+
+        bench.cpu_uut.ram.memory[i] = seed[29:26];
+      end
+
+      // Read the random values back over the bus
+      seed = 1039;
+
+      for (int i = 0; i < 80; i++) begin
+        for (int j = 0; j < 8; j++) begin
+          seed = (1103515245 * seed + 12345) % 2147483647;
+          write_value = {seed[29:26], write_value[31:4]};
+        end
+
+        // Read
+        bench.ss_bus_addr = 8'h10 + i;
+        bench.ss_bus_in = write_value;
+
+        #(10 * 2);
+
+        bench.assert_ss_bus_out(write_value);
+      end
+    end
   end;
 
   // The watchdog macro is optional, but recommended. If present, it
   // must not be placed inside any initial or always-block.
-  `WATCHDOG(1ns);
+  `WATCHDOG(50ns);
 endmodule

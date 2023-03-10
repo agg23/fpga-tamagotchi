@@ -42,7 +42,16 @@ module cpu_6s46 (
   wire [31:0] ss_bus_out2;
   wire [31:0] ss_bus_out3;
 
-  assign ss_bus_out = ss_bus_out_core | ss_bus_out_timers | ss_bus_out_interrupt | ss_bus_out_input | ss_bus_out1 | ss_bus_out2 | ss_bus_out3;
+  wire [31:0] ss_bus_out_main_ram;
+
+  assign ss_bus_out = ss_bus_out_core 
+      | ss_bus_out_timers
+      | ss_bus_out_interrupt 
+      | ss_bus_out_input 
+      | ss_bus_out1 
+      | ss_bus_out2 
+      | ss_bus_out3 
+      | ss_bus_out_main_ram;
 
   wire memory_write_en;
   wire memory_read_en;
@@ -277,16 +286,25 @@ module cpu_6s46 (
       .wren_b(1'b0)
   );
 
+  wire [9:0] ss_main_ram_addr;
+  wire [3:0] ss_main_ram_new_data;
+  wire ss_main_ram_wren;
+  wire ss_main_ram_active;
+
+  wire [9:0] combined_cpu_ram_addr = ss_main_ram_active ? ss_main_ram_addr : memory_addr[9:0];
+  wire [3:0] combined_cpu_ram_data = ss_main_ram_active ? ss_main_ram_new_data : memory_write_data;
+  wire combined_cpu_ram_wren = ss_main_ram_active ? ss_main_ram_wren : memory_write_en && memory_addr < 12'h280;
+
   wire [3:0] cpu_ram_out;
 
   // RAM from 0x000 - 0x280
   main_ram ram (
       .clock(clk),
 
-      .address(memory_addr[9:0]),
-      .data(memory_write_data),
+      .address(combined_cpu_ram_addr),
+      .data(combined_cpu_ram_data),
       .q(cpu_ram_out),
-      .wren(memory_write_en && memory_addr < 12'h280)
+      .wren(combined_cpu_ram_wren)
   );
 
   wire [31:0] ss_current_data1 = {
@@ -758,5 +776,24 @@ module cpu_6s46 (
 
       .current_data(ss_current_data3),
       .new_data(ss_new_data3)
+  );
+
+  bus_memory #(
+      .ADDRESS_MIN(SS_MAIN_RAM_START),
+      .ADDRESS_MAX(SS_MAIN_RAM_END)
+  ) ss_main_ram (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out_main_ram),
+
+      .mem_addr(ss_main_ram_addr),
+      .mem_current_data(cpu_ram_out),
+      .mem_new_data(ss_main_ram_new_data),
+      .mem_wren(ss_main_ram_wren),
+      .mem_active(ss_main_ram_active)
   );
 endmodule
