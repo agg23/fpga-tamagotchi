@@ -13,7 +13,7 @@ module extra_tb;
 
       bench.run_until_halt();
       #1;
-      bench.assert_expected(bench.prev_pc, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
+      bench.assert_expected(bench.prev_pc + 1, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
     end
 
     `TEST_CASE("SLP should change nothing") begin
@@ -21,7 +21,7 @@ module extra_tb;
 
       bench.run_until_halt();
       #1;
-      bench.assert_expected(bench.prev_pc, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
+      bench.assert_expected(bench.prev_pc + 1, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
     end
 
     `TEST_CASE("NOP5 should change nothing") begin

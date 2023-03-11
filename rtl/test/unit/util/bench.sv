@@ -23,7 +23,7 @@ module bench;
   reg [31:0] ss_bus_in = 0;
   reg [7:0] ss_bus_addr = 0;
   reg ss_bus_wren = 0;
-  reg ss_bus_reset_n = 1;
+  reg ss_bus_reset_n = 0;
   wire [31:0] ss_bus_out;
 
   cpu_6s46 cpu_uut (
@@ -138,6 +138,7 @@ module bench;
     #6;
 
     bench.reset_n = 1;
+    bench.ss_bus_reset_n = 1;
   endtask
 
   task run_until_final_stage_fetch();

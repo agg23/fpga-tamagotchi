@@ -36,9 +36,11 @@ module clock (
 
   always @(posedge clk) begin
     if (~reset_n) begin
+      prev_reset <= divider == 0;
+
       {timer_256_tick, divider, counter_256} <= ss_new_data[15:0];
     end else if (clk_en) begin
-      prev_reset <= ~reset_n || reset_clock_timer;
+      prev_reset <= reset_clock_timer;
 
       if (reset_clock_timer) begin
         divider <= 0;

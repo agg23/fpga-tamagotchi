@@ -17,6 +17,8 @@ module core_bench;
 
   reg [14:0] interrupt_req = 0;
 
+  reg ss_bus_reset_n = 0;
+
   reg [3:0] ram[4096];
 
   cpu cpu_uut (
@@ -35,7 +37,10 @@ module core_bench;
       .memory_write_data(memory_write_data),
       .memory_read_data(memory_read_data),
 
-      .interrupt_req(interrupt_req)
+      .interrupt_req(interrupt_req),
+
+      // Savestates
+      .ss_bus_reset_n(ss_bus_reset_n)
   );
 
   always @(posedge clk) begin
@@ -100,9 +105,22 @@ module core_bench;
     prev_decimal = cpu_uut.regs.decimal;
   endtask
 
-  task initialize_regs();
+  task initialize_ram();
     cycle_count = 0;
 
+    for (int i = 0; i < 4096; i = i + 1) begin
+      ram[i] = 0;
+    end
+  endtask
+
+  task initialize();
+    bench.initialize_ram();
+
+    #6;
+
+    bench.reset_n = 1;
+
+    // Set default values for tests
     cpu_uut.regs.a = 0;
     cpu_uut.regs.b = 1;
 
@@ -116,19 +134,7 @@ module core_bench;
     cpu_uut.regs.decimal = 0;
     cpu_uut.regs.interrupt = 0;
 
-    for (int i = 0; i < 4096; i = i + 1) begin
-      ram[i] = 0;
-    end
-
     update_prevs();
-  endtask
-
-  task initialize();
-    bench.initialize_regs();
-
-    #6;
-
-    bench.reset_n = 1;
   endtask
 
   task run_until_final_stage_fetch();
