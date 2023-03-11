@@ -504,6 +504,81 @@ module savestates_tb;
         bench.assert_ss_bus_out(write_value);
       end
     end
+
+    `TEST_CASE("Video RAM should be set by SS addresses 0x60-0x74") begin
+      int seed;
+      reg [31:0] write_value;
+      write_value = 0;
+
+      bench.rom_data = 12'hFFF; // NOP7
+
+      // Reinitialize all process blocks
+      bench.reset_n = 0;
+
+      #4;
+      #1;
+
+      seed = 17;
+
+      for (int i = 0; i < 20; i++) begin
+        for (int j = 0; j < 8; j++) begin
+          seed = (1103515245 * seed + 12345) % 2147483647;
+          write_value = {seed[29:26], write_value[31:4]};
+        end
+
+        // Write
+        bench.ss_bus_wren = 1;
+        bench.ss_bus_addr = 8'h60 + i;
+        bench.ss_bus_in = write_value;
+
+        #(10 * 2);
+      end
+
+      // Read the random values back
+      seed = 17;
+
+      for (int i = 0; i < 160; i++) begin
+        seed = (1103515245 * seed + 12345) % 2147483647;
+
+        `CHECK_EQUAL(bench.cpu_uut.video_ram.memory[i], seed[29:26]);
+      end
+    end
+
+    `TEST_CASE("Video RAM should be read by SS addresses 0x60-0x74") begin
+      int seed;
+      reg [31:0] write_value;
+      write_value = 0;
+
+      bench.rom_data = 12'hFFF; // NOP7
+
+      #1;
+
+      seed = 5;
+
+      for (int i = 0; i < 160; i++) begin
+        seed = (1103515245 * seed + 12345) % 2147483647;
+
+        bench.cpu_uut.video_ram.memory[i] = seed[29:26];
+      end
+
+      // Read the random values back over the bus
+      seed = 5;
+
+      for (int i = 0; i < 20; i++) begin
+        for (int j = 0; j < 8; j++) begin
+          seed = (1103515245 * seed + 12345) % 2147483647;
+          write_value = {seed[29:26], write_value[31:4]};
+        end
+
+        // Read
+        bench.ss_bus_addr = 8'h60 + i;
+        bench.ss_bus_in = write_value;
+
+        #(10 * 2);
+
+        bench.assert_ss_bus_out(write_value);
+      end
+    end
   end;
 
   // The watchdog macro is optional, but recommended. If present, it

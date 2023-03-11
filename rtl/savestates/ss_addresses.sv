@@ -21,4 +21,7 @@ package ss_addresses;
 
   parameter [WIDTH:0] SS_MAIN_RAM_START = 8'h10;
   parameter [WIDTH:0] SS_MAIN_RAM_END = 8'h60;  // 80 addresses that map to 640 4-bit addresses
+
+  parameter [WIDTH:0] SS_VIDEO_RAM_START = 8'h60;
+  parameter [WIDTH:0] SS_VIDEO_RAM_END = 8'h74;  // 20 addresses that map to 160 4-bit addresses
 endpackage

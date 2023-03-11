@@ -43,6 +43,7 @@ module cpu_6s46 (
   wire [31:0] ss_bus_out3;
 
   wire [31:0] ss_bus_out_main_ram;
+  wire [31:0] ss_bus_out_video_ram;
 
   assign ss_bus_out = ss_bus_out_core 
       | ss_bus_out_timers
@@ -51,7 +52,8 @@ module cpu_6s46 (
       | ss_bus_out1 
       | ss_bus_out2 
       | ss_bus_out3 
-      | ss_bus_out_main_ram;
+      | ss_bus_out_main_ram
+      | ss_bus_out_video_ram;
 
   wire memory_write_en;
   wire memory_read_en;
@@ -270,6 +272,13 @@ module cpu_6s46 (
 
   wire [3:0] cpu_video_out;
 
+  wire [7:0] ss_video_ram_addr;
+  wire [3:0] ss_video_ram_new_data;
+  wire ss_video_ram_wren;
+  wire ss_video_ram_active;
+
+  wire [7:0] combined_video_addr = ss_video_ram_active ? ss_video_ram_addr : (video_addr < 8'hA0 ? video_addr : 8'h0);
+
   // Sys and video RAM split out and not inferred due to massive synthesis size improvement using Quartus
   video_ram video_ram (
       .clock(clk),
@@ -280,10 +289,10 @@ module cpu_6s46 (
       .wren_a(cpu_video_write_en),
 
       // Video access
-      .address_b(video_addr < 8'hA0 ? video_addr : 8'h0),
-      .data_b(4'h0),
+      .address_b(combined_video_addr),
+      .data_b(ss_video_ram_new_data),
       .q_b(video_data),
-      .wren_b(1'b0)
+      .wren_b(ss_video_ram_wren)
   );
 
   wire [9:0] ss_main_ram_addr;
@@ -779,6 +788,7 @@ module cpu_6s46 (
   );
 
   bus_memory #(
+      .MEM_ADDR_WIDTH(10),
       .ADDRESS_MIN(SS_MAIN_RAM_START),
       .ADDRESS_MAX(SS_MAIN_RAM_END)
   ) ss_main_ram (
@@ -795,5 +805,25 @@ module cpu_6s46 (
       .mem_new_data(ss_main_ram_new_data),
       .mem_wren(ss_main_ram_wren),
       .mem_active(ss_main_ram_active)
+  );
+
+  bus_memory #(
+      .MEM_ADDR_WIDTH(8),
+      .ADDRESS_MIN(SS_VIDEO_RAM_START),
+      .ADDRESS_MAX(SS_VIDEO_RAM_END)
+  ) ss_video_ram (
+      .clk(clk),
+
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out_video_ram),
+
+      .mem_addr(ss_video_ram_addr),
+      .mem_current_data(video_data),
+      .mem_new_data(ss_video_ram_new_data),
+      .mem_wren(ss_video_ram_wren),
+      .mem_active(ss_video_ram_active)
   );
 endmodule

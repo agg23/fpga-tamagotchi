@@ -2,7 +2,7 @@ import ss_addresses::*;
 
 module bus_memory #(
     parameter MEM_DATA_WIDTH = 4,
-    parameter MEM_ADDR_WIDTH = 10,
+    parameter MEM_ADDR_WIDTH,
     parameter [SS_BUS_WIDTH-1:0] ADDRESS_MIN,
     parameter [SS_BUS_WIDTH-1:0] ADDRESS_MAX
 ) (
