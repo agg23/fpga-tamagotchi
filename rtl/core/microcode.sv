@@ -34,7 +34,10 @@ module microcode (
     output alu_op alu_operation,
 
     // Hack for RET
-    output wire override_memory_read_en
+    output wire override_memory_read_en,
+
+    // Indicates ready for savestate halt
+    output wire ss_ready
 );
   typedef enum {
     DECODE,   // Single cycle
@@ -88,6 +91,8 @@ module microcode (
   assign reset_np = ~prevent_reset_np && last_cycle_step;
 
   assign override_memory_read_en = temp_override_bus_input_selector != REG_ALU && current_cycle == CYCLE_REG_WRITE;
+
+  assign ss_ready = stage == DECODE && ~should_begin_interrupt;
 
   int interrupt_req_i;
 

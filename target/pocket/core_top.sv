@@ -315,6 +315,9 @@ module core_top (
         bridge_rd_data <= 0;
       end
       32'h100: bridge_rd_data <= {30'b0, turbo_speed};
+      32'h4xxxxxxx: begin
+        bridge_rd_data <= save_state_bridge_read_data;
+      end
       32'hF8xxxxxx: begin
         bridge_rd_data <= cmd_bridge_rd_data;
       end
@@ -382,10 +385,10 @@ module core_top (
 
   wire dataslot_allcomplete;
 
-  wire savestate_supported;
-  wire [31:0] savestate_addr;
-  wire [31:0] savestate_size;
-  wire [31:0] savestate_maxloadsize;
+  wire savestate_supported = 1;
+  wire [31:0] savestate_addr = 32'h40000000;
+  wire [31:0] savestate_size = 32'h1D0;
+  wire [31:0] savestate_maxloadsize = savestate_size;
 
   wire savestate_start;
   wire savestate_start_ack;
@@ -463,6 +466,53 @@ module core_top (
       .datatable_wren(datatable_wren),
       .datatable_data(datatable_data),
       .datatable_q   (datatable_q)
+  );
+
+  wire [31:0] ss_bus_in;
+  wire [31:0] ss_bus_addr;
+  wire ss_bus_wren;
+  wire ss_bus_reset_n;
+  wire [31:0] ss_bus_out;
+
+  wire ss_ready;
+  wire ss_halt;
+
+  wire [31:0] save_state_bridge_read_data;
+
+  save_state_controller save_state_controller (
+      .clk_74a(clk_74a),
+      .clk_sys(clk_32_768),
+
+      // APF
+      .bridge_wr(bridge_wr),
+      .bridge_rd(bridge_rd),
+      .bridge_endian_little(bridge_endian_little),
+      .bridge_addr(bridge_addr),
+      .bridge_wr_data(bridge_wr_data),
+      .save_state_bridge_read_data(save_state_bridge_read_data),
+
+      // APF Savestates
+      .savestate_load(savestate_load),
+      .savestate_load_ack_s(savestate_load_ack),
+      .savestate_load_busy_s(savestate_load_busy),
+      .savestate_load_ok_s(savestate_load_ok),
+      .savestate_load_err_s(savestate_load_err),
+
+      .savestate_start(savestate_start),
+      .savestate_start_ack_s(savestate_start_ack),
+      .savestate_start_busy_s(savestate_start_busy),
+      .savestate_start_ok_s(savestate_start_ok),
+      .savestate_start_err_s(savestate_start_err),
+
+      // Savestate bus
+      .bus_in(ss_bus_in),
+      .bus_addr(ss_bus_addr),
+      .bus_wren(ss_bus_wren),
+      .bus_reset_n(ss_bus_reset_n),
+      .bus_out(ss_bus_out),
+
+      .ss_ready(ss_ready),
+      .ss_halt (ss_halt)
   );
 
   wire ioctl_wr;
@@ -616,8 +666,8 @@ module core_top (
 
   cpu_6s46 tamagotchi (
       .clk(clk_32_768),
-      .clk_en(clk_en_32_768khz),
-      .clk_2x_en(clk_en_65_536khz),
+      .clk_en(clk_en_32_768khz && ~ss_halt),
+      .clk_2x_en(clk_en_65_536khz && ~ss_halt),
       .clk_vid(clk_32_768),
 
       .reset_n(reset_n_s),
@@ -636,7 +686,16 @@ module core_top (
 
       // Settings
       .lcd_all_off_setting(lcd_all_off_setting),
-      .lcd_all_on_setting (lcd_all_on_setting)
+      .lcd_all_on_setting (lcd_all_on_setting),
+
+      // Savestates
+      .ss_bus_in(ss_bus_in),
+      .ss_bus_addr(ss_bus_addr),
+      .ss_bus_wren(ss_bus_wren),
+      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_out(ss_bus_out),
+
+      .ss_ready(ss_ready)
   );
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -700,7 +759,7 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire [14:0] audio_l = ~disable_sound_s ? {1'b0, {14{buzzer}}} : 0;
+  wire [14:0] audio_l = ~disable_sound_s ? {2'b0, {13{buzzer}}} : 0;
 
   sound_i2s #(
       .CHANNEL_WIDTH(15)

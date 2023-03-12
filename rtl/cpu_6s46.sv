@@ -30,7 +30,9 @@ module cpu_6s46 (
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
     input wire ss_bus_reset_n,
-    output wire [31:0] ss_bus_out
+    output wire [31:0] ss_bus_out,
+
+    output wire ss_ready
 );
   // Savestates
   wire [31:0] ss_bus_out_core;
@@ -86,7 +88,9 @@ module cpu_6s46 (
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
       .ss_bus_reset_n(ss_bus_reset_n),
-      .ss_bus_out(ss_bus_out_core)
+      .ss_bus_out(ss_bus_out_core),
+
+      .ss_ready(ss_ready)
   );
 
   reg reset_clock_timer = 0;

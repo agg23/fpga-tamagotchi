@@ -459,6 +459,9 @@ module savestates_tb;
         #(10 * 2);
       end
 
+      // Let last write finish
+      #2;
+
       // Read the random values back
       seed = 2;
 
@@ -533,6 +536,9 @@ module savestates_tb;
 
         #(10 * 2);
       end
+
+      // Let last write finish
+      #2;
 
       // Read the random values back
       seed = 17;

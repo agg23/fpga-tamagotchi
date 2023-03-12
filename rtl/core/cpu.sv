@@ -23,7 +23,9 @@ module cpu (
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
     input wire ss_bus_reset_n,
-    output wire [31:0] ss_bus_out
+    output wire [31:0] ss_bus_out,
+
+    output wire ss_ready
 );
   // Microcode
   reg skip_pc_increment;
@@ -114,7 +116,9 @@ module cpu (
       .increment_selector(increment_selector),
       .alu_operation(alu_operation),
 
-      .override_memory_read_en(override_memory_read_en)
+      .override_memory_read_en(override_memory_read_en),
+
+      .ss_ready(ss_ready)
   );
 
   wire [3:0] temp_a;

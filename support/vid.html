@@ -67,6 +67,7 @@
           .trim()
           .replace(/\s+/g, " ")
           .split(" ")
+          .flatMap((n) => n.split(""))
           .map((n) => parseInt(n, 16));
 
         const canvas = document.getElementById("canvas");

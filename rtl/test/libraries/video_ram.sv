@@ -3,28 +3,46 @@ module video_ram (
 
     input wire [7:0] address_a,
     input wire [3:0] data_a,
-    output wire [3:0] q_a,
+    output reg [3:0] q_a,
     input wire wren_a,
 
     input wire [7:0] address_b,
     input wire [3:0] data_b,
-    output wire [3:0] q_b,
+    output reg [3:0] q_b,
     input wire wren_b
 );
   reg [3:0] memory[256];
 
+  reg [7:0] stored_addr_a;
+  reg [7:0] stored_addr_b;
+
+  reg [3:0] stored_data_a;
+  reg [3:0] stored_data_b;
+
+  reg stored_wren_a;
+  reg stored_wren_b;
+
   always @(posedge clock) begin
-    if (wren_a) begin
-      memory[address_a] <= data_a;
+    stored_addr_a <= address_a;
+    stored_addr_b <= address_b;
+
+    stored_data_a <= data_a;
+    stored_data_b <= data_b;
+
+    stored_wren_a <= wren_a;
+    stored_wren_b <= wren_b;
+
+    if (stored_wren_a) begin
+      memory[stored_addr_a] <= stored_data_a;
     end
 
-    if (wren_b) begin
-      memory[address_b] <= data_b;
+    if (stored_wren_b) begin
+      memory[stored_addr_b] <= stored_data_b;
     end
   end
 
   // TODO: Which way should this be to accurately simulate an unregistered output?
   // ModelSim and Verilator don't seem to agree
-  assign q_a = memory[address_a];
-  assign q_b = memory[address_b];
+  assign q_a = memory[stored_addr_a];
+  assign q_b = memory[stored_addr_b];
 endmodule

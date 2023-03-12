@@ -8,11 +8,19 @@ module main_ram (
 );
   reg [3:0] memory[1024];
 
+  reg [9:0] stored_addr;
+  reg [3:0] stored_data;
+  reg stored_wren;
+
   always @(posedge clock) begin
-    if (wren) begin
-      memory[address] <= data;
+    stored_addr <= address;
+    stored_data <= data;
+    stored_wren <= wren;
+
+    if (stored_wren) begin
+      memory[stored_addr] <= stored_data;
     end
   end
 
-  assign q = memory[address];
+  assign q = memory[stored_addr];
 endmodule
