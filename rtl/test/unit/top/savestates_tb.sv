@@ -456,7 +456,10 @@ module savestates_tb;
         bench.ss_bus_addr = 8'h10 + i;
         bench.ss_bus_in = write_value;
 
-        #(10 * 2);
+        #2;
+        bench.ss_bus_wren = 0;
+
+        #(9 * 2);
       end
 
       // Let last write finish
@@ -534,7 +537,10 @@ module savestates_tb;
         bench.ss_bus_addr = 8'h60 + i;
         bench.ss_bus_in = write_value;
 
-        #(10 * 2);
+        #2;
+        bench.ss_bus_wren = 0;
+
+        #(9 * 2);
       end
 
       // Let last write finish

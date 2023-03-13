@@ -33,15 +33,15 @@ module bus_memory #(
 
   // We use an extra bit to indicate having processed all of the word in the read case
   reg [WORDS_ADDR_WIDTH:0] word_offset = 0;
-  reg [SS_BUS_WIDTH-1:0] prev_bus_addr = 0;
+  reg [SS_BUS_WIDTH-1:0] last_processed_bus_addr = 0;
 
   reg [SS_DATA_WIDTH-1:0] buffer = 0;
 
   localparam STATE_INIT = 0;
   localparam STATE_PROCESSING = 1;
-  localparam STATE_FINISHED = 2;
 
-  reg [1:0] state = STATE_INIT;
+  reg state = STATE_INIT;
+  reg is_writing = 0;
 
   assign mem_addr = {base_ss_address, word_offset[WORDS_ADDR_WIDTH-1:0]};
 
@@ -49,13 +49,14 @@ module bus_memory #(
   assign mem_new_data = buffer[MEM_DATA_WIDTH-1:0];
 
   always @(posedge clk) begin
-    prev_bus_addr <= bus_addr;
-
     case (state)
       STATE_INIT: begin
-        if (mem_active) begin
+        if (mem_active && bus_addr != last_processed_bus_addr) begin
           // Bus addr is in range. Not reading or writing. Start
           state <= STATE_PROCESSING;
+
+          is_writing <= bus_wren;
+          last_processed_bus_addr <= bus_addr;
 
           if (bus_wren) begin
             // Start write
@@ -77,19 +78,17 @@ module bus_memory #(
         // Both paths need to shift by the word size. Read inserts a new word at the top, write uses the lowest word
         buffer <= {mem_current_data, buffer[SS_DATA_WIDTH-1:MEM_DATA_WIDTH]};
 
-        if (bus_wren ? word_offset == WORDS_PER_BUS - 1 : word_offset == WORDS_PER_BUS) begin
+        if (is_writing ? word_offset == WORDS_PER_BUS - 1 : word_offset == WORDS_PER_BUS) begin
           // We've processed all words after this next cycle
-          state <= STATE_FINISHED;
+          state <= STATE_INIT;
 
           mem_wren <= 0;
+          word_offset <= 0;
         end
-      end
-      STATE_FINISHED: begin
-        // Sit here waiting for an address change
       end
     endcase
 
-    if (~mem_active || (state != STATE_INIT && prev_bus_addr != bus_addr)) begin
+    if (~mem_active) begin
       // Reset
       mem_wren <= 0;
       word_offset <= 0;

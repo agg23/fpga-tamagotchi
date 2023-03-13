@@ -92,7 +92,7 @@ module microcode (
 
   assign override_memory_read_en = temp_override_bus_input_selector != REG_ALU && current_cycle == CYCLE_REG_WRITE;
 
-  assign ss_ready = stage == DECODE && ~should_begin_interrupt;
+  assign ss_ready = stage == DECODE && ~should_begin_interrupt && ~disable_interrupt;
 
   int interrupt_req_i;
 

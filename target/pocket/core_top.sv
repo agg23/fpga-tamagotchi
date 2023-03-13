@@ -476,12 +476,15 @@ module core_top (
 
   wire ss_ready;
   wire ss_halt;
+  wire ss_reset;
 
   wire [31:0] save_state_bridge_read_data;
 
   save_state_controller save_state_controller (
       .clk_74a(clk_74a),
       .clk_sys(clk_32_768),
+
+      .reset_n(reset_n_s),
 
       // APF
       .bridge_wr(bridge_wr),
@@ -512,7 +515,8 @@ module core_top (
       .bus_out(ss_bus_out),
 
       .ss_ready(ss_ready),
-      .ss_halt (ss_halt)
+      .ss_halt (ss_halt),
+      .ss_reset(ss_reset)
   );
 
   wire ioctl_wr;
@@ -670,7 +674,7 @@ module core_top (
       .clk_2x_en(clk_en_65_536khz && ~ss_halt),
       .clk_vid(clk_32_768),
 
-      .reset_n(reset_n_s),
+      .reset_n(~(~reset_n_s || ss_reset)),
 
       // Left, middle, right
       .input_k0({1'b0, ~cont1_key_s[7], ~cont1_key_s[5], ~cont1_key_s[4]}),
