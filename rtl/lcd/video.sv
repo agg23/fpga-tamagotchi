@@ -19,10 +19,6 @@ module video #(
     input wire [16:0] image_write_addr,
     input wire [15:0] image_write_data,
 
-    // Settings
-    input wire lcd_all_off_setting,
-    input wire lcd_all_on_setting,
-
     output wire vsync,
     output wire hsync,
     output wire de,
@@ -38,8 +34,7 @@ module video #(
   wire [9:0] video_y;
   wire [1:0] lcd_segment_row;
 
-  wire gen_lcd_pixel_active;
-  wire lcd_active = lcd_all_on_setting || (~lcd_all_off_setting && gen_lcd_pixel_active);
+  wire lcd_active;
   wire active_sprite_pixel;
   wire [7:0] sprite_alpha_pixel;
 
@@ -114,7 +109,7 @@ module video #(
 
       .video_data(lcd_video_data),
 
-      .lcd_active(gen_lcd_pixel_active)
+      .lcd_active(lcd_active)
   );
 
   frame_ram frame_ram (

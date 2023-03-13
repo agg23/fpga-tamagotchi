@@ -39,7 +39,7 @@ module cpu (
   instr_length cycle_length;
   microcode_cycle current_cycle;
 
-  wire [7:0] immed;
+  wire [7:0] decode_immed;
 
   reg [11:0] instr_rom_data = 0;
 
@@ -53,7 +53,7 @@ module cpu (
       .cycle_length(decode_cycle_length),
       .disable_interrupt(disable_interrupt),
 
-      .immed(immed)
+      .immed(decode_immed)
   );
 
   reg_type bus_input_selector;
@@ -84,6 +84,9 @@ module cpu (
     end
   end
 
+  // Offset by 1, since 0 index is reset vector
+  wire [7:0] immed = performing_interrupt ? {4'b0, interrupt_address + 1'b1} : decode_immed;
+
   microcode microcode (
       .clk(clk),
       .clk_en(clk_en),
@@ -94,6 +97,7 @@ module cpu (
       .zero(flag_zero),
       .carry(flag_carry),
       .interrupt(flag_interrupt),
+      .immed(immed),
 
       // Control
       .increment_pc(increment_pc),

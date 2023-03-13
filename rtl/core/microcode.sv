@@ -11,6 +11,7 @@ module microcode (
     input wire zero,
     input wire carry,
     input wire interrupt,
+    input wire [7:0] immed,
 
     // Control
     output wire increment_pc,
@@ -135,6 +136,25 @@ module microcode (
     end
   end
 
+  function reg_type final_selector(reg_type selector);
+    if (selector == REG_IMM_ADDR_L || selector == REG_IMM_ADDR_H || selector == REG_IMM_ADDR_P) begin
+      final_selector = imm_addressed_reg(selector, immed[5:0]);
+    end else begin
+      final_selector = selector;
+    end
+  endfunction
+
+  task assign_bus_selectors(reg [4:0] in, reg [4:0] out);
+    reg_type temp_input;
+    reg_type temp_output;
+
+    temp_input  = reg_type'(in);
+    temp_output = reg_type'(out);
+
+    bus_input_selector  <= final_selector(temp_input);
+    bus_output_selector <= final_selector(temp_output);
+  endtask
+
   reg microcode_tick = 0;
   microcode_stage prev_stage = STEP6_2;
   reg cycle_second_step;
@@ -203,9 +223,8 @@ module microcode (
           end
           3'b001: begin
             // TRANSFER
-            bus_input_selector  <= reg_type'(instruction[12:8]);
-            bus_output_selector <= reg_type'(instruction[7:3]);
-            increment_selector  <= reg_inc_type'(instruction[2:0]);
+            assign_bus_selectors(instruction[12:8], instruction[7:3]);
+            increment_selector <= reg_inc_type'(instruction[2:0]);
 
             if (reg_type'(instruction[7:3]) == REG_NPP) begin
               // If NPP was modified in this instruction, don't reset NP
@@ -215,8 +234,9 @@ module microcode (
           3'b010: begin
             // TRANSALU
             alu_operation <= alu_op'(instruction[11:8]);
+            assign_bus_selectors(0, instruction[7:3]);
+            // Override assign_bus_selectors for input
             bus_input_selector <= REG_ALU_WITH_FLAGS;
-            bus_output_selector <= reg_type'(instruction[7:3]);
             increment_selector <= reg_inc_type'(instruction[2:0]);
           end
           3'b011: begin
