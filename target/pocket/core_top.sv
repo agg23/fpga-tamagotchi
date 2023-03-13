@@ -656,9 +656,6 @@ module core_top (
 
   wire buzzer;
 
-  wire lcd_all_off_setting;
-  wire lcd_all_on_setting;
-
   always @(posedge clk_32_768) begin
     reset_turbo <= 0;
 
@@ -687,10 +684,6 @@ module core_top (
       .video_data(video_data),
 
       .buzzer(buzzer),
-
-      // Settings
-      .lcd_all_off_setting(lcd_all_off_setting),
-      .lcd_all_on_setting (lcd_all_on_setting),
 
       // Savestates
       .ss_bus_in(ss_bus_in),
@@ -750,10 +743,6 @@ module core_top (
       // Top bit is used to determine which memory it goes to
       .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_addr[17:1]),
       .image_write_data(spritesheet_download ? spritesheet_write_data : ioctl_dout_reversed),
-
-      // Settings
-      .lcd_all_off_setting(lcd_all_off_setting),
-      .lcd_all_on_setting (lcd_all_on_setting),
 
       .vsync(vsync),
       .hsync(hsync),

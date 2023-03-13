@@ -150,8 +150,6 @@ module regs (
 
   // Write bus output
   always @(posedge clk) begin
-    reg_type modified_selector;
-
     if (~reset_n) begin
       {np, pc, a, b, interrupt, decimal, zero, carry} <= ss_new_data1[29:0];
       {x, y, sp} <= ss_new_data2;
@@ -160,15 +158,11 @@ module regs (
         memory_write_en <= 0;
       end
 
-      if (bus_output_selector == REG_IMM_ADDR_L || bus_output_selector == REG_IMM_ADDR_H || bus_output_selector == REG_IMM_ADDR_P) begin
-        modified_selector = imm_addressed_reg(bus_output_selector, immed[5:0]);
-      end else begin
-        modified_selector = bus_output_selector;
-      end
+      // REG_IMM_ADDR_L-P is handled in microcode to remove comb logic from mux
 
       // Some registers are set only on WRITE cycle, others do stuff on other cycles
       casex ({
-        modified_selector, current_cycle
+        bus_output_selector, current_cycle
       })
         {
           REG_ALU, 2'hX

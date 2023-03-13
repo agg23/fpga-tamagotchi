@@ -21,7 +21,7 @@ module cpu_6s46 (
     output wire buzzer,
 
     // Settings
-    // Probably unused
+    // Unused in Tamagotchi
     output wire lcd_all_off_setting,
     output wire lcd_all_on_setting,
 
