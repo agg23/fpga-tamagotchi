@@ -39,7 +39,7 @@ module microcode (
     // Indicates ready for savestate halt
     output wire ss_ready
 );
-  typedef enum {
+  typedef enum bit [3:0] {
     DECODE,   // Single cycle
     STEP1,
     STEP1_2,
