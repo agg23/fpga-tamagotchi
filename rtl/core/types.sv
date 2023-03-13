@@ -1,5 +1,5 @@
 package types;
-  typedef enum {
+  typedef enum bit [3:0] {
     ALU_ADD,
     ALU_ADD_NO_DEC,
     ALU_ADC,
@@ -17,7 +17,7 @@ package types;
     // ALU_NOT
   } alu_op;
 
-  typedef enum {
+  typedef enum bit [5:0] {
     REG_FLAGS,
     REG_A,
     REG_B,
@@ -63,7 +63,7 @@ package types;
     REG_ALU_WITH_FLAGS
   } reg_type;
 
-  typedef enum {
+  typedef enum bit [2:0] {
     REG_NONE,
     REG_XHL,
     REG_YHL,
@@ -72,13 +72,13 @@ package types;
     REG_PC  // Special case used only for halt
   } reg_inc_type;
 
-  typedef enum {
+  typedef enum bit [1:0] {
     CYCLE_NONE,
     CYCLE_REG_FETCH,
     CYCLE_REG_WRITE
   } microcode_cycle;
 
-  typedef enum {
+  typedef enum bit [1:0] {
     CYCLE5,
     CYCLE7,
     CYCLE12
