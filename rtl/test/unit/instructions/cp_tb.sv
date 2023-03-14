@@ -17,12 +17,9 @@ module cp_tb;
   endfunction
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
 
     `TEST_CASE("CP XH i should set flags") begin
-      bench.rom_data = 12'hA4F; // CP XH, i
+      bench.initialize(12'hA4F); // CP XH, i
 
       bench.run_until_complete();
       #1;
@@ -36,7 +33,7 @@ module cp_tb;
     end
 
     `TEST_CASE("CP XL i should set flags") begin
-      bench.rom_data = 12'hA52; // CP XL, i
+      bench.initialize(12'hA52); // CP XL, i
 
       bench.run_until_complete();
       #1;
@@ -50,7 +47,7 @@ module cp_tb;
     end
 
     `TEST_CASE("CP YH i should set flags") begin
-      bench.rom_data = 12'hA62; // CP YH, i
+      bench.initialize(12'hA62); // CP YH, i
 
       bench.run_until_complete();
       #1;
@@ -64,7 +61,7 @@ module cp_tb;
     end
 
     `TEST_CASE("CP YL i should set flags") begin
-      bench.rom_data = 12'hA74; // CP YH, i
+      bench.initialize(12'hA74); // CP YH, i
 
       bench.run_until_complete();
       #1;
@@ -82,13 +79,13 @@ module cp_tb;
       reg carry;
       reg zero;
 
+      bench.initialize(12'hDC4 | (r << 4)); // CP r, i
+
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h5;
       bench.ram[bench.cpu_uut.regs.y] = 4'hE;
       bench.update_prevs();
-
-      bench.rom_data = 12'hDC4 | (r << 4); // CP r, i
 
       temp_a = bench.get_r_value(r);
 
@@ -113,13 +110,13 @@ module cp_tb;
       reg carry;
       reg zero;
 
+      bench.initialize(12'hF00 | (r << 2) | q); // CP r, q
+
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h5;
       bench.ram[bench.cpu_uut.regs.y] = 4'hE;
       bench.update_prevs();
-
-      bench.rom_data = 12'hF00 | (r << 2) | q; // CP r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);

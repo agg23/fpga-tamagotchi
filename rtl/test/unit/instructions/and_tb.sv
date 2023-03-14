@@ -7,22 +7,18 @@ module and_tb;
   parameter q = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENrq AND r q should bitwise AND and store into r") begin
       reg [3:0] temp_a;
       reg [3:0] temp_b;
       reg [3:0] result;
+
+      bench.initialize(12'hAC0 | (r << 2) | q); // AND r, q
 
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h5;
       bench.ram[bench.cpu_uut.regs.y] = 4'hE;
       bench.update_prevs();
-
-      bench.rom_data = 12'hAC0 | (r << 2) | q; // AND r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);
@@ -46,13 +42,13 @@ module and_tb;
       reg [3:0] temp_a;
       reg [3:0] result;
 
+      bench.initialize(12'hC83 | (r << 4)); // AND r, i
+
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h5;
       bench.ram[bench.cpu_uut.regs.y] = 4'hE;
       bench.update_prevs();
-
-      bench.rom_data = 12'hC83 | (r << 4); // AND r, i
 
       temp_a = bench.get_r_value(r);
 

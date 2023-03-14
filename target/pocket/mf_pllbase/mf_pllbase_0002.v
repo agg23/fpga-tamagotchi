@@ -13,6 +13,9 @@ module  mf_pllbase_0002(
 	// interface 'outclk1'
 	output wire outclk_1,
 
+	// interface 'outclk2'
+	output wire outclk_2,
+
 	// interface 'locked'
 	output wire locked
 );
@@ -21,15 +24,15 @@ module  mf_pllbase_0002(
 		.fractional_vco_multiplier("true"),
 		.reference_clock_frequency("74.25 MHz"),
 		.operation_mode("normal"),
-		.number_of_clocks(2),
+		.number_of_clocks(3),
 		.output_clock_frequency0("13.107200 MHz"),
 		.phase_shift0("0 ps"),
 		.duty_cycle0(50),
 		.output_clock_frequency1("13.107200 MHz"),
-		.phase_shift1("19073 ps"),
+		.phase_shift1("0 ps"),
 		.duty_cycle1(50),
-		.output_clock_frequency2("0 MHz"),
-		.phase_shift2("0 ps"),
+		.output_clock_frequency2("13.107200 MHz"),
+		.phase_shift2("19073 ps"),
 		.duty_cycle2(50),
 		.output_clock_frequency3("0 MHz"),
 		.phase_shift3("0 ps"),
@@ -80,7 +83,7 @@ module  mf_pllbase_0002(
 		.pll_subtype("General")
 	) altera_pll_i (
 		.rst	(rst),
-		.outclk	({outclk_1, outclk_0}),
+		.outclk	({outclk_2, outclk_1, outclk_0}),
 		.locked	(locked),
 		.fboutclk	( ),
 		.fbclk	(1'b0),

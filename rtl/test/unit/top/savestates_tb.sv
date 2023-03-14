@@ -4,12 +4,8 @@ module savestates_tb;
   bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("Registers should initalize to expected defaults") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reload SS buffers with default values
       bench.ss_bus_reset_n = 0;
@@ -34,7 +30,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Registers should be set by SS addresses 0x0 and 0x1") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -57,7 +53,9 @@ module savestates_tb;
     end
 
     `TEST_CASE("Registers should be read by SS addresses 0x0 and 0x1") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
+
+      #1;
       bench.ss_bus_addr = 0;
 
       bench.cpu_uut.core.regs.pc = 13'h1432;
@@ -76,7 +74,7 @@ module savestates_tb;
       bench.cpu_uut.core.regs.decimal = 1;
       bench.cpu_uut.core.regs.interrupt = 0;
 
-      #4;
+      #3;
       // {2'b0, np, pc, a, b, interrupt, decimal, zero, carry}
       bench.assert_ss_bus_out({2'b0, 5'h0E, 13'h1432, 4'h0, 4'h1, 1'b0, 1'b1, 1'b1, 1'b0});
       bench.ss_bus_addr = 8'h1;
@@ -87,7 +85,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Clock timer data should be set by SS address 0x2") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -105,7 +103,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Clock timer data should be read by SS address 0x2") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h2;
 
       #1;
@@ -121,7 +119,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Stopwatch data should be set by SS address 0x3") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -140,7 +138,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Stopwatch data should be read by SS address 0x3") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h3;
 
       #1;
@@ -157,7 +155,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Prog timer data should be set by SS address 0x4") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -176,7 +174,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Prog timer data should be read by SS address 0x4") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h4;
 
       #1;
@@ -193,7 +191,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Prog timer data should initalize to expected defaults") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reload SS buffers with default values
       bench.ss_bus_reset_n = 0;
@@ -213,7 +211,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Interrupt clock data should be set by SS address 0x5") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -233,7 +231,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Interrupt data should be read by SS address 0x5") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h5;
 
       #1;
@@ -251,7 +249,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Input interrupt factor should be set by SS address 0x6") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -267,7 +265,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("Input interrupt factor should be read by SS address 0x6") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h6;
 
       #1;
@@ -281,7 +279,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs should initalize to expected defaults") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reload SS buffers with default values
       bench.ss_bus_reset_n = 0;
@@ -305,7 +303,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs set 1 should be set by SS address 0x7") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -330,7 +328,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs set 1 should be read by SS address 0x7") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h7;
 
       #1;
@@ -353,7 +351,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs set 2 should be set by SS address 0x8") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -378,7 +376,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs set 2 should be read by SS address 0x8") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h8;
 
       #1;
@@ -401,7 +399,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs set 3 should be set by SS address 0x9") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -417,7 +415,7 @@ module savestates_tb;
     end
 
     `TEST_CASE("CPU memmap regs set 3 should be read by SS address 0x9") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.ss_bus_addr = 8'h9;
 
       #1;
@@ -435,7 +433,7 @@ module savestates_tb;
       reg [31:0] write_value;
       write_value = 0;
 
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -480,7 +478,7 @@ module savestates_tb;
       reg [31:0] write_value;
       write_value = 0;
 
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       #1;
 
@@ -516,7 +514,7 @@ module savestates_tb;
       reg [31:0] write_value;
       write_value = 0;
 
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
       bench.reset_n = 0;
@@ -561,7 +559,7 @@ module savestates_tb;
       reg [31:0] write_value;
       write_value = 0;
 
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       #1;
 

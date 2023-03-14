@@ -7,22 +7,18 @@ module or_tb;
   parameter q = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENrq OR r q should bitwise OR and store into r") begin
       reg [3:0] temp_a;
       reg [3:0] temp_b;
       reg [3:0] result;
+
+      bench.initialize(12'hAD0 | (r << 2) | q); // OR r, q
 
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h0;
       bench.ram[bench.cpu_uut.regs.y] = 4'h0;
       bench.update_prevs();
-
-      bench.rom_data = 12'hAD0 | (r << 2) | q; // OR r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);
@@ -46,13 +42,13 @@ module or_tb;
       reg [3:0] temp_a;
       reg [3:0] result;
 
+      bench.initialize(12'hCC5 | (r << 4)); // OR r, i
+
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h0;
       bench.ram[bench.cpu_uut.regs.y] = 4'h0;
       bench.update_prevs();
-
-      bench.rom_data = 12'hCC5 | (r << 4); // OR r, i
 
       temp_a = bench.get_r_value(r);
 

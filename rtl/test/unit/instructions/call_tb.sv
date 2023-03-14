@@ -4,12 +4,8 @@ module call_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("CALL s should push to stack") begin
-      bench.rom_data = 12'h4AB; // CALL 0xAB
+      bench.initialize(12'h4AB); // CALL 0xAB
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h12;
 
@@ -26,8 +22,9 @@ module call_tb;
       bench.assert_ram(12'h41, 4'h5); // PCSL + 1
     end
 
+    // TODO: CALL s should copy NPP to PCP but not bank
     `TEST_CASE("CALL s should use PCP but not bank") begin
-      bench.rom_data = 12'h444; // CALL 0x44
+      bench.initialize(12'h444); // CALL 0x44
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h0A;
 
@@ -42,7 +39,7 @@ module call_tb;
     end
 
     `TEST_CASE("CALZ s should jump to page 0") begin
-      bench.rom_data = 12'h569; // CALZ 0x69
+      bench.initialize(12'h569); // CALZ 0x69
       bench.cpu_uut.regs.pc = 13'h1ABC;
       bench.cpu_uut.regs.np = 5'h15;
 
@@ -60,7 +57,7 @@ module call_tb;
     end
 
     `TEST_CASE("CALL s should add across all 12 main PC bits") begin
-      bench.rom_data = 12'h4AB; // CALL 0xAB
+      bench.initialize(12'h4AB); // CALL 0xAB
       bench.cpu_uut.regs.pc = 13'h05FF;
       bench.cpu_uut.regs.np = 5'h03;
 
@@ -78,7 +75,7 @@ module call_tb;
     end
 
     `TEST_CASE("CALZ s should add across all 12 main PC bits") begin
-      bench.rom_data = 12'h5AB; // CALZ 0xAB
+      bench.initialize(12'h5AB); // CALZ 0xAB
       bench.cpu_uut.regs.pc = 13'h05FF;
       bench.cpu_uut.regs.np = 5'h03;
 

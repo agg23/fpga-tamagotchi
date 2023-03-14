@@ -116,12 +116,8 @@ module stopwatch_tb;
   endtask
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("SWL counter should pass timing") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
 
       #4;
@@ -132,15 +128,17 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Reading from 0xF22 should return 1/100 sec data") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
 
       // 17/100: 1/256 * (26 + 19): 23040 + 4ps
       #23044;
 
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hEC2; // LD A, MX
+
       bench.run_until_complete();
       bench.cpu_uut.core.regs.x = 12'hF22;
-      bench.rom_data = 12'hEC2; // LD A, MX
 
       bench.run_until_complete();
       #1;
@@ -148,15 +146,17 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Reading from 0xF23 should return 1/10 sec data") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
 
       // 62/100: 1/256 * (26 + 26 + 25 + 25 + 26 + 26 + 5): 81408 + 4ps
       #81412;
 
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hEC2; // LD A, MX
+
       bench.run_until_complete();
       bench.cpu_uut.core.regs.x = 12'hF23;
-      bench.rom_data = 12'hEC2; // LD A, MX
 
       bench.run_until_complete();
       #1;
@@ -164,7 +164,7 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Stopwatch should only start once 0xF77 bit 0 is set") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // 17/100: 1/256 * (26 + 19): 23040 + 4ps
       #23044;
@@ -172,13 +172,17 @@ module stopwatch_tb;
       `CHECK_EQUAL(bench.cpu_uut.timers.stopwatch.counter_swl, 4'h0);
       `CHECK_EQUAL(bench.cpu_uut.timers.stopwatch.counter_swh, 4'h0);
 
-      bench.run_until_complete();
-      bench.cpu_uut.core.regs.a = 4'b0011;
-      bench.cpu_uut.core.regs.x = 12'hF77;
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC8; // LD MX, A
 
       bench.run_until_complete();
+      bench.cpu_uut.core.regs.a = 4'b0011;
+      bench.cpu_uut.core.regs.x = 12'hF77;
+
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hFFF; // NOP7
+
+      bench.run_until_complete();
       #1;
       `CHECK_EQUAL(bench.cpu_uut.enable_stopwatch, 1);
 
@@ -190,7 +194,7 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Stopwatch should pause on 0xF77 bit 0 clear and resume on bit 0 set") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
 
       // 17/100: 1/256 * (26 + 19): 23040 + 4ps
@@ -201,13 +205,17 @@ module stopwatch_tb;
       `CHECK_EQUAL(bench.cpu_uut.timers.stopwatch.counter_swh, 4'h1);
 
       // Disable stopwatch
-      bench.run_until_complete();
-      bench.cpu_uut.core.regs.a = 4'b0000;
-      bench.cpu_uut.core.regs.x = 12'hF77;
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC8; // LD MX, A
 
       bench.run_until_complete();
+      bench.cpu_uut.core.regs.a = 4'b0000;
+      bench.cpu_uut.core.regs.x = 12'hF77;
+
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hFFF; // NOP7
+
+      bench.run_until_complete();
 
       #1;
       `CHECK_EQUAL(bench.cpu_uut.enable_stopwatch, 0);
@@ -220,13 +228,17 @@ module stopwatch_tb;
       `CHECK_EQUAL(bench.cpu_uut.timers.stopwatch.counter_swh, 4'h1);
 
       // Start stopwatch
-      bench.run_until_complete();
-      bench.cpu_uut.core.regs.a = 4'b0001;
-      bench.cpu_uut.core.regs.x = 12'hF77;
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC8; // LD MX, A
 
       bench.run_until_complete();
+      bench.cpu_uut.core.regs.a = 4'b0001;
+      bench.cpu_uut.core.regs.x = 12'hF77;
+
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hFFF; // NOP7
+
+      bench.run_until_complete();
 
       #1;
       `CHECK_EQUAL(bench.cpu_uut.enable_stopwatch, 1);
@@ -240,7 +252,7 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Stopwatch should reset on 0xF77 bit 1 set") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
       bench.cpu_uut.timers.stopwatch.counter_swl = 4'h9;
       bench.cpu_uut.timers.stopwatch.counter_swh = 4'h2;
@@ -248,13 +260,17 @@ module stopwatch_tb;
       // Random duration so that it's not right at the beginning of a tick
       #400;
 
-      bench.run_until_complete();
-      bench.cpu_uut.core.regs.a = 4'b0011;
-      bench.cpu_uut.core.regs.x = 12'hF77;
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC8; // LD MX, A
 
       bench.run_until_complete();
+      bench.cpu_uut.core.regs.a = 4'b0011;
+      bench.cpu_uut.core.regs.x = 12'hF77;
+
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hFFF; // NOP7
+
+      bench.run_until_complete();
 
       #10;
 
@@ -270,7 +286,7 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Reading 0xF01 should get factor flags and clear them") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.enable_stopwatch = 1;
 
       // 17/100: 1/256 * (26 + 19): 23040 + 4ps
@@ -279,12 +295,16 @@ module stopwatch_tb;
 
       `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b01);
 
-      bench.run_until_complete();
-      bench.cpu_uut.core.regs.x = 12'hF01;
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC2; // LD A, MX
 
       bench.run_until_complete();
+      bench.cpu_uut.core.regs.x = 12'hF01;
+
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hFFF; // NOP7
+
+      bench.run_until_complete();
       #1;
       bench.assert_a(4'h1);
       `CHECK_EQUAL(bench.cpu_uut.stopwatch_factor, 4'b00);
@@ -295,7 +315,7 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Interrupt factor AND with mask should produce interrupts") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.core.regs.interrupt = 1;
       bench.cpu_uut.enable_stopwatch = 1;
       bench.cpu_uut.stopwatch_mask = 2'b01;
@@ -317,7 +337,7 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Interrupts should not be produced if factor AND mask is 0") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.core.regs.interrupt = 1;
       bench.cpu_uut.enable_stopwatch = 1;
       bench.cpu_uut.stopwatch_mask = 2'b10;
@@ -349,12 +369,14 @@ module stopwatch_tb;
     end
 
     `TEST_CASE("Reading/writing from 0xF11 should read/write mask settings") begin
-      bench.rom_data = 12'hEC8; // LD MX, A
+      bench.initialize(12'hEC8); // LD MX, A
       bench.cpu_uut.core.regs.a = 4'h6;
       bench.cpu_uut.core.regs.x = 12'hF11;
 
-      bench.run_until_complete();
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC6; // LD B, MX
+
+      bench.run_until_complete();
       #1;
       `CHECK_EQUAL(bench.cpu_uut.stopwatch_mask, 2'b10);
 

@@ -1,3 +1,5 @@
+`timescale 1ps / 1ps
+
 module tama_tb;
 
   reg clk = 0;
@@ -24,7 +26,21 @@ module tama_tb;
       .input_k1(4'h0),
 
       .rom_addr(rom_addr),
-      .rom_data(rom_data)
+      .rom_data(rom_data),
+
+      .video_addr(0),
+      // .video_data(video_data),
+
+      // .buzzer(buzzer),
+
+      // Savestates
+      .ss_bus_in(0),
+      .ss_bus_addr(0),
+      .ss_bus_wren(0),
+      .ss_bus_reset_n(0)
+      // .ss_bus_out(ss_bus_out),
+
+      // .ss_ready(ss_ready)
   );
 
   always begin
@@ -38,7 +54,7 @@ module tama_tb;
     clk_2x = ~clk_2x;
   end
 
-  always @(posedge clk) begin
+  always @(posedge clk_2x) begin
     // ROM access
     rom_data <= rom[rom_addr][11:0];
   end
@@ -50,7 +66,7 @@ module tama_tb;
 
     reset_n = 1;
     forever begin
-      @(posedge clk iff cpu_uut.core.microcode.last_cycle_step);
+      @(posedge clk iff cpu_uut.core.microcode.is_last_cycle_step);
     end
   end
 
@@ -79,7 +95,7 @@ module tama_tb;
 
   //       reset_n = 1;
   //       forever begin
-  //         @(posedge clk iff cpu_uut.core.microcode.last_cycle_step);
+  //         @(posedge clk iff cpu_uut.core.microcode.is_last_cycle_step);
 
   //         #1;
 

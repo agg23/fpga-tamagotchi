@@ -8,10 +8,6 @@ module sub_tb;
   parameter decimal = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENrqd SUB r q should sub and store into r") begin
       reg [3:0] temp_a;
       reg [3:0] temp_b;
@@ -21,14 +17,14 @@ module sub_tb;
 
       carry = 0;
 
+      bench.initialize(12'hAA0 | (r << 2) | q); // SUB r, q
+
       bench.cpu_uut.regs.decimal = decimal;
       bench.cpu_uut.regs.a = 4'h7;
       bench.cpu_uut.regs.b = 4'h9;
       bench.ram[bench.cpu_uut.regs.x] = 4'h4;
       bench.ram[bench.cpu_uut.regs.y] = 4'hB;
       bench.update_prevs();
-
-      bench.rom_data = 12'hAA0 | (r << 2) | q; // SUB r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);

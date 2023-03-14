@@ -109,21 +109,8 @@ module bench;
     prev_decimal = cpu_uut.core.regs.decimal;
   endtask
 
-  task initialize_regs();
+  task initialize_ram();
     cycle_count = 0;
-
-    cpu_uut.core.regs.a = 0;
-    cpu_uut.core.regs.b = 1;
-
-    cpu_uut.core.regs.x = 12'h222;
-    cpu_uut.core.regs.y = 12'h333;
-
-    cpu_uut.core.regs.sp = 8'h44;
-
-    cpu_uut.core.regs.zero = 0;
-    cpu_uut.core.regs.carry = 0;
-    cpu_uut.core.regs.decimal = 0;
-    cpu_uut.core.regs.interrupt = 0;
 
     for (int i = 0; i < 256 + 256 + 128; i = i + 1) begin
       cpu_uut.ram.memory[i] = 0;
@@ -132,21 +119,26 @@ module bench;
     update_prevs();
   endtask
 
-  task initialize();
-    bench.initialize_regs();
+  task initialize(reg [11:0] instruction);
+    bench.initialize_ram();
 
-    #6;
+    #4;
+
+    // Set instruction one 2x cycle early
+    bench.rom_data = instruction;
+
+    #2;
 
     bench.reset_n = 1;
     bench.ss_bus_reset_n = 1;
   endtask
 
   task run_until_final_stage_fetch();
-    @(posedge clk iff cpu_uut.core.microcode.last_fetch_step);
+    @(posedge clk iff cpu_uut.core.microcode.is_last_fetch_step);
   endtask
 
   task run_until_complete();
-    @(posedge clk iff cpu_uut.core.microcode.last_cycle_step);
+    @(posedge clk iff cpu_uut.core.microcode.is_last_cycle_step);
   endtask
 
   task run_until_halt();

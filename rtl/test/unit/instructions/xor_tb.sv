@@ -7,22 +7,18 @@ module xor_tb;
   parameter q = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENrq XOR r q should bitwise XOR and store into r") begin
       reg [3:0] temp_a;
       reg [3:0] temp_b;
       reg [3:0] result;
+
+      bench.initialize(12'hAE0 | (r << 2) | q); // XOR r, q
 
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'hF;
       bench.ram[bench.cpu_uut.regs.x] = 4'h7;
       bench.ram[bench.cpu_uut.regs.y] = 4'h7;
       bench.update_prevs();
-
-      bench.rom_data = 12'hAE0 | (r << 2) | q; // XOR r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);
@@ -46,13 +42,13 @@ module xor_tb;
       reg [3:0] temp_a;
       reg [3:0] result;
 
+      bench.initialize(12'hD01 | (r << 4)); // XOR r, i
+
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'hF;
       bench.ram[bench.cpu_uut.regs.x] = 4'h7;
       bench.ram[bench.cpu_uut.regs.y] = 4'h7;
       bench.update_prevs();
-
-      bench.rom_data = 12'hD01 | (r << 4); // XOR r, i
 
       temp_a = bench.get_r_value(r);
 

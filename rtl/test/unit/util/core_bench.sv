@@ -113,10 +113,15 @@ module core_bench;
     end
   endtask
 
-  task initialize();
+  task initialize(reg [11:0] instruction);
     bench.initialize_ram();
 
-    #6;
+    #4;
+
+    // Set instruction one 2x cycle early
+    bench.rom_data = instruction;
+
+    #2;
 
     bench.reset_n = 1;
 
@@ -135,14 +140,16 @@ module core_bench;
     cpu_uut.regs.interrupt = 0;
 
     update_prevs();
+
+    #1;
   endtask
 
   task run_until_final_stage_fetch();
-    @(posedge clk iff cpu_uut.microcode.last_fetch_step);
+    @(posedge clk iff cpu_uut.microcode.is_last_fetch_step);
   endtask
 
   task run_until_complete();
-    @(posedge clk iff cpu_uut.microcode.last_cycle_step);
+    @(posedge clk iff cpu_uut.microcode.is_last_cycle_step);
   endtask
 
   task run_until_halt();

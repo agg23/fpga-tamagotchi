@@ -28,6 +28,8 @@ module adc_tb;
 
     output_carry = 0;
 
+    bench.initialize(opcode);
+
     bench.cpu_uut.regs.carry = carry;
     bench.cpu_uut.regs.decimal = decimal;
     bench.cpu_uut.regs.a = 4'h7;
@@ -35,8 +37,6 @@ module adc_tb;
     bench.ram[bench.cpu_uut.regs.x] = 4'h4;
     bench.ram[bench.cpu_uut.regs.y] = 4'hB;
     bench.update_prevs();
-
-    bench.rom_data = opcode;
 
     temp_a = bench.get_r_value(r);
     if (use_immediate) begin
@@ -67,6 +67,8 @@ module adc_tb;
 
     output_carry = 0;
 
+    bench.initialize(opcode);
+
     bench.cpu_uut.regs.carry = carry;
     bench.cpu_uut.regs.decimal = decimal;
     bench.cpu_uut.regs.a = 4'h7;
@@ -74,8 +76,6 @@ module adc_tb;
     bench.ram[bench.cpu_uut.regs.x] = 4'h4;
     bench.ram[bench.cpu_uut.regs.y] = 4'hB;
     bench.update_prevs();
-
-    bench.rom_data = opcode;
 
     temp_a = bench.get_r_value(r);
 
@@ -95,12 +95,8 @@ module adc_tb;
   endtask
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("ADC XH i should load with 4 bit immediate") begin
-      bench.rom_data = 12'hA0F; // ADC XH, i
+      bench.initialize(12'hA0F); // ADC XH, i
 
       bench.run_until_complete();
       #1;
@@ -113,7 +109,7 @@ module adc_tb;
     end
 
     `TEST_CASE("ADC XL i should load with 4 bit immediate") begin
-      bench.rom_data = 12'hA1E; // ADC XL, i
+      bench.initialize(12'hA1E); // ADC XL, i
 
       bench.run_until_complete();
       #1;
@@ -126,7 +122,7 @@ module adc_tb;
     end
 
     `TEST_CASE("ADC YH i should load with 4 bit immediate") begin
-      bench.rom_data = 12'hA27; // ADC YH, i
+      bench.initialize(12'hA27); // ADC YH, i
 
       bench.run_until_complete();
       #1;
@@ -139,7 +135,7 @@ module adc_tb;
     end
 
     `TEST_CASE("ADC YL i should load with 4 bit immediate") begin
-      bench.rom_data = 12'hA3D; // ADC YL, i
+      bench.initialize(12'hA3D); // ADC YL, i
 
       bench.run_until_complete();
       #1;
