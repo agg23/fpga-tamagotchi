@@ -4,12 +4,8 @@ module lbpx_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("LBPX MX e should load 8 bit immediate into M(X) and increment X by 2") begin
-      bench.rom_data = 12'h94B; // LBPX MX, e
+      bench.initialize(12'h94B); // LBPX MX, e
 
       bench.run_until_complete();
       #1;

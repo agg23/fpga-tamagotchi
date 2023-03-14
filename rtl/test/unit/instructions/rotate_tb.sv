@@ -10,14 +10,14 @@ module rotate_tb;
     reg [3:0] result;
     reg output_carry;
 
+    bench.initialize(12'hAF0 | (r << 2) | r); // RLC r
+
     bench.cpu_uut.regs.carry = carry;
     bench.cpu_uut.regs.a = 4'h1;
     bench.cpu_uut.regs.b = 4'h8;
     bench.ram[bench.cpu_uut.regs.x] = 4'h7;
     bench.ram[bench.cpu_uut.regs.y] = 4'h4;
     bench.update_prevs();
-
-    bench.rom_data = 12'hAF0 | (r << 2) | r; // RLC r
 
     temp_a = bench.get_r_value(r);
 
@@ -41,14 +41,14 @@ module rotate_tb;
     reg [3:0] result;
     reg output_carry;
 
+    bench.initialize(12'hE8C | r); // RRC r
+
     bench.cpu_uut.regs.carry = carry;
     bench.cpu_uut.regs.a = 4'h1;
     bench.cpu_uut.regs.b = 4'h8;
     bench.ram[bench.cpu_uut.regs.x] = 4'h7;
     bench.ram[bench.cpu_uut.regs.y] = 4'h4;
     bench.update_prevs();
-
-    bench.rom_data = 12'hE8C | r; // RRC r
 
     temp_a = bench.get_r_value(r);
 
@@ -68,10 +68,6 @@ module rotate_tb;
   endtask
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENr RLC should rotate left without carry") begin
       test_rlc(0);
     end

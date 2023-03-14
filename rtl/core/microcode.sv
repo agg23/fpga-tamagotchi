@@ -28,6 +28,7 @@ module microcode (
 
     // Bus
     output microcode_cycle current_cycle,
+    output wire is_last_cycle_step,
 
     output reg_type bus_input_selector,
     output reg_type bus_output_selector,
@@ -81,15 +82,15 @@ module microcode (
   // Interrupt technically uses a 7 and a 5 cycle instruction, but for ease we collapse this into one 12
   assign actual_cycle_length = performing_interrupt ? CYCLE12 : cycle_length;
 
-  wire last_cycle_step = stage + 1 == cycle_count_int(actual_cycle_length);
-  wire last_fetch_step = stage + 2 == cycle_count_int(actual_cycle_length);
+  assign is_last_cycle_step = stage + 1 == cycle_count_int(actual_cycle_length) || stage == STEP6_2;
+  wire is_last_fetch_step = stage + 2 == cycle_count_int(actual_cycle_length);
 
   // This is a dirty hack to provide memory data to the bus for the RET instruction
   reg_type temp_override_bus_input_selector;
   reg disable_increment = 0;
   reg prevent_reset_np = 0;
-  assign increment_pc = ~disable_increment && last_fetch_step;
-  assign reset_np = ~prevent_reset_np && last_cycle_step;
+  assign increment_pc = ~disable_increment && is_last_fetch_step;
+  assign reset_np = ~prevent_reset_np && is_last_cycle_step;
 
   assign override_memory_read_en = temp_override_bus_input_selector != REG_ALU && current_cycle == CYCLE_REG_WRITE;
 
@@ -109,7 +110,7 @@ module microcode (
         queued_interrupt <= 1;
       end
 
-      if (last_cycle_step || stage == STEP6_2) begin
+      if (is_last_cycle_step || stage == STEP6_2) begin
         // Finished cycle, go back to decode
         stage <= DECODE;
         performing_interrupt <= 0;
@@ -205,7 +206,7 @@ module microcode (
         micro_pc <= microcode_addr;
         disable_increment <= 0;
         prevent_reset_np <= 0;
-      end else if (cycle_second_step && ~last_cycle_step && ~microcode_tick) begin
+      end else if (cycle_second_step && ~is_last_cycle_step && ~microcode_tick) begin
         // Execute microcode instruction
         // Defaults
         alu_operation <= ALU_ADD;

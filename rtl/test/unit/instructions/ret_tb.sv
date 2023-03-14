@@ -4,12 +4,8 @@ module ret_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("RETD should set PC and load 8 bit immediate into MX and increment X twice") begin
-      bench.rom_data = 12'h1FC; // RETD 0xFC
+      bench.initialize(12'h1FC); // RETD 0xFC
       bench.cpu_uut.regs.x = 12'h4F1;
       bench.cpu_uut.regs.sp = 8'h44;
       bench.ram[8'h44] = 4'hD;  // PCSL
@@ -34,7 +30,7 @@ module ret_tb;
     end
 
     `TEST_CASE("RETS should set PC and increment it") begin
-      bench.rom_data = 12'hFDE; // RETS
+      bench.initialize(12'hFDE); // RETS
       bench.cpu_uut.regs.x = 12'h4F1;
       bench.cpu_uut.regs.sp = 8'h44;
       bench.ram[8'h44] = 4'hD;  // PCSL
@@ -52,7 +48,7 @@ module ret_tb;
     end
 
     `TEST_CASE("RET should set PC") begin
-      bench.rom_data = 12'hFDF; // RET
+      bench.initialize(12'hFDF); // RET
       bench.cpu_uut.regs.x = 12'h4F1;
       bench.cpu_uut.regs.sp = 8'h44;
       bench.ram[8'h44] = 4'hD;  // PCSL

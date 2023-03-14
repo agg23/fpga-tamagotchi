@@ -6,14 +6,10 @@ module pop_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENr POP r should pop value from stack and store into r") begin
       reg [11:0] opcode;
 
-      bench.rom_data = 12'hFD0 | r; // POP r
+      bench.initialize(12'hFD0 | r); // POP r
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -26,7 +22,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP XP should pop value from stack and store into XP") begin
-      bench.rom_data = 12'hFD4; // POP XP
+      bench.initialize(12'hFD4); // POP XP
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -36,7 +32,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP XH should pop value from stack and store into XH") begin
-      bench.rom_data = 12'hFD5; // POP XH
+      bench.initialize(12'hFD5); // POP XH
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -46,7 +42,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP XL should pop value from stack and store into XL") begin
-      bench.rom_data = 12'hFD6; // POP XL
+      bench.initialize(12'hFD6); // POP XL
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -56,7 +52,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP YP should pop value from stack and store into YP") begin
-      bench.rom_data = 12'hFD7; // POP YP
+      bench.initialize(12'hFD7); // POP YP
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -66,7 +62,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP YH should pop value from stack and store into YH") begin
-      bench.rom_data = 12'hFD8; // POP YH
+      bench.initialize(12'hFD8); // POP YH
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -76,7 +72,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP YL should pop value from stack and store into YL") begin
-      bench.rom_data = 12'hFD9; // POP YL
+      bench.initialize(12'hFD9); // POP YL
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();
@@ -86,7 +82,7 @@ module pop_tb;
     end
 
     `TEST_CASE("POP F should pop value from stack and store into flags") begin
-      bench.rom_data = 12'hFDA; // POP F
+      bench.initialize(12'hFDA); // POP F
       bench.ram[bench.prev_sp] = 4'hA;
 
       bench.run_until_complete();

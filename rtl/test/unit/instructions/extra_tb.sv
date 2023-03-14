@@ -4,12 +4,8 @@ module extra_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("HALT should change nothing") begin
-      bench.rom_data = 12'hFF8; // HALT
+      bench.initialize(12'hFF8); // HALT
 
       bench.run_until_halt();
       #1;
@@ -17,7 +13,7 @@ module extra_tb;
     end
 
     `TEST_CASE("SLP should change nothing") begin
-      bench.rom_data = 12'hFF9; // SLP
+      bench.initialize(12'hFF9); // SLP
 
       bench.run_until_halt();
       #1;
@@ -25,7 +21,7 @@ module extra_tb;
     end
 
     `TEST_CASE("NOP5 should change nothing") begin
-      bench.rom_data = 12'hFFB; // NOP5
+      bench.initialize(12'hFFB); // NOP5
 
       bench.run_until_complete();
       #1;
@@ -34,7 +30,7 @@ module extra_tb;
     end
 
     `TEST_CASE("NOP7 should change nothing") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       bench.run_until_complete();
       #1;

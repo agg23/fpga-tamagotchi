@@ -21,15 +21,13 @@ module add_tb;
   endfunction
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENrqd ADD r q should add and store into r") begin
       reg [3:0] temp_a;
       reg [3:0] temp_b;
       reg [3:0] result;
       reg carry;
+
+      bench.initialize(12'hA80 | (r << 2) | q); // ADD r, q
 
       bench.cpu_uut.regs.decimal = decimal;
       bench.cpu_uut.regs.a = 4'h7;
@@ -37,8 +35,6 @@ module add_tb;
       bench.ram[bench.cpu_uut.regs.x] = 4'h4;
       bench.ram[bench.cpu_uut.regs.y] = 4'hB;
       bench.update_prevs();
-
-      bench.rom_data = 12'hA80 | (r << 2) | q; // ADD r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);
@@ -64,14 +60,14 @@ module add_tb;
       reg [3:0] result;
       reg carry;
 
+      bench.initialize(12'hC09 | (r << 4)); // ADD r, i
+
       bench.cpu_uut.regs.decimal = decimal;
       bench.cpu_uut.regs.a = 4'h7;
       bench.cpu_uut.regs.b = 4'h9;
       bench.ram[bench.cpu_uut.regs.x] = 4'h4;
       bench.ram[bench.cpu_uut.regs.y] = 4'hB;
       bench.update_prevs();
-
-      bench.rom_data = 12'hC09 | (r << 4); // ADD r, i
 
       temp_a = bench.get_r_value(r);
 

@@ -6,16 +6,12 @@ module inc_tb;
   parameter i = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENi INC Mn should increment Mn and update flags") begin
       reg [3:0] result;
       reg carry;
       int j;
 
-      bench.rom_data = 12'hF60 | i; // INC Mn
+      bench.initialize(12'hF60 | i); // INC Mn
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
         bench.ram[j] = j + 2;
@@ -40,7 +36,7 @@ module inc_tb;
       reg carry;
       int j;
 
-      bench.rom_data = 12'hF70 | i; // DEC Mn
+      bench.initialize(12'hF70 | i); // DEC Mn
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
         bench.ram[j] = j + 2;
@@ -61,7 +57,7 @@ module inc_tb;
     end
 
     `TEST_CASE("DEC SP should decrement SP") begin
-      bench.rom_data = 12'hFCB; // DEC SP
+      bench.initialize(12'hFCB); // DEC SP
 
       bench.run_until_complete();
       #1;
@@ -71,7 +67,7 @@ module inc_tb;
     end
 
     `TEST_CASE("INC SP should increment SP") begin
-      bench.rom_data = 12'hFDB; // INC SP
+      bench.initialize(12'hFDB); // INC SP
 
       bench.run_until_complete();
       #1;

@@ -7,14 +7,10 @@ module flag_tb;
   parameter p = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENip SET F i should OR immediate with flags") begin
       reg [3:0] result;
 
-      bench.rom_data = 12'hF40 | i; // SET F, i
+      bench.initialize(12'hF40 | i); // SET F, i
 
       // p is the initial state of flags
       {bench.cpu_uut.regs.interrupt, bench.cpu_uut.regs.decimal, bench.cpu_uut.regs.zero, bench.cpu_uut.regs.carry} = p;
@@ -36,7 +32,7 @@ module flag_tb;
     `TEST_CASE("GENip RST F i should AND immediate with flags") begin
       reg [3:0] result;
 
-      bench.rom_data = 12'hF50 | i; // RST F, i
+      bench.initialize(12'hF50 | i); // RST F, i
 
       // p is the initial state of flags
       {bench.cpu_uut.regs.interrupt, bench.cpu_uut.regs.decimal, bench.cpu_uut.regs.zero, bench.cpu_uut.regs.carry} = p;

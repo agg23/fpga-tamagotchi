@@ -4,12 +4,8 @@ module pset_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("PSET should set NPP") begin
-      bench.rom_data = 12'hE4F; // PSET p
+      bench.initialize(12'hE4F); // PSET p
 
       bench.run_until_complete();
       #1;
@@ -20,7 +16,7 @@ module pset_tb;
     end
 
     `TEST_CASE("PSET should set NBP") begin
-      bench.rom_data = 12'hE54; // PSET p
+      bench.initialize(12'hE54); // PSET p
 
       bench.run_until_complete();
       #1;
@@ -31,14 +27,16 @@ module pset_tb;
     end
 
     `TEST_CASE("NBP and NPP should be reset after non-PSET") begin
-      bench.rom_data = 12'hFFB; // NOP5
+      bench.initialize(12'hFFB); // NOP5
 
       bench.cpu_uut.regs.np = 5'h1A;
 
-      bench.run_until_complete();
+      bench.run_until_final_stage_fetch();
 
       // Set up next instruction
       bench.rom_data = 12'h0A5; // JP 0xA5
+
+      bench.run_until_complete();
       #1;
       bench.assert_np(5'h01); // Default starting NP
 
@@ -49,15 +47,16 @@ module pset_tb;
     end
 
     `TEST_CASE("Interrupt should wait until after instruction after PSET") begin
-      bench.rom_data = 12'hE59; // PSET p
+      bench.initialize(12'hE59); // PSET p
       bench.cpu_uut.regs.interrupt = 1;
       
       // Wait some time for instruction to start
       #2;
       bench.interrupt_req = 15'h0001;
 
-      bench.run_until_complete();
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'h0E1; // JP 0xE1
+      bench.run_until_complete();
 
       #1;
       // JP is executing

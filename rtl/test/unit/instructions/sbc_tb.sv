@@ -28,6 +28,8 @@ module sbc_tb;
 
     output_carry = 0;
 
+    bench.initialize(opcode);
+
     bench.cpu_uut.regs.carry = carry;
     bench.cpu_uut.regs.decimal = decimal;
     bench.cpu_uut.regs.a = 4'h7;
@@ -35,8 +37,6 @@ module sbc_tb;
     bench.ram[bench.cpu_uut.regs.x] = 4'h4;
     bench.ram[bench.cpu_uut.regs.y] = 4'hB;
     bench.update_prevs();
-
-    bench.rom_data = opcode;
 
     temp_a = bench.get_r_value(r);
     if (use_immediate) begin
@@ -68,6 +68,8 @@ module sbc_tb;
 
     output_carry = 0;
 
+    bench.initialize(opcode);
+
     bench.cpu_uut.regs.carry = carry;
     bench.cpu_uut.regs.decimal = decimal;
     bench.cpu_uut.regs.a = 4'h7;
@@ -75,8 +77,6 @@ module sbc_tb;
     bench.ram[bench.cpu_uut.regs.x] = 4'h4;
     bench.ram[bench.cpu_uut.regs.y] = 4'hB;
     bench.update_prevs();
-
-    bench.rom_data = opcode;
 
     temp_a = bench.get_r_value(r);
 
@@ -96,10 +96,6 @@ module sbc_tb;
   endtask
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENrqd SBC r q should sub and store into r without carry") begin
       reg [11:0] opcode;
       opcode = 12'hAB0 | (r << 2) | q; // SBC r, q

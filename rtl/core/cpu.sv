@@ -28,29 +28,30 @@ module cpu (
     output wire ss_ready
 );
   // Microcode
-  reg skip_pc_increment;
-  wire decode_skip_pc_increment;
+  wire skip_pc_increment;
   wire increment_pc;
   wire disable_interrupt;
   wire reset_np;
 
   wire [6:0] microcode_start_addr;
-  instr_length decode_cycle_length;
   instr_length cycle_length;
   microcode_cycle current_cycle;
+  wire is_last_cycle_step;
 
   wire [7:0] decode_immed;
 
-  reg [11:0] instr_rom_data = 0;
-
   decode decoder (
-      // Store ROM data so instruction doesn't change while we're working with it and setting PC
-      .opcode(current_cycle == CYCLE_NONE ? rom_data : instr_rom_data),
+      .clk(clk),
+      .clk_2x_en(is_last_cycle_step && clk_en),
 
-      .skip_pc_increment(decode_skip_pc_increment),
+      .reset_n(reset_n),
+
+      .opcode(rom_data),
+
+      .skip_pc_increment(skip_pc_increment),
 
       .microcode_start_addr(microcode_start_addr),
-      .cycle_length(decode_cycle_length),
+      .cycle_length(cycle_length),
       .disable_interrupt(disable_interrupt),
 
       .immed(decode_immed)
@@ -74,15 +75,6 @@ module cpu (
   wire override_memory_read_en;
 
   assign memory_read_en = override_memory_read_en | internal_memory_read_en;
-
-  always @(posedge clk) begin
-    if (clk_2x_en && current_cycle == CYCLE_NONE) begin
-      skip_pc_increment <= decode_skip_pc_increment;
-      cycle_length <= decode_cycle_length;
-
-      instr_rom_data <= rom_data;
-    end
-  end
 
   // Offset by 1, since 0 index is reset vector
   wire [7:0] immed = performing_interrupt ? {4'b0, interrupt_address + 1'b1} : decode_immed;
@@ -114,6 +106,7 @@ module cpu (
 
       // Bus
       .current_cycle(current_cycle),
+      .is_last_cycle_step(is_last_cycle_step),
 
       .bus_input_selector(bus_input_selector),
       .bus_output_selector(bus_output_selector),
@@ -165,8 +158,7 @@ module cpu (
       .alu(alu_out),
       .alu_zero(alu_zero_out),
       .alu_carry(alu_carry_out),
-      // Offset by 1, since 0 index is reset vector
-      .immed(performing_interrupt ? {4'b0, interrupt_address + 1'b1} : immed),
+      .immed(immed),
 
       .memory_write_en(memory_write_en),
       .memory_read_en(internal_memory_read_en),

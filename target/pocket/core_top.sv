@@ -669,7 +669,7 @@ module core_top (
       .clk(clk_32_768),
       .clk_en(clk_en_32_768khz && ~ss_halt),
       .clk_2x_en(clk_en_65_536khz && ~ss_halt),
-      .clk_vid(clk_32_768),
+      .clk_vid(clk_vid_32_768),
 
       .reset_n(~(~reset_n_s || ss_reset)),
 
@@ -705,7 +705,7 @@ module core_top (
   wire de;
   wire [23:0] rgb;
 
-  assign video_rgb_clock = clk_32_768;
+  assign video_rgb_clock = clk_vid_32_768;
   assign video_rgb_clock_90 = clk_vid_32_768_90deg;
   assign video_rgb = de ? rgb : 24'h0;
   assign video_de = de;
@@ -733,7 +733,7 @@ module core_top (
   wire [15:0] spritesheet_write_data = write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_dout;
 
   video video (
-      .clk(clk_32_768),
+      .clk(clk_vid_32_768),
 
       .video_addr(video_addr),
       .video_data(video_data),
@@ -770,7 +770,8 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire clk_32_768;
+  wire clk_32_768 = clk_vid_32_768;
+  wire clk_vid_32_768;
   wire clk_vid_32_768_90deg;
 
   wire pll_core_locked;
@@ -779,8 +780,9 @@ module core_top (
       .refclk(clk_74a),
       .rst   (0),
 
-      .outclk_0(clk_32_768),
-      .outclk_1(clk_vid_32_768_90deg),
+      // .outclk_0(clk_32_768),
+      .outclk_1(clk_vid_32_768),
+      .outclk_2(clk_vid_32_768_90deg),
 
       .locked(pll_core_locked)
   );

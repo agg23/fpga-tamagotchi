@@ -8,12 +8,8 @@ module ld_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("LD X e should load 8 bit immediate") begin
-      bench.rom_data = 12'hB69; // LD X, e
+      bench.initialize(12'hB69); // LD X, e
 
       bench.run_until_complete();
       #1;
@@ -22,7 +18,7 @@ module ld_tb;
     end
 
     `TEST_CASE("LD Y e should load 8 bit immediate") begin
-      bench.rom_data = 12'h8F3; // LD Y, e
+      bench.initialize(12'h8F3); // LD Y, e
 
       bench.run_until_complete();
       #1;
@@ -31,7 +27,7 @@ module ld_tb;
     end
 
     `TEST_CASE("LBPX MX e should load 8 bit immediate into M(X) and increment X by 2") begin
-      bench.rom_data = 12'h94B; // LBPX MX, e
+      bench.initialize(12'h94B); // LBPX MX, e
 
       bench.run_until_complete();
       #1;
@@ -43,7 +39,7 @@ module ld_tb;
     end
 
     `TEST_CASE("GENr LD r i should load r with 4 bit immediate") begin
-      bench.rom_data = 12'hE05 | (r << 4); // LD r, i
+      bench.initialize(12'hE05 | (r << 4)); // LD r, i
 
       bench.run_until_complete();
       #1;
@@ -55,7 +51,7 @@ module ld_tb;
     end
 
     `TEST_CASE("LDPX MX i should load 4 bit immediate into M(X) and increment X") begin
-      bench.rom_data = 12'hE6A; // LDPX MX, i
+      bench.initialize(12'hE6A); // LDPX MX, i
 
       bench.run_until_complete();
       #1;
@@ -66,7 +62,7 @@ module ld_tb;
     end
 
     `TEST_CASE("LDPY MY i should load 4 bit immediate into M(Y) and increment Y") begin
-      bench.rom_data = 12'hE75; // LDPX MY, i
+      bench.initialize(12'hE75); // LDPX MY, i
 
       bench.run_until_complete();
       #1;
@@ -79,7 +75,7 @@ module ld_tb;
     `TEST_CASE("GENr LD XP r should load XP with r") begin
       reg [3:0] r_value;
 
-      bench.rom_data = 12'hE80 | r; // LD XP, r
+      bench.initialize(12'hE80 | r); // LD XP, r
 
       r_value = bench.get_r_value(r);
 
@@ -92,7 +88,7 @@ module ld_tb;
     `TEST_CASE("GENr LD XH r should load XH with r") begin
       reg [3:0] r_value;
 
-      bench.rom_data = 12'hE84 | r; // LD XH, r
+      bench.initialize(12'hE84 | r); // LD XH, r
 
       r_value = bench.get_r_value(r);
 
@@ -105,7 +101,7 @@ module ld_tb;
     `TEST_CASE("GENr LD XL r should load XL with r") begin
       reg [3:0] r_value;
 
-      bench.rom_data = 12'hE88 | r; // LD XL, r
+      bench.initialize(12'hE88 | r); // LD XL, r
 
       r_value = bench.get_r_value(r);
 
@@ -118,7 +114,7 @@ module ld_tb;
     `TEST_CASE("GENr LD YP r should load YP with r") begin
       reg [3:0] r_value;
 
-      bench.rom_data = 12'hE90 | r; // LD YP, r
+      bench.initialize(12'hE90 | r); // LD YP, r
 
       r_value = bench.get_r_value(r);
 
@@ -131,7 +127,7 @@ module ld_tb;
     `TEST_CASE("GENr LD YH r should load YH with r") begin
       reg [3:0] r_value;
 
-      bench.rom_data = 12'hE94 | r; // LD YH, r
+      bench.initialize(12'hE94 | r); // LD YH, r
 
       r_value = bench.get_r_value(r);
 
@@ -144,7 +140,7 @@ module ld_tb;
     `TEST_CASE("GENr LD YL r should load YL with r") begin
       reg [3:0] r_value;
 
-      bench.rom_data = 12'hE98 | r; // LD YL, r
+      bench.initialize(12'hE98 | r); // LD YL, r
 
       r_value = bench.get_r_value(r);
 
@@ -157,7 +153,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r XP should load r with XP") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEA0 | r; // LD r, XP
+      bench.initialize(12'hEA0 | r); // LD r, XP
 
       bench.cpu_uut.regs.x = 12'hACF;
       bench.cpu_uut.regs.y = 12'h48E;
@@ -177,7 +173,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r XH should load r with XH") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEA4 | r; // LD r, XH
+      bench.initialize(12'hEA4 | r); // LD r, XH
 
       bench.cpu_uut.regs.x = 12'hACF;
       bench.cpu_uut.regs.y = 12'h48E;
@@ -197,7 +193,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r XL should load r with XL") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEA8 | r; // LD r, XL
+      bench.initialize(12'hEA8 | r); // LD r, XL
 
       bench.cpu_uut.regs.x = 12'hACF;
       bench.cpu_uut.regs.y = 12'h48E;
@@ -217,7 +213,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r YP should load r with YP") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEB0 | r; // LD r, YP
+      bench.initialize(12'hEB0 | r); // LD r, YP
 
       bench.cpu_uut.regs.x = 12'hACF;
       bench.cpu_uut.regs.y = 12'h48E;
@@ -237,7 +233,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r YH should load r with YH") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEB4 | r; // LD r, YH
+      bench.initialize(12'hEB4 | r); // LD r, YH
 
       bench.cpu_uut.regs.x = 12'hACF;
       bench.cpu_uut.regs.y = 12'h48E;
@@ -257,7 +253,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r YL should load r with YL") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEB8 | r; // LD r, YL
+      bench.initialize(12'hEB8 | r); // LD r, YL
 
       bench.cpu_uut.regs.x = 12'hACF;
       bench.cpu_uut.regs.y = 12'h48E;
@@ -277,7 +273,7 @@ module ld_tb;
     `TEST_CASE("GENrq LD r q should load r with q") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEC0 | (r << 2) | q; // LD r, q
+      bench.initialize(12'hEC0 | (r << 2) | q); // LD r, q
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;
@@ -299,7 +295,7 @@ module ld_tb;
     `TEST_CASE("GENrq LDPX r q should load r with q and increment X") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEE0 | (r << 2) | q; // LDPX r, q
+      bench.initialize(12'hEE0 | (r << 2) | q); // LDPX r, q
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;
@@ -321,7 +317,7 @@ module ld_tb;
     `TEST_CASE("GENrq LDPY r q should load r with q and increment Y") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hEF0 | (r << 2) | q; // LDPY r, q
+      bench.initialize(12'hEF0 | (r << 2) | q); // LDPY r, q
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;
@@ -341,7 +337,7 @@ module ld_tb;
     end
 
     `TEST_CASE("GENi LD Mn A should copy A to Mn") begin
-      bench.rom_data = 12'hF80 | i;
+      bench.initialize(12'hF80 | i);
 
       bench.cpu_uut.regs.a = 4'h5;
       bench.update_prevs();
@@ -355,7 +351,7 @@ module ld_tb;
     end
 
     `TEST_CASE("GENi LD Mn B should copy B to Mn") begin
-      bench.rom_data = 12'hF90 | i;
+      bench.initialize(12'hF90 | i);
 
       bench.run_until_complete();
       #1;
@@ -368,7 +364,7 @@ module ld_tb;
     `TEST_CASE("GENi LD A Mn should copy Mn to A") begin
       int j;
 
-      bench.rom_data = 12'hFA0 | i;
+      bench.initialize(12'hFA0 | i);
 
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
@@ -384,7 +380,7 @@ module ld_tb;
     `TEST_CASE("GENi LD B Mn should copy Mn to B") begin
       int j;
 
-      bench.rom_data = 12'hFB0 | i;
+      bench.initialize(12'hFB0 | i);
 
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
@@ -400,7 +396,7 @@ module ld_tb;
     `TEST_CASE("GENr LD SPH r should copy r to SPH") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hFE0 | r; // LD SPH, r
+      bench.initialize(12'hFE0 | r); // LD SPH, r
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;
@@ -419,7 +415,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r SPH should copy SPH to r") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hFE4 | r; // LD r SPH
+      bench.initialize(12'hFE4 | r); // LD r SPH
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;
@@ -440,7 +436,7 @@ module ld_tb;
     `TEST_CASE("GENr LD SPL r should copy r to SPL") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hFF0 | r; // LD SPL, r
+      bench.initialize(12'hFF0 | r); // LD SPL, r
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;
@@ -459,7 +455,7 @@ module ld_tb;
     `TEST_CASE("GENr LD r SPL should copy SPL to r") begin
       reg [3:0] value;
 
-      bench.rom_data = 12'hFF4 | r; // LD r SPL
+      bench.initialize(12'hFF4 | r); // LD r SPL
 
       bench.cpu_uut.regs.a = 4'h0;
       bench.cpu_uut.regs.b = 4'h5;

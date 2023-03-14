@@ -4,12 +4,8 @@ module clock_tb;
   bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("Clock interrupt factor should be set") begin
-      bench.rom_data = 12'hEE0; // INC X
+      bench.initialize(12'hEE0); // INC X
 
       // #4 per complete clk cycle
       // 32hz will be 1024 cycles: 1024 * 4 = 4096
@@ -38,16 +34,18 @@ module clock_tb;
     end
 
     `TEST_CASE("Reading from clock interrupt factor register should clear it") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // 8hz: 16384ps + 4ps
       #16388;
       #1; // Wait extra tick for data to change
       `CHECK_EQUAL(bench.cpu_uut.clock_factor, 4'b0011);
 
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hEC2; // LD A, MX
+
       bench.run_until_complete();
       bench.cpu_uut.core.regs.x = 12'hF00;
-      bench.rom_data = 12'hEC2; // LD A, MX
 
       bench.run_until_complete();
       #1;
@@ -56,7 +54,7 @@ module clock_tb;
     end
 
     `TEST_CASE("Interrupt factor AND with mask should produce interrupts") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.core.regs.interrupt = 1;
       bench.cpu_uut.clock_mask = 4'b0001;
 
@@ -76,7 +74,7 @@ module clock_tb;
     end
 
     `TEST_CASE("Interrupts should not be produced if factor AND mask is 0") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
       bench.cpu_uut.core.regs.interrupt = 1;
       bench.cpu_uut.clock_mask = 4'b0100;
 
@@ -113,12 +111,14 @@ module clock_tb;
     end
 
     `TEST_CASE("Reading/writing from 0xF10 should read/write mask settings") begin
-      bench.rom_data = 12'hEC8; // LD MX, A
+      bench.initialize(12'hEC8); // LD MX, A
       bench.cpu_uut.core.regs.a = 4'hC;
       bench.cpu_uut.core.regs.x = 12'hF10;
 
-      bench.run_until_complete();
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC6; // LD B, MX
+
+      bench.run_until_complete();
       #1;
       `CHECK_EQUAL(bench.cpu_uut.clock_mask, 4'hC);
 
@@ -128,15 +128,17 @@ module clock_tb;
     end
 
     `TEST_CASE("Reading from 0xF20 should return current timer data from 16-128Hz") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // 32hz: 4096ps - 40ps
       #4056;
       `CHECK_EQUAL(bench.cpu_uut.clock_factor, 4'b0000);
 
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hEC2; // LD A, MX
+
       bench.run_until_complete();
       bench.cpu_uut.core.regs.x = 12'hF20;
-      bench.rom_data = 12'hEC2; // LD A, MX
 
       bench.run_until_complete();
       #1;
@@ -144,15 +146,17 @@ module clock_tb;
     end
 
     `TEST_CASE("Reading from 0xF21 should return current timer data from 1-8Hz") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // 4hz: 32768ps - 40ps
       #32728;
       `CHECK_EQUAL(bench.cpu_uut.clock_factor, 4'b0011);
 
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hEC2; // LD A, MX
+
       bench.run_until_complete();
       bench.cpu_uut.core.regs.x = 12'hF21;
-      bench.rom_data = 12'hEC2; // LD A, MX
 
       bench.run_until_complete();
       #1;
@@ -160,20 +164,24 @@ module clock_tb;
     end
 
     `TEST_CASE("Writing to 0xF76 bit 1 will reset timer") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // 8hz: 16384ps + 4ps
       #16388;
       #1; // Wait extra tick for data to change
       `CHECK_EQUAL(bench.cpu_uut.clock_factor, 4'b0011);
+      
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hEC8; // LD MX, A
 
       bench.run_until_complete();
       bench.cpu_uut.core.regs.a = 4'h2;
       bench.cpu_uut.core.regs.x = 12'hF76;
-      bench.rom_data = 12'hEC8; // LD MX, A
+
+      bench.run_until_final_stage_fetch();
+      bench.rom_data = 12'hFFF; // NOP7
 
       bench.run_until_complete();
-      bench.rom_data = 12'hFFF; // NOP7
       bench.cpu_uut.interrupt.clock_factor = 4'h0;
       #4;
       #1;
@@ -187,20 +195,24 @@ module clock_tb;
     end
 
     `TEST_CASE("Writing to 0xF76 bits besides 1 will not reset timer") begin
-      bench.rom_data = 12'hFFF; // NOP7
+      bench.initialize(12'hFFF); // NOP7
 
       // 8hz: 16384ps + 4ps
       #16388;
       #1; // Wait extra tick for data to change
       `CHECK_EQUAL(bench.cpu_uut.clock_factor, 4'b0011);
 
-      bench.run_until_complete();
-      bench.cpu_uut.core.regs.a = 4'hD;
-      bench.cpu_uut.core.regs.x = 12'hF76;
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hEC8; // LD MX, A
 
       bench.run_until_complete();
+      bench.cpu_uut.core.regs.a = 4'hD;
+      bench.cpu_uut.core.regs.x = 12'hF76;
+
+      bench.run_until_final_stage_fetch();
       bench.rom_data = 12'hFFF; // NOP7
+
+      bench.run_until_complete();
       #4;
       #1;
       `CHECK_NOT_EQUAL(bench.cpu_uut.timers.clock.counter_256, 4'b0);

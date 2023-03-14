@@ -4,12 +4,8 @@ module jp_c_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("JP C should not jump when carry isn't set") begin
-      bench.rom_data = 12'h2CD; // JP C, 0xCD
+      bench.initialize(12'h2CD); // JP C, 0xCD
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -21,8 +17,8 @@ module jp_c_tb;
     end
 
     `TEST_CASE("JP C should jump when carry is set") begin
+      bench.initialize(12'h2CD); // JP C, 0xCD
       bench.cpu_uut.regs.carry = 1;
-      bench.rom_data = 12'h2CD; // JP C, 0xCD
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -34,7 +30,7 @@ module jp_c_tb;
     end
 
     `TEST_CASE("JP NC should jump when carry isn't set") begin
-      bench.rom_data = 12'h3F1; // JP NC, 0xF1
+      bench.initialize(12'h3F1); // JP NC, 0xF1
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -46,8 +42,8 @@ module jp_c_tb;
     end
 
     `TEST_CASE("JP NC should not jump when carry is set") begin
+      bench.initialize(12'h3F1); // JP NC, 0xF1
       bench.cpu_uut.regs.carry = 1;
-      bench.rom_data = 12'h3F1; // JP NC, 0xF1
 
       bench.run_until_final_stage_fetch();
       #1;

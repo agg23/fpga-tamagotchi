@@ -7,21 +7,17 @@ module fan_tb;
   parameter q = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("GENr FAN r i should AND immediate with r and set zero flag") begin
       reg [3:0] temp_a;
       reg [3:0] result;
+
+      bench.initialize(12'hD84 | (r << 4)); // FAN r, i
 
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h5;
       bench.ram[bench.cpu_uut.regs.y] = 4'hE;
       bench.update_prevs();
-
-      bench.rom_data = 12'hD84 | (r << 4); // FAN r, i
 
       temp_a = bench.get_r_value(r);
 
@@ -45,13 +41,13 @@ module fan_tb;
       reg [3:0] temp_b;
       reg [3:0] result;
 
+      bench.initialize(12'hF10 | (r << 2) | q); // FAN r, q
+
       bench.cpu_uut.regs.a = 4'h1;
       bench.cpu_uut.regs.b = 4'h8;
       bench.ram[bench.cpu_uut.regs.x] = 4'h5;
       bench.ram[bench.cpu_uut.regs.y] = 4'hE;
       bench.update_prevs();
-
-      bench.rom_data = 12'hF10 | (r << 2) | q; // FAN r, q
 
       temp_a = bench.get_r_value(r);
       temp_b = bench.get_r_value(q);

@@ -4,12 +4,8 @@ module interrupt_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("Interrupt should be captured and jump to interrupt vector") begin
-      bench.rom_data = 12'hEE0; // INC X
+      bench.initialize(12'hEE0); // INC X
       bench.cpu_uut.regs.x = 12'h0;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h1F;
@@ -42,7 +38,7 @@ module interrupt_tb;
     end
 
     `TEST_CASE("Interrupt should set vector based on requested line") begin
-      bench.rom_data = 12'hEE0; // INC X
+      bench.initialize(12'hEE0); // INC X
       bench.cpu_uut.regs.x = 12'h0;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h1F;
@@ -67,7 +63,7 @@ module interrupt_tb;
     `TEST_CASE("Interrupt should take exactly 12 cycles when immediately asserted") begin
       reg [7:0] cycle_time;
 
-      bench.rom_data = 12'hEE0; // INC X
+      bench.initialize(12'hEE0); // INC X
       bench.cpu_uut.regs.x = 12'h0;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h1F;
@@ -94,7 +90,7 @@ module interrupt_tb;
     `TEST_CASE("Interrupt should take exactly 13 cycles when asserted during halt") begin
       reg [7:0] cycle_time;
 
-      bench.rom_data = 12'hFF8; // HALT
+      bench.initialize(12'hFF8); // HALT
       bench.cpu_uut.regs.x = 12'h0;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h1F;
@@ -124,7 +120,7 @@ module interrupt_tb;
     end
 
     `TEST_CASE("Interrupt should handle req staying high after interrupt starts") begin
-      bench.rom_data = 12'hEE0; // INC X
+      bench.initialize(12'hEE0); // INC X
       bench.cpu_uut.regs.x = 12'h0;
       bench.cpu_uut.regs.pc = 13'h1234;
       bench.cpu_uut.regs.np = 5'h1F;

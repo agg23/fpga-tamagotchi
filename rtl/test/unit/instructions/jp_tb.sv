@@ -4,12 +4,8 @@ module jp_tb;
   core_bench bench();
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("JP should set PC") begin
-      bench.rom_data = 12'h023; // JP 0x23
+      bench.initialize(12'h023); // JP 0x23
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -21,7 +17,7 @@ module jp_tb;
     end
 
     `TEST_CASE("JP should use NBP + NPP") begin
-      bench.rom_data = 12'h045; // JP 0x45
+      bench.initialize(12'h045); // JP 0x45
       bench.cpu_uut.regs.np = 5'h12;
 
       bench.run_until_final_stage_fetch();
@@ -34,7 +30,7 @@ module jp_tb;
     end
 
     `TEST_CASE("JPBA should set PC") begin
-      bench.rom_data = 12'hFE8; // JPBA
+      bench.initialize(12'hFE8); // JPBA
       bench.cpu_uut.regs.a = 4'h4;
       bench.cpu_uut.regs.b = 4'hB;
       bench.update_prevs();
@@ -49,7 +45,7 @@ module jp_tb;
     end
 
     `TEST_CASE("JPBA should use NBP + NPP") begin
-      bench.rom_data = 12'hFE8; // JPBA
+      bench.initialize(12'hFE8); // JPBA
       bench.cpu_uut.regs.a = 4'h4;
       bench.cpu_uut.regs.b = 4'hB;
       bench.cpu_uut.regs.np = 5'h15;

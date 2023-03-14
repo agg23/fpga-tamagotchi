@@ -4,7 +4,7 @@ module buzzer_tb;
   bench bench();
 
   task test_buzzer_frequencies(reg [2:0] clock_selection, int duration);
-    bench.rom_data = 12'hFFF; // NOP7
+    bench.initialize(12'hFFF); // NOP7
     bench.cpu_uut.buzzer_frequency_selection = {1'b1, clock_selection};
 
     #1;
@@ -46,10 +46,6 @@ module buzzer_tb;
   endtask
 
   `TEST_SUITE begin
-    `TEST_CASE_SETUP begin
-      bench.initialize();
-    end
-
     `TEST_CASE("Buzzer 0 should fire at 4096Hz") begin
       test_buzzer_frequencies(3'h0, 8 * 2);
     end
