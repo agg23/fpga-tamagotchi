@@ -1,15 +1,15 @@
 `include "vunit_defines.svh"
 
 module interrupt_tb;
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("Interrupt should be captured and jump to interrupt vector") begin
       bench.initialize(12'hEE0); // INC X
-      bench.cpu_uut.regs.x = 12'h0;
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h1F;
-      bench.cpu_uut.regs.interrupt = 1;
+      bench.cpu_uut.core.regs.x = 12'h0;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h1F;
+      bench.cpu_uut.core.regs.interrupt = 1;
 
       // Wait some time for instruction to start
       #2;
@@ -20,9 +20,9 @@ module interrupt_tb;
       // Unassert interrupt
       bench.interrupt_req = 15'h0;
 
-      `CHECK_EQUAL(bench.cpu_uut.microcode.performing_interrupt, 1);
+      `CHECK_EQUAL(bench.cpu_uut.core.microcode.performing_interrupt, 1);
 
-      @(posedge bench.clk iff bench.cpu_uut.microcode.stage == 3); // STEP2
+      @(posedge bench.clk iff bench.cpu_uut.core.microcode.stage == 3); // STEP2
       #1;
       bench.assert_interrupt(0);
 
@@ -39,10 +39,10 @@ module interrupt_tb;
 
     `TEST_CASE("Interrupt should set vector based on requested line") begin
       bench.initialize(12'hEE0); // INC X
-      bench.cpu_uut.regs.x = 12'h0;
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h1F;
-      bench.cpu_uut.regs.interrupt = 1;
+      bench.cpu_uut.core.regs.x = 12'h0;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h1F;
+      bench.cpu_uut.core.regs.interrupt = 1;
 
       // Wait some time for instruction to start
       #4;
@@ -64,10 +64,10 @@ module interrupt_tb;
       reg [7:0] cycle_time;
 
       bench.initialize(12'hEE0); // INC X
-      bench.cpu_uut.regs.x = 12'h0;
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h1F;
-      bench.cpu_uut.regs.interrupt = 1;
+      bench.cpu_uut.core.regs.x = 12'h0;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h1F;
+      bench.cpu_uut.core.regs.interrupt = 1;
 
       // Wait some time for instruction to start
       bench.run_until_final_stage_fetch();
@@ -91,10 +91,10 @@ module interrupt_tb;
       reg [7:0] cycle_time;
 
       bench.initialize(12'hFF8); // HALT
-      bench.cpu_uut.regs.x = 12'h0;
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h1F;
-      bench.cpu_uut.regs.interrupt = 1;
+      bench.cpu_uut.core.regs.x = 12'h0;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h1F;
+      bench.cpu_uut.core.regs.interrupt = 1;
 
       // Wait a long time for halt
       #30;
@@ -121,10 +121,10 @@ module interrupt_tb;
 
     `TEST_CASE("Interrupt should handle req staying high after interrupt starts") begin
       bench.initialize(12'hEE0); // INC X
-      bench.cpu_uut.regs.x = 12'h0;
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h1F;
-      bench.cpu_uut.regs.interrupt = 1;
+      bench.cpu_uut.core.regs.x = 12'h0;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h1F;
+      bench.cpu_uut.core.regs.interrupt = 1;
 
       // Wait some time for instruction to start
       #2;
@@ -133,9 +133,9 @@ module interrupt_tb;
       bench.run_until_complete();
       #1;
 
-      `CHECK_EQUAL(bench.cpu_uut.microcode.performing_interrupt, 1);
+      `CHECK_EQUAL(bench.cpu_uut.core.microcode.performing_interrupt, 1);
 
-      @(posedge bench.clk iff bench.cpu_uut.microcode.stage == 3); // STEP2
+      @(posedge bench.clk iff bench.cpu_uut.core.microcode.stage == 3); // STEP2
       #1;
       bench.assert_interrupt(0);
 

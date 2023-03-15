@@ -5,7 +5,7 @@ module ld_tb;
   parameter q = 0;
   parameter i = 0;
 
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("LD X e should load 8 bit immediate") begin
@@ -40,14 +40,16 @@ module ld_tb;
 
     `TEST_CASE("GENr LD r i should load r with 4 bit immediate") begin
       bench.initialize(12'hE05 | (r << 4)); // LD r, i
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       bench.run_until_complete();
       #1;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? 4'h5 : bench.prev_a, r == 1 ? 4'h5 : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? 4'h5 : 0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? 4'h5 : 0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? 4'h5 : 0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? 4'h5 : 0);
     end
 
     `TEST_CASE("LDPX MX i should load 4 bit immediate into M(X) and increment X") begin
@@ -63,6 +65,8 @@ module ld_tb;
 
     `TEST_CASE("LDPY MY i should load 4 bit immediate into M(Y) and increment Y") begin
       bench.initialize(12'hE75); // LDPX MY, i
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       bench.run_until_complete();
       #1;
@@ -76,6 +80,8 @@ module ld_tb;
       reg [3:0] r_value;
 
       bench.initialize(12'hE80 | r); // LD XP, r
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       r_value = bench.get_r_value(r);
 
@@ -89,6 +95,8 @@ module ld_tb;
       reg [3:0] r_value;
 
       bench.initialize(12'hE84 | r); // LD XH, r
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       r_value = bench.get_r_value(r);
 
@@ -102,6 +110,8 @@ module ld_tb;
       reg [3:0] r_value;
 
       bench.initialize(12'hE88 | r); // LD XL, r
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       r_value = bench.get_r_value(r);
 
@@ -115,6 +125,8 @@ module ld_tb;
       reg [3:0] r_value;
 
       bench.initialize(12'hE90 | r); // LD YP, r
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       r_value = bench.get_r_value(r);
 
@@ -128,6 +140,8 @@ module ld_tb;
       reg [3:0] r_value;
 
       bench.initialize(12'hE94 | r); // LD YH, r
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       r_value = bench.get_r_value(r);
 
@@ -141,6 +155,8 @@ module ld_tb;
       reg [3:0] r_value;
 
       bench.initialize(12'hE98 | r); // LD YL, r
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.update_prevs();
 
       r_value = bench.get_r_value(r);
 
@@ -155,19 +171,19 @@ module ld_tb;
 
       bench.initialize(12'hEA0 | r); // LD r, XP
 
-      bench.cpu_uut.regs.x = 12'hACF;
-      bench.cpu_uut.regs.y = 12'h48E;
+      bench.cpu_uut.core.regs.x = 12'h1CF;
+      bench.cpu_uut.core.regs.y = 12'h27E;
       bench.update_prevs();
 
-      value = 4'hA;
+      value = 4'h1;
 
       bench.run_until_complete();
       #1;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'h0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'h0);
     end
 
     `TEST_CASE("GENr LD r XH should load r with XH") begin
@@ -175,8 +191,8 @@ module ld_tb;
 
       bench.initialize(12'hEA4 | r); // LD r, XH
 
-      bench.cpu_uut.regs.x = 12'hACF;
-      bench.cpu_uut.regs.y = 12'h48E;
+      bench.cpu_uut.core.regs.x = 12'h1CF;
+      bench.cpu_uut.core.regs.y = 12'h27E;
       bench.update_prevs();
 
       value = 4'hC;
@@ -186,8 +202,8 @@ module ld_tb;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'h0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'h0);
     end
 
     `TEST_CASE("GENr LD r XL should load r with XL") begin
@@ -195,8 +211,8 @@ module ld_tb;
 
       bench.initialize(12'hEA8 | r); // LD r, XL
 
-      bench.cpu_uut.regs.x = 12'hACF;
-      bench.cpu_uut.regs.y = 12'h48E;
+      bench.cpu_uut.core.regs.x = 12'h1CF;
+      bench.cpu_uut.core.regs.y = 12'h27E;
       bench.update_prevs();
 
       value = 4'hF;
@@ -206,8 +222,8 @@ module ld_tb;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'h0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'h0);
     end
 
     `TEST_CASE("GENr LD r YP should load r with YP") begin
@@ -215,19 +231,19 @@ module ld_tb;
 
       bench.initialize(12'hEB0 | r); // LD r, YP
 
-      bench.cpu_uut.regs.x = 12'hACF;
-      bench.cpu_uut.regs.y = 12'h48E;
+      bench.cpu_uut.core.regs.x = 12'h1CF;
+      bench.cpu_uut.core.regs.y = 12'h27E;
       bench.update_prevs();
 
-      value = 4'h4;
+      value = 4'h2;
 
       bench.run_until_complete();
       #1;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'h0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'h0);
     end
 
     `TEST_CASE("GENr LD r YH should load r with YH") begin
@@ -235,19 +251,19 @@ module ld_tb;
 
       bench.initialize(12'hEB4 | r); // LD r, YH
 
-      bench.cpu_uut.regs.x = 12'hACF;
-      bench.cpu_uut.regs.y = 12'h48E;
+      bench.cpu_uut.core.regs.x = 12'h1CF;
+      bench.cpu_uut.core.regs.y = 12'h27E;
       bench.update_prevs();
 
-      value = 4'h8;
+      value = 4'h7;
 
       bench.run_until_complete();
       #1;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'h0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'h0);
     end
 
     `TEST_CASE("GENr LD r YL should load r with YL") begin
@@ -255,8 +271,8 @@ module ld_tb;
 
       bench.initialize(12'hEB8 | r); // LD r, YL
 
-      bench.cpu_uut.regs.x = 12'hACF;
-      bench.cpu_uut.regs.y = 12'h48E;
+      bench.cpu_uut.core.regs.x = 12'h1CF;
+      bench.cpu_uut.core.regs.y = 12'h27E;
       bench.update_prevs();
 
       value = 4'hE;
@@ -266,8 +282,8 @@ module ld_tb;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'h0);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'h0);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'h0);
     end
 
     `TEST_CASE("GENrq LD r q should load r with q") begin
@@ -275,10 +291,11 @@ module ld_tb;
 
       bench.initialize(12'hEC0 | (r << 2) | q); // LD r, q
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
       bench.update_prevs();
 
       value = bench.get_r_value(q);
@@ -288,8 +305,8 @@ module ld_tb;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? value : bench.prev_a, r == 1 ? value : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(5);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? value : 4'hA);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? value : 4'hF);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? value : 4'hA);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? value : 4'hF);
     end
 
     `TEST_CASE("GENrq LDPX r q should load r with q and increment X") begin
@@ -297,10 +314,11 @@ module ld_tb;
 
       bench.initialize(12'hEE0 | (r << 2) | q); // LDPX r, q
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
       bench.update_prevs();
 
       value = bench.get_r_value(q);
@@ -319,10 +337,11 @@ module ld_tb;
 
       bench.initialize(12'hEF0 | (r << 2) | q); // LDPY r, q
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
       bench.update_prevs();
 
       value = bench.get_r_value(q);
@@ -339,7 +358,7 @@ module ld_tb;
     `TEST_CASE("GENi LD Mn A should copy A to Mn") begin
       bench.initialize(12'hF80 | i);
 
-      bench.cpu_uut.regs.a = 4'h5;
+      bench.cpu_uut.core.regs.a = 4'h5;
       bench.update_prevs();
 
       bench.run_until_complete();
@@ -368,7 +387,7 @@ module ld_tb;
 
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
-        bench.ram[j] = j + 2;
+        bench.cpu_uut.ram.memory[j] = j + 2;
       end
 
       bench.run_until_complete();
@@ -384,7 +403,7 @@ module ld_tb;
 
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
-        bench.ram[j] = j + 2;
+        bench.cpu_uut.ram.memory[j] = j + 2;
       end
 
       bench.run_until_complete();
@@ -398,10 +417,11 @@ module ld_tb;
 
       bench.initialize(12'hFE0 | r); // LD SPH, r
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
       bench.update_prevs();
 
       value = bench.get_r_value(r);
@@ -417,11 +437,12 @@ module ld_tb;
 
       bench.initialize(12'hFE4 | r); // LD r SPH
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
-      bench.cpu_uut.regs.sp = 8'hB4;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.sp = 8'hB4;
       bench.update_prevs();
 
       bench.run_until_complete();
@@ -438,10 +459,11 @@ module ld_tb;
 
       bench.initialize(12'hFF0 | r); // LD SPL, r
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
       bench.update_prevs();
 
       value = bench.get_r_value(r);
@@ -457,11 +479,12 @@ module ld_tb;
 
       bench.initialize(12'hFF4 | r); // LD r SPL
 
-      bench.cpu_uut.regs.a = 4'h0;
-      bench.cpu_uut.regs.b = 4'h5;
-      bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hF;
-      bench.cpu_uut.regs.sp = 8'hB4;
+      bench.cpu_uut.core.regs.a = 4'h0;
+      bench.cpu_uut.core.regs.b = 4'h5;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
+      bench.cpu_uut.core.regs.sp = 8'hB4;
       bench.update_prevs();
 
       bench.run_until_complete();

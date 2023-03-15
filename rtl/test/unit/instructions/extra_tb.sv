@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module extra_tb;
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("HALT should change nothing") begin

@@ -4,7 +4,7 @@ module cp_tb;
   parameter r = 0;
   parameter q = 0;
 
-  core_bench bench();
+  bench bench();
 
   function [1:0] cp_flags(reg [3:0] a, reg [3:0] b);
     if (a > b) begin
@@ -81,10 +81,11 @@ module cp_tb;
 
       bench.initialize(12'hDC4 | (r << 4)); // CP r, i
 
-      bench.cpu_uut.regs.a = 4'h1;
-      bench.cpu_uut.regs.b = 4'h8;
-      bench.ram[bench.cpu_uut.regs.x] = 4'h5;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hE;
+      bench.cpu_uut.core.regs.a = 4'h1;
+      bench.cpu_uut.core.regs.b = 4'h8;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'h5;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hE;
       bench.update_prevs();
 
       temp_a = bench.get_r_value(r);
@@ -97,8 +98,8 @@ module cp_tb;
       bench.assert_expected(bench.prev_pc + 1, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(7);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, 4'h5);
-      bench.assert_ram(bench.cpu_uut.regs.y, 4'hE);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, 4'h5);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, 4'hE);
   
       bench.assert_carry(carry);
       bench.assert_zero(zero);
@@ -112,10 +113,11 @@ module cp_tb;
 
       bench.initialize(12'hF00 | (r << 2) | q); // CP r, q
 
-      bench.cpu_uut.regs.a = 4'h1;
-      bench.cpu_uut.regs.b = 4'h8;
-      bench.ram[bench.cpu_uut.regs.x] = 4'h5;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hE;
+      bench.cpu_uut.core.regs.a = 4'h1;
+      bench.cpu_uut.core.regs.b = 4'h8;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'h5;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hE;
       bench.update_prevs();
 
       temp_a = bench.get_r_value(r);
@@ -129,8 +131,8 @@ module cp_tb;
       bench.assert_expected(bench.prev_pc + 1, bench.prev_a, bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(7);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, 4'h5);
-      bench.assert_ram(bench.cpu_uut.regs.y, 4'hE);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, 4'h5);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, 4'hE);
   
       bench.assert_carry(carry);
       bench.assert_zero(zero);

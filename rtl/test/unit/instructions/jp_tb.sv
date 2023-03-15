@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module jp_tb;
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("JP should set PC") begin
@@ -18,7 +18,7 @@ module jp_tb;
 
     `TEST_CASE("JP should use NBP + NPP") begin
       bench.initialize(12'h045); // JP 0x45
-      bench.cpu_uut.regs.np = 5'h12;
+      bench.cpu_uut.core.regs.np = 5'h12;
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -31,8 +31,8 @@ module jp_tb;
 
     `TEST_CASE("JPBA should set PC") begin
       bench.initialize(12'hFE8); // JPBA
-      bench.cpu_uut.regs.a = 4'h4;
-      bench.cpu_uut.regs.b = 4'hB;
+      bench.cpu_uut.core.regs.a = 4'h4;
+      bench.cpu_uut.core.regs.b = 4'hB;
       bench.update_prevs();
 
       bench.run_until_final_stage_fetch();
@@ -46,9 +46,9 @@ module jp_tb;
 
     `TEST_CASE("JPBA should use NBP + NPP") begin
       bench.initialize(12'hFE8); // JPBA
-      bench.cpu_uut.regs.a = 4'h4;
-      bench.cpu_uut.regs.b = 4'hB;
-      bench.cpu_uut.regs.np = 5'h15;
+      bench.cpu_uut.core.regs.a = 4'h4;
+      bench.cpu_uut.core.regs.b = 4'hB;
+      bench.cpu_uut.core.regs.np = 5'h15;
       bench.update_prevs();
 
       bench.run_until_final_stage_fetch();

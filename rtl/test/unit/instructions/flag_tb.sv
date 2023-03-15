@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module flag_tb;
-  core_bench bench();
+  bench bench();
 
   parameter i = 0;
   parameter p = 0;
@@ -13,9 +13,9 @@ module flag_tb;
       bench.initialize(12'hF40 | i); // SET F, i
 
       // p is the initial state of flags
-      {bench.cpu_uut.regs.interrupt, bench.cpu_uut.regs.decimal, bench.cpu_uut.regs.zero, bench.cpu_uut.regs.carry} = p;
+      {bench.cpu_uut.core.regs.interrupt, bench.cpu_uut.core.regs.decimal, bench.cpu_uut.core.regs.zero, bench.cpu_uut.core.regs.carry} = p;
 
-      result = {bench.cpu_uut.regs.interrupt, bench.cpu_uut.regs.decimal, bench.cpu_uut.regs.zero, bench.cpu_uut.regs.carry} | i;
+      result = {bench.cpu_uut.core.regs.interrupt, bench.cpu_uut.core.regs.decimal, bench.cpu_uut.core.regs.zero, bench.cpu_uut.core.regs.carry} | i;
 
       bench.run_until_complete();
       #1;
@@ -35,9 +35,9 @@ module flag_tb;
       bench.initialize(12'hF50 | i); // RST F, i
 
       // p is the initial state of flags
-      {bench.cpu_uut.regs.interrupt, bench.cpu_uut.regs.decimal, bench.cpu_uut.regs.zero, bench.cpu_uut.regs.carry} = p;
+      {bench.cpu_uut.core.regs.interrupt, bench.cpu_uut.core.regs.decimal, bench.cpu_uut.core.regs.zero, bench.cpu_uut.core.regs.carry} = p;
 
-      result = {bench.cpu_uut.regs.interrupt, bench.cpu_uut.regs.decimal, bench.cpu_uut.regs.zero, bench.cpu_uut.regs.carry} & i;
+      result = {bench.cpu_uut.core.regs.interrupt, bench.cpu_uut.core.regs.decimal, bench.cpu_uut.core.regs.zero, bench.cpu_uut.core.regs.carry} & i;
 
       bench.run_until_complete();
       #1;

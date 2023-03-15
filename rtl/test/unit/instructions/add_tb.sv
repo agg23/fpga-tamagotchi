@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module add_tb;
-  core_bench bench();
+  bench bench();
 
   parameter r = 0;
   parameter q = 0;
@@ -29,11 +29,12 @@ module add_tb;
 
       bench.initialize(12'hA80 | (r << 2) | q); // ADD r, q
 
-      bench.cpu_uut.regs.decimal = decimal;
-      bench.cpu_uut.regs.a = 4'h7;
-      bench.cpu_uut.regs.b = 4'h9;
-      bench.ram[bench.cpu_uut.regs.x] = 4'h4;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hB;
+      bench.cpu_uut.core.regs.decimal = decimal;
+      bench.cpu_uut.core.regs.a = 4'h7;
+      bench.cpu_uut.core.regs.b = 4'h9;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'h4;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hB;
       bench.update_prevs();
 
       temp_a = bench.get_r_value(r);
@@ -47,8 +48,8 @@ module add_tb;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? result : bench.prev_a, r == 1 ? result : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(7);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? result : 4'h4);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? result : 4'hB);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? result : 4'h4);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? result : 4'hB);
   
       bench.assert_carry(carry);
       bench.assert_zero(result == 4'h0);
@@ -62,11 +63,12 @@ module add_tb;
 
       bench.initialize(12'hC09 | (r << 4)); // ADD r, i
 
-      bench.cpu_uut.regs.decimal = decimal;
-      bench.cpu_uut.regs.a = 4'h7;
-      bench.cpu_uut.regs.b = 4'h9;
-      bench.ram[bench.cpu_uut.regs.x] = 4'h4;
-      bench.ram[bench.cpu_uut.regs.y] = 4'hB;
+      bench.cpu_uut.core.regs.decimal = decimal;
+      bench.cpu_uut.core.regs.a = 4'h7;
+      bench.cpu_uut.core.regs.b = 4'h9;
+      bench.cpu_uut.core.regs.y = 12'h279;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'h4;
+      bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hB;
       bench.update_prevs();
 
       temp_a = bench.get_r_value(r);
@@ -79,8 +81,8 @@ module add_tb;
       bench.assert_expected(bench.prev_pc + 1, r == 0 ? result : bench.prev_a, r == 1 ? result : bench.prev_b, bench.prev_x, bench.prev_y, bench.prev_sp);
       bench.assert_cycle_length(7);
 
-      bench.assert_ram(bench.cpu_uut.regs.x, r == 2 ? result : 4'h4);
-      bench.assert_ram(bench.cpu_uut.regs.y, r == 3 ? result : 4'hB);
+      bench.assert_ram(bench.cpu_uut.core.regs.x, r == 2 ? result : 4'h4);
+      bench.assert_ram(bench.cpu_uut.core.regs.y, r == 3 ? result : 4'hB);
   
       bench.assert_carry(carry);
       bench.assert_zero(result == 4'h0);
