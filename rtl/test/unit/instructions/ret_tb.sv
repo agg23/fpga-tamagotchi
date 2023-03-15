@@ -1,16 +1,17 @@
 `include "vunit_defines.svh"
 
 module ret_tb;
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("RETD should set PC and load 8 bit immediate into MX and increment X twice") begin
       bench.initialize(12'h1FC); // RETD 0xFC
-      bench.cpu_uut.regs.x = 12'h4F1;
-      bench.cpu_uut.regs.sp = 8'h44;
-      bench.ram[8'h44] = 4'hD;  // PCSL
-      bench.ram[8'h45] = 4'h4;  // PCSL
-      bench.ram[8'h46] = 4'h7;  // PCP
+      bench.cpu_uut.core.regs.x = 12'h1F1;
+      bench.cpu_uut.core.regs.sp = 8'h44;
+      bench.cpu_uut.ram.memory[8'h44] = 4'hD;  // PCSL
+      bench.cpu_uut.ram.memory[8'h45] = 4'h4;  // PCSL
+      bench.cpu_uut.ram.memory[8'h46] = 4'h7;  // PCP
+      bench.update_prevs();
 
       #8;
       // Changing the PC value shouldn't affect the instruction
@@ -23,19 +24,19 @@ module ret_tb;
       bench.run_until_complete();
       #1;
       bench.assert_cycle_length(12);
-      bench.assert_ram(12'h4F1, 4'hC); // Lower nibble of immediate
-      bench.assert_ram(12'h4F2, 4'hF); // Upper nibble of immediate
+      bench.assert_ram(12'h1F1, 4'hC); // Lower nibble of immediate
+      bench.assert_ram(12'h1F2, 4'hF); // Upper nibble of immediate
 
-      bench.assert_x(12'h4F3);
+      bench.assert_x(12'h1F3);
     end
 
     `TEST_CASE("RETS should set PC and increment it") begin
       bench.initialize(12'hFDE); // RETS
-      bench.cpu_uut.regs.x = 12'h4F1;
-      bench.cpu_uut.regs.sp = 8'h44;
-      bench.ram[8'h44] = 4'hD;  // PCSL
-      bench.ram[8'h45] = 4'h4;  // PCSL
-      bench.ram[8'h46] = 4'h7;  // PCP
+      bench.cpu_uut.core.regs.x = 12'h1F1;
+      bench.cpu_uut.core.regs.sp = 8'h44;
+      bench.cpu_uut.ram.memory[8'h44] = 4'hD;  // PCSL
+      bench.cpu_uut.ram.memory[8'h45] = 4'h4;  // PCSL
+      bench.cpu_uut.ram.memory[8'h46] = 4'h7;  // PCP
       bench.update_prevs();
 
       bench.run_until_final_stage_fetch();
@@ -49,11 +50,11 @@ module ret_tb;
 
     `TEST_CASE("RET should set PC") begin
       bench.initialize(12'hFDF); // RET
-      bench.cpu_uut.regs.x = 12'h4F1;
-      bench.cpu_uut.regs.sp = 8'h44;
-      bench.ram[8'h44] = 4'hD;  // PCSL
-      bench.ram[8'h45] = 4'h4;  // PCSL
-      bench.ram[8'h46] = 4'h7;  // PCP
+      bench.cpu_uut.core.regs.x = 12'h1F1;
+      bench.cpu_uut.core.regs.sp = 8'h44;
+      bench.cpu_uut.ram.memory[8'h44] = 4'hD;  // PCSL
+      bench.cpu_uut.ram.memory[8'h45] = 4'h4;  // PCSL
+      bench.cpu_uut.ram.memory[8'h46] = 4'h7;  // PCP
       bench.update_prevs();
 
       bench.run_until_final_stage_fetch();

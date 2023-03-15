@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module inc_tb;
-  core_bench bench();
+  bench bench();
 
   parameter i = 0;
 
@@ -14,10 +14,10 @@ module inc_tb;
       bench.initialize(12'hF60 | i); // INC Mn
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
-        bench.ram[j] = j + 2;
+        bench.cpu_uut.ram.memory[j] = j + 2;
       end
 
-      {carry, result} = bench.ram[i] + 1;
+      {carry, result} = bench.cpu_uut.ram.memory[i] + 1;
 
       bench.run_until_complete();
       #1;
@@ -39,10 +39,10 @@ module inc_tb;
       bench.initialize(12'hF70 | i); // DEC Mn
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
-        bench.ram[j] = j + 2;
+        bench.cpu_uut.ram.memory[j] = j + 2;
       end
 
-      {carry, result} = bench.ram[i] - 1;
+      {carry, result} = bench.cpu_uut.ram.memory[i] - 1;
 
       bench.run_until_complete();
       #1;

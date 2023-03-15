@@ -3,25 +3,25 @@
 module push_tb;
   parameter r = 0;
 
-  core_bench bench();
+  bench bench();
 
   task test_push(reg [11:0] opcode, reg [3:0] expected, reg use_r, reg [3:0] flags);
     reg [3:0] value;
   
     bench.initialize(opcode);
 
-    bench.cpu_uut.regs.x = 12'hABC;
-    bench.cpu_uut.regs.y = 12'h789;
+    bench.cpu_uut.core.regs.x = 12'hABC;
+    bench.cpu_uut.core.regs.y = 12'h789;
 
-    bench.cpu_uut.regs.a = 4'h4;
-    bench.cpu_uut.regs.b = 4'h7;
-    bench.ram[bench.cpu_uut.regs.x] = 4'hA;
-    bench.ram[bench.cpu_uut.regs.y] = 4'hF;
+    bench.cpu_uut.core.regs.a = 4'h4;
+    bench.cpu_uut.core.regs.b = 4'h7;
+    bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.x] = 4'hA;
+    bench.cpu_uut.ram.memory[bench.cpu_uut.core.regs.y] = 4'hF;
 
-    bench.cpu_uut.regs.carry = flags[0];
-    bench.cpu_uut.regs.zero = flags[1];
-    bench.cpu_uut.regs.decimal = flags[2];
-    bench.cpu_uut.regs.interrupt = flags[3];
+    bench.cpu_uut.core.regs.carry = flags[0];
+    bench.cpu_uut.core.regs.zero = flags[1];
+    bench.cpu_uut.core.regs.decimal = flags[2];
+    bench.cpu_uut.core.regs.interrupt = flags[3];
     bench.update_prevs();
 
     if (use_r) begin

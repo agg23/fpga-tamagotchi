@@ -9,8 +9,6 @@ module bench;
   wire [12:0] rom_addr;
   reg [11:0] rom_data = 0;
 
-  reg [14:0] interrupt_req = 0;
-
   reg [3:0] input_k0 = 0;
   reg [3:0] input_k1 = 0;
 
@@ -131,6 +129,24 @@ module bench;
 
     bench.reset_n = 1;
     bench.ss_bus_reset_n = 1;
+
+    // Set default values for tests
+    cpu_uut.core.regs.a = 0;
+    cpu_uut.core.regs.b = 1;
+
+    cpu_uut.core.regs.x = 12'h222;
+    cpu_uut.core.regs.y = 12'h333;
+
+    cpu_uut.core.regs.sp = 8'h44;
+
+    cpu_uut.core.regs.zero = 0;
+    cpu_uut.core.regs.carry = 0;
+    cpu_uut.core.regs.decimal = 0;
+    cpu_uut.core.regs.interrupt = 0;
+
+    bench.update_prevs();
+
+    #1;
   endtask
 
   task run_until_final_stage_fetch();

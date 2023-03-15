@@ -1,7 +1,7 @@
 `include "vunit_defines.svh"
 
 module lbpx_tb;
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("LBPX MX e should load 8 bit immediate into M(X) and increment X by 2") begin

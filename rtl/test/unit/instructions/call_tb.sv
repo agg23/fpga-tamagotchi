@@ -1,13 +1,13 @@
 `include "vunit_defines.svh"
 
 module call_tb;
-  core_bench bench();
+  bench bench();
 
   `TEST_SUITE begin
     `TEST_CASE("CALL s should push to stack") begin
       bench.initialize(12'h4AB); // CALL 0xAB
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h12;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h12;
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -25,8 +25,8 @@ module call_tb;
     // TODO: CALL s should copy NPP to PCP but not bank
     `TEST_CASE("CALL s should use PCP but not bank") begin
       bench.initialize(12'h444); // CALL 0x44
-      bench.cpu_uut.regs.pc = 13'h1234;
-      bench.cpu_uut.regs.np = 5'h0A;
+      bench.cpu_uut.core.regs.pc = 13'h1234;
+      bench.cpu_uut.core.regs.np = 5'h0A;
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -40,8 +40,8 @@ module call_tb;
 
     `TEST_CASE("CALZ s should jump to page 0") begin
       bench.initialize(12'h569); // CALZ 0x69
-      bench.cpu_uut.regs.pc = 13'h1ABC;
-      bench.cpu_uut.regs.np = 5'h15;
+      bench.cpu_uut.core.regs.pc = 13'h1ABC;
+      bench.cpu_uut.core.regs.np = 5'h15;
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -58,8 +58,8 @@ module call_tb;
 
     `TEST_CASE("CALL s should add across all 12 main PC bits") begin
       bench.initialize(12'h4AB); // CALL 0xAB
-      bench.cpu_uut.regs.pc = 13'h05FF;
-      bench.cpu_uut.regs.np = 5'h03;
+      bench.cpu_uut.core.regs.pc = 13'h05FF;
+      bench.cpu_uut.core.regs.np = 5'h03;
 
       bench.run_until_final_stage_fetch();
       #1;
@@ -76,8 +76,8 @@ module call_tb;
 
     `TEST_CASE("CALZ s should add across all 12 main PC bits") begin
       bench.initialize(12'h5AB); // CALZ 0xAB
-      bench.cpu_uut.regs.pc = 13'h05FF;
-      bench.cpu_uut.regs.np = 5'h03;
+      bench.cpu_uut.core.regs.pc = 13'h05FF;
+      bench.cpu_uut.core.regs.np = 5'h03;
 
       bench.run_until_final_stage_fetch();
       #1;
