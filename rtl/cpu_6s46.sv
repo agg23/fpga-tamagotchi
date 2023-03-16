@@ -2,7 +2,6 @@ import ss_addresses::*;
 
 module cpu_6s46 (
     input wire clk,
-    input wire clk_vid,
 
     input wire clk_en,
     input wire clk_2x_en,

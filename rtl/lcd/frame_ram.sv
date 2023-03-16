@@ -14,37 +14,27 @@ module frame_ram (
 );
   reg [3:0] memory[256];
 
-  reg init_read_delay = 0;
-
   always @(posedge clk) begin
-    reg [7:0] write_addr;
-
-    cpu_video_addr  <= 0;
-    init_read_delay <= 0;
+    cpu_video_addr <= 0;
 
     if (vsync) begin
+      // Address 0x0 has been available for a while, so just write it
       memory[cpu_video_addr] <= cpu_video_data;
 
       cpu_video_addr <= 8'h1;
-      init_read_delay <= 1;
-    end else if (init_read_delay) begin
-      // End of this cycle, data for 0x1 will be available, so start 0x2
-      cpu_video_addr <= 8'h2;
     end else if (cpu_video_addr != 0) begin
       // Write byte
-      write_addr = cpu_video_addr - 8'h1;
-
-      memory[write_addr] <= cpu_video_data;
+      memory[cpu_video_addr] <= cpu_video_data;
 
       // Will automatically stop copying on overflow
       cpu_video_addr <= cpu_video_addr + 8'h1;
 
       // Extract sprite data while fetching
-      if (write_addr == 8'h10) begin
+      if (cpu_video_addr == 8'h10) begin
         // Upper sprite status data
         // {1'b0, 6'd8, 1'b0}
         sprite_enable_status[3:0] <= cpu_video_data;
-      end else if (write_addr == 8'h89) begin
+      end else if (cpu_video_addr == 8'h89) begin
         // Lower sprite status data
         // Second RAM bank, y = 12
         // {1'b0, 6'd28, 1'b1} + 8'h50
