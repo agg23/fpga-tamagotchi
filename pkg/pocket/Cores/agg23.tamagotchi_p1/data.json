@@ -18,7 +18,7 @@
         "filename": "background.bin",
         "parameters": 0,
         "extensions": ["bin"],
-        "address": "0x10000000"
+        "address": "0x20000000"
       },
       {
         "name": "Spritesheet",
@@ -27,7 +27,7 @@
         "filename": "spritesheet.bin",
         "parameters": 0,
         "extensions": ["bin"],
-        "address": "0x10000000"
+        "address": "0x20000000"
       }
     ]
   }

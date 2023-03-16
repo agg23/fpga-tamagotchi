@@ -519,9 +519,13 @@ module core_top (
       .ss_reset(ss_reset)
   );
 
-  wire ioctl_wr;
-  wire [20:0] ioctl_addr;
-  wire [15:0] ioctl_dout;
+  wire ioctl_rom_wr;
+  wire [20:0] ioctl_rom_addr;
+  wire [15:0] ioctl_rom_dout;
+
+  wire ioctl_image_wr;
+  wire [20:0] ioctl_image_addr;
+  wire [15:0] ioctl_image_dout;
 
   wire rom_download = dataslot_requestwrite_id == 0;
   wire background_download = dataslot_requestwrite_id == 10;
@@ -531,7 +535,7 @@ module core_top (
       .ADDRESS_MASK_UPPER_4(4'h1),
       .ADDRESS_SIZE(18),
       .OUTPUT_WORD_SIZE(2)
-  ) data_loader (
+  ) rom_data_loader (
       .clk_74a(clk_74a),
       .clk_memory(clk_32_768),
 
@@ -540,12 +544,31 @@ module core_top (
       .bridge_addr(bridge_addr),
       .bridge_wr_data(bridge_wr_data),
 
-      .write_en  (ioctl_wr),
-      .write_addr(ioctl_addr),
-      .write_data(ioctl_dout)
+      .write_en  (ioctl_rom_wr),
+      .write_addr(ioctl_rom_addr),
+      .write_data(ioctl_rom_dout)
   );
 
-  wire [15:0] ioctl_dout_reversed = {ioctl_dout[7:0], ioctl_dout[15:8]};
+  data_loader #(
+      .ADDRESS_MASK_UPPER_4(4'h2),
+      .ADDRESS_SIZE(18),
+      .OUTPUT_WORD_SIZE(2)
+  ) image_data_loader (
+      .clk_74a(clk_74a),
+      .clk_memory(clk_vid_32_768),
+
+      .bridge_wr(bridge_wr),
+      .bridge_endian_little(bridge_endian_little),
+      .bridge_addr(bridge_addr),
+      .bridge_wr_data(bridge_wr_data),
+
+      .write_en  (ioctl_image_wr),
+      .write_addr(ioctl_image_addr),
+      .write_data(ioctl_image_dout)
+  );
+
+  wire [15:0] ioctl_rom_dout_reversed = {ioctl_rom_dout[7:0], ioctl_rom_dout[15:8]};
+  wire [15:0] ioctl_image_dout_reversed = {ioctl_image_dout[7:0], ioctl_image_dout[15:8]};
 
   //   data_unloader #(
   //       .ADDRESS_MASK_UPPER_4(4'h2),
@@ -617,9 +640,9 @@ module core_top (
 
   always @(posedge clk_32_768) begin
     // ROM initialization
-    if (ioctl_wr && rom_download) begin
+    if (ioctl_rom_wr && rom_download) begin
       // Word addressing
-      rom[ioctl_addr[13:1]] <= ioctl_dout_reversed;
+      rom[ioctl_rom_addr[13:1]] <= ioctl_rom_dout_reversed;
     end
   end
 
@@ -669,7 +692,6 @@ module core_top (
       .clk(clk_32_768),
       .clk_en(clk_en_32_768khz && ~ss_halt),
       .clk_2x_en(clk_en_65_536khz && ~ss_halt),
-      .clk_vid(clk_vid_32_768),
 
       .reset_n(~(~reset_n_s || ss_reset)),
 
@@ -719,18 +741,18 @@ module core_top (
   reg write_spritesheet_high = 0;
   reg [7:0] image_pixel_high = 0;
 
-  always @(posedge clk_32_768) begin
+  always @(posedge clk_vid_32_768) begin
     // Always run this, regardless of whether or not its image data
     write_spritesheet_high <= 0;
 
-    if (ioctl_wr) begin
-      image_pixel_high <= ioctl_dout[15:8];
+    if (ioctl_image_wr) begin
+      image_pixel_high <= ioctl_image_dout[15:8];
       write_spritesheet_high <= spritesheet_download;
     end
   end
 
-  wire [16:0] spritesheet_write_addr = ioctl_addr[16:0] + {16'b0, write_spritesheet_high};
-  wire [15:0] spritesheet_write_data = write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_dout;
+  wire [16:0] spritesheet_write_addr = ioctl_image_addr[16:0] + {16'b0, write_spritesheet_high};
+  wire [15:0] spritesheet_write_data = write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_image_dout;
 
   video video (
       .clk(clk_vid_32_768),
@@ -738,11 +760,11 @@ module core_top (
       .video_addr(video_addr),
       .video_data(video_data),
 
-      .background_write_en(ioctl_wr && background_download),
-      .spritesheet_write_en((ioctl_wr || write_spritesheet_high) && spritesheet_download),
+      .background_write_en(ioctl_image_wr && background_download),
+      .spritesheet_write_en((ioctl_image_wr || write_spritesheet_high) && spritesheet_download),
       // Top bit is used to determine which memory it goes to
-      .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_addr[17:1]),
-      .image_write_data(spritesheet_download ? spritesheet_write_data : ioctl_dout_reversed),
+      .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_image_addr[17:1]),
+      .image_write_data(spritesheet_download ? spritesheet_write_data : ioctl_image_dout_reversed),
 
       .vsync(vsync),
       .hsync(hsync),
@@ -770,7 +792,7 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire clk_32_768 = clk_vid_32_768;
+  wire clk_32_768;
   wire clk_vid_32_768;
   wire clk_vid_32_768_90deg;
 
@@ -780,7 +802,7 @@ module core_top (
       .refclk(clk_74a),
       .rst   (0),
 
-      // .outclk_0(clk_32_768),
+      .outclk_0(clk_32_768),
       .outclk_1(clk_vid_32_768),
       .outclk_2(clk_vid_32_768_90deg),
 
