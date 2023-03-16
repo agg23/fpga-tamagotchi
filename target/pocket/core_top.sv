@@ -482,7 +482,7 @@ module core_top (
 
   save_state_controller save_state_controller (
       .clk_74a(clk_74a),
-      .clk_sys(clk_32_768),
+      .clk_sys(clk_sys_117_964),
 
       .reset_n(reset_n_s),
 
@@ -537,7 +537,7 @@ module core_top (
       .OUTPUT_WORD_SIZE(2)
   ) rom_data_loader (
       .clk_74a(clk_74a),
-      .clk_memory(clk_32_768),
+      .clk_memory(clk_sys_117_964),
 
       .bridge_wr(bridge_wr),
       .bridge_endian_little(bridge_endian_little),
@@ -555,7 +555,7 @@ module core_top (
       .OUTPUT_WORD_SIZE(2)
   ) image_data_loader (
       .clk_74a(clk_74a),
-      .clk_memory(clk_vid_32_768),
+      .clk_memory(clk_vid_13_107),
 
       .bridge_wr(bridge_wr),
       .bridge_endian_little(bridge_endian_little),
@@ -596,49 +596,54 @@ module core_top (
   // ROM is 16 bit
   reg [15:0] rom[8192];
 
-  localparam CLOCK_DIV_COUNT = 10'd400;
+  localparam BASE_CLOCK_DIV_COUNT = 12'd3600;
 
   // Comb
-  reg [9:0] clock_div_reset_value;
+  reg [11:0] clock_div_reset_value;
 
   always_comb begin
     case (turbo_speed_s)
       // 1x
-      0: clock_div_reset_value = 10'd400;
+      0: clock_div_reset_value = BASE_CLOCK_DIV_COUNT;
       // 4x
-      1: clock_div_reset_value = 10'd100;
+      1: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd4;
       // 50x
-      2: clock_div_reset_value = 10'd8;
-      // TODO: Implement Max
-      3: clock_div_reset_value = 10'd8;
+      2: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd50;
+      3: clock_div_reset_value = 12'd0;
     endcase
   end
 
-  reg [9:0] clock_div = CLOCK_DIV_COUNT;
+  reg [11:0] clock_div = BASE_CLOCK_DIV_COUNT;
 
   // Clock divider
-  always @(posedge clk_32_768) begin
+  always @(posedge clk_sys_117_964) begin
     clk_en_32_768khz <= 0;
     clk_en_65_536khz <= 0;
 
-    clock_div <= clock_div - 10'h1;
-
-    if (clock_div == 0) begin
-      clock_div <= clock_div_reset_value;
-
-      clk_en_32_768khz <= 1;
+    if (clock_div_reset_value == 12'd0) begin
+      // Special case. Full speed
+      clk_en_32_768khz <= ~clk_en_32_768khz;
       clk_en_65_536khz <= 1;
-    end else if (clock_div == clock_div_reset_value / 2) begin
-      clk_en_65_536khz <= 1;
+    end else begin
+      clock_div <= clock_div - 12'h1;
+
+      if (clock_div == 0) begin
+        clock_div <= clock_div_reset_value;
+
+        clk_en_32_768khz <= 1;
+        clk_en_65_536khz <= 1;
+      end else if (clock_div == clock_div_reset_value / 2) begin
+        clk_en_65_536khz <= 1;
+      end
     end
   end
 
-  always @(posedge clk_32_768) begin
+  always @(posedge clk_sys_117_964) begin
     // ROM access
     rom_data <= rom[rom_addr][11:0];
   end
 
-  always @(posedge clk_32_768) begin
+  always @(posedge clk_sys_117_964) begin
     // ROM initialization
     if (ioctl_rom_wr && rom_download) begin
       // Word addressing
@@ -666,7 +671,7 @@ module core_top (
   ) cont1_s (
       cont1_key,
       cont1_key_s,
-      clk_32_768
+      clk_sys_117_964
   );
 
   synch_3 #(
@@ -674,12 +679,12 @@ module core_top (
   ) settings_s (
       {cancel_turbo_on_event, turbo_speed, disable_sound, reset_n},
       {cancel_turbo_on_event_s, turbo_speed_s, disable_sound_s, reset_n_s},
-      clk_32_768
+      clk_sys_117_964
   );
 
   wire buzzer;
 
-  always @(posedge clk_32_768) begin
+  always @(posedge clk_sys_117_964) begin
     reset_turbo <= 0;
 
     if (cancel_turbo_on_event_s && buzzer) begin
@@ -689,7 +694,7 @@ module core_top (
   end
 
   cpu_6s46 tamagotchi (
-      .clk(clk_32_768),
+      .clk(clk_sys_117_964),
       .clk_en(clk_en_32_768khz && ~ss_halt),
       .clk_2x_en(clk_en_65_536khz && ~ss_halt),
 
@@ -727,8 +732,8 @@ module core_top (
   wire de;
   wire [23:0] rgb;
 
-  assign video_rgb_clock = clk_vid_32_768;
-  assign video_rgb_clock_90 = clk_vid_32_768_90deg;
+  assign video_rgb_clock = clk_vid_13_107;
+  assign video_rgb_clock_90 = clk_vid_13_107_90deg;
   assign video_rgb = de ? rgb : 24'h0;
   assign video_de = de;
   assign video_skip = 0;
@@ -741,7 +746,7 @@ module core_top (
   reg write_spritesheet_high = 0;
   reg [7:0] image_pixel_high = 0;
 
-  always @(posedge clk_vid_32_768) begin
+  always @(posedge clk_vid_13_107) begin
     // Always run this, regardless of whether or not its image data
     write_spritesheet_high <= 0;
 
@@ -755,7 +760,7 @@ module core_top (
   wire [15:0] spritesheet_write_data = write_spritesheet_high ? {8'b0, image_pixel_high} : ioctl_image_dout;
 
   video video (
-      .clk(clk_vid_32_768),
+      .clk(clk_vid_13_107),
 
       .video_addr(video_addr),
       .video_data(video_data),
@@ -780,7 +785,7 @@ module core_top (
       .CHANNEL_WIDTH(15)
   ) sound_i2s (
       .clk_74a  (clk_74a),
-      .clk_audio(clk_32_768),
+      .clk_audio(clk_sys_117_964),
 
       .audio_l(audio_l),
       .audio_r(audio_l),
@@ -792,9 +797,9 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire clk_32_768;
-  wire clk_vid_32_768;
-  wire clk_vid_32_768_90deg;
+  wire clk_sys_117_964;
+  wire clk_vid_13_107;
+  wire clk_vid_13_107_90deg;
 
   wire pll_core_locked;
 
@@ -802,9 +807,9 @@ module core_top (
       .refclk(clk_74a),
       .rst   (0),
 
-      .outclk_0(clk_32_768),
-      .outclk_1(clk_vid_32_768),
-      .outclk_2(clk_vid_32_768_90deg),
+      .outclk_0(clk_sys_117_964),
+      .outclk_1(clk_vid_13_107),
+      .outclk_2(clk_vid_13_107_90deg),
 
       .locked(pll_core_locked)
   );
