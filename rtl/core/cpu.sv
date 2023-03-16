@@ -143,6 +143,7 @@ module cpu (
   regs regs (
       .clk(clk),
       .clk_en(clk_en),
+      .clk_2x_en(clk_2x_en),
 
       .reset_n(reset_n),
 

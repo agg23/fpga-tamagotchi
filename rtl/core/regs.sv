@@ -4,6 +4,7 @@ import ss_addresses::*;
 module regs (
     input wire clk,
     input wire clk_en,
+    input wire clk_2x_en,
 
     input microcode_cycle current_cycle,
 
@@ -68,8 +69,6 @@ module regs (
   wire [7:0] sp_dec = sp - 8'h1;
 
   // Bus
-  wire [3:0] bus_input;
-
   wire use_bus_input_memory_addr;
   wire [11:0] bus_input_memory_addr;
   reg [11:0] bus_output_memory_addr;
@@ -77,6 +76,9 @@ module regs (
   assign memory_addr = use_bus_input_memory_addr ? bus_input_memory_addr : bus_output_memory_addr;
 
   assign memory_read_en = use_bus_input_memory_addr && current_cycle == CYCLE_REG_FETCH;
+
+  wire [3:0] reg_bus_input;
+  wire [3:0] bus_input = use_bus_input_memory_addr ? memory_read_data : reg_bus_input;
 
   wire [31:0] ss_current_data1 = {2'b0, np, pc, a, b, interrupt, decimal, zero, carry};
   wire [31:0] ss_current_data2 = {x, y, sp};
@@ -121,6 +123,11 @@ module regs (
   );
 
   reg_mux bus_input_mux (
+      .clk(clk),
+      .clk_2x_en(clk_2x_en),
+
+      .is_fetch(current_cycle == CYCLE_REG_FETCH),
+
       .selector(bus_input_selector),
 
       .pc(pc),
@@ -142,10 +149,10 @@ module regs (
 
       .immed(immed),
 
-      .memory_read_data(memory_read_data),
-      .use_memory(use_bus_input_memory_addr),
-      .memory_addr(bus_input_memory_addr),
-      .out(bus_input)
+      .out(reg_bus_input),
+
+      .use_memory (use_bus_input_memory_addr),
+      .memory_addr(bus_input_memory_addr)
   );
 
   // Write bus output

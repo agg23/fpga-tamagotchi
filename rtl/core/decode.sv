@@ -18,7 +18,7 @@ module decode (
 );
   always @(posedge clk) begin
     // reset_n so that we can properly restore state after savestate load
-    if (clk_2x_en || ~reset_n) begin
+    if (clk_2x_en) begin
       skip_pc_increment <= 0;
       microcode_start_addr <= 0;
       cycle_length <= CYCLE5;
