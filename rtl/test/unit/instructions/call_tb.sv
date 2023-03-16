@@ -22,8 +22,7 @@ module call_tb;
       bench.assert_ram(12'h41, 4'h5); // PCSL + 1
     end
 
-    // TODO: CALL s should copy NPP to PCP but not bank
-    `TEST_CASE("CALL s should use PCP but not bank") begin
+    `TEST_CASE("CALL s should copy NPP to PCP but not bank") begin
       bench.initialize(12'h444); // CALL 0x44
       bench.cpu_uut.core.regs.pc = 13'h1234;
       bench.cpu_uut.core.regs.np = 5'h0A;
