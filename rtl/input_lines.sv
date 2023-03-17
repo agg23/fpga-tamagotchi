@@ -4,7 +4,7 @@ module input_lines (
     input wire clk,
     input wire clk_en,
 
-    input wire reset_n,
+    input wire reset,
 
     input wire [3:0] input_k0,
     input wire [3:0] input_k1,
@@ -20,7 +20,7 @@ module input_lines (
     input wire [31:0] ss_bus_in,
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
-    input wire ss_bus_reset_n,
+    input wire ss_bus_reset,
     output wire [31:0] ss_bus_out
 );
   reg [3:0] prev_input_k0 = 0;
@@ -30,7 +30,7 @@ module input_lines (
   wire [31:0] ss_new_data;
 
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (reset) begin
       factor_flags <= ss_new_data[1:0];
     end else if (clk_en) begin
       reg k00_factor;
@@ -76,7 +76,7 @@ module input_lines (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out),
 
       .current_data(ss_current_data),

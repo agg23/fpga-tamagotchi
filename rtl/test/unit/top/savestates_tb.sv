@@ -8,16 +8,16 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reload SS buffers with default values
-      bench.ss_bus_reset_n = 0;
+      bench.ss_bus_reset = 1;
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       // Wait one cycle
       #4;
 
       // Release reset
-      bench.ss_bus_reset_n = 1;
-      bench.reset_n = 1;
+      bench.ss_bus_reset = 0;
+      bench.reset = 0;
 
       #1;
 
@@ -33,7 +33,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -88,7 +88,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -104,6 +104,7 @@ module savestates_tb;
 
     `TEST_CASE("Clock timer data should be read by SS address 0x2") begin
       bench.initialize(12'hFFF); // NOP7
+      #3;
       bench.ss_bus_addr = 8'h2;
 
       #1;
@@ -122,7 +123,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -139,6 +140,7 @@ module savestates_tb;
 
     `TEST_CASE("Stopwatch data should be read by SS address 0x3") begin
       bench.initialize(12'hFFF); // NOP7
+      #3;
       bench.ss_bus_addr = 8'h3;
 
       #1;
@@ -158,7 +160,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -175,6 +177,7 @@ module savestates_tb;
 
     `TEST_CASE("Prog timer data should be read by SS address 0x4") begin
       bench.initialize(12'hFFF); // NOP7
+      #3;
       bench.ss_bus_addr = 8'h4;
 
       #1;
@@ -194,16 +197,16 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reload SS buffers with default values
-      bench.ss_bus_reset_n = 0;
+      bench.ss_bus_reset = 1;
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       // Wait one cycle
       #4;
 
       // Release reset
-      bench.ss_bus_reset_n = 1;
-      bench.reset_n = 1;
+      bench.ss_bus_reset = 0;
+      bench.reset = 0;
 
       #1;
 
@@ -214,7 +217,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -232,6 +235,7 @@ module savestates_tb;
 
     `TEST_CASE("Interrupt data should be read by SS address 0x5") begin
       bench.initialize(12'hFFF); // NOP7
+      #3;
       bench.ss_bus_addr = 8'h5;
 
       #1;
@@ -252,7 +256,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -266,6 +270,7 @@ module savestates_tb;
 
     `TEST_CASE("Input interrupt factor should be read by SS address 0x6") begin
       bench.initialize(12'hFFF); // NOP7
+      #3;
       bench.ss_bus_addr = 8'h6;
 
       #1;
@@ -282,16 +287,16 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reload SS buffers with default values
-      bench.ss_bus_reset_n = 0;
+      bench.ss_bus_reset = 1;
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       // Wait one cycle
       #4;
 
       // Release reset
-      bench.ss_bus_reset_n = 1;
-      bench.reset_n = 1;
+      bench.ss_bus_reset = 0;
+      bench.reset = 0;
 
       #1;
 
@@ -306,7 +311,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -354,7 +359,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -402,7 +407,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -436,7 +441,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;
@@ -517,7 +522,7 @@ module savestates_tb;
       bench.initialize(12'hFFF); // NOP7
 
       // Reinitialize all process blocks
-      bench.reset_n = 0;
+      bench.reset = 1;
 
       #4;
       #1;

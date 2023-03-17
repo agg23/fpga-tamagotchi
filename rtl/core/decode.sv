@@ -4,8 +4,6 @@ module decode (
     input wire clk,
     input wire clk_2x_en,
 
-    input wire reset_n,
-
     input wire [11:0] opcode,
 
     output reg skip_pc_increment = 0,
@@ -17,7 +15,6 @@ module decode (
     output reg [7:0] immed = 0
 );
   always @(posedge clk) begin
-    // reset_n so that we can properly restore state after savestate load
     if (clk_2x_en) begin
       skip_pc_increment <= 0;
       microcode_start_addr <= 0;

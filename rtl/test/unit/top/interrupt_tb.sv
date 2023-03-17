@@ -13,12 +13,14 @@ module interrupt_tb;
 
       // Wait some time for instruction to start
       #2;
-      bench.interrupt_req = 15'h0001;
+      // Set interrupt 0x1
+      bench.cpu_uut.clock_mask = 4'h8;
+      bench.cpu_uut.interrupt.clock_factor = 4'h8;
 
       bench.run_until_complete();
       #1;
       // Unassert interrupt
-      bench.interrupt_req = 15'h0;
+      bench.cpu_uut.interrupt.clock_factor = 4'h0;
 
       `CHECK_EQUAL(bench.cpu_uut.core.microcode.performing_interrupt, 1);
 
@@ -29,7 +31,7 @@ module interrupt_tb;
       bench.run_until_complete();
       #1;
       bench.assert_cycle_length(12 + 5);
-      bench.assert_pc(13'h1101);
+      bench.assert_pc(13'h1102);
       bench.assert_ram(bench.prev_sp - 1, 4'h2);
       bench.assert_ram(bench.prev_sp - 2, 4'h3);
       bench.assert_ram(bench.prev_sp - 3, 4'h5);
@@ -46,12 +48,13 @@ module interrupt_tb;
 
       // Wait some time for instruction to start
       #4;
-      bench.interrupt_req = 15'h0800;
+      bench.cpu_uut.prog_timer_mask = 1;
+      bench.cpu_uut.timers.prog_timer.factor_flags = 1;
 
       bench.run_until_complete();
       #4;
       // Unassert interrupt
-      bench.interrupt_req = 15'h0;
+      bench.cpu_uut.timers.prog_timer.factor_flags = 1;
 
       bench.run_until_complete();
       #1;
@@ -71,20 +74,21 @@ module interrupt_tb;
 
       // Wait some time for instruction to start
       bench.run_until_final_stage_fetch();
-      bench.interrupt_req = 15'h4000;
+      bench.cpu_uut.prog_timer_mask = 1;
+      bench.cpu_uut.timers.prog_timer.factor_flags = 1;
       #1;
       cycle_time = bench.cycle_count; // Save cycle count
 
       bench.run_until_complete();
       #1;
       // Unassert interrupt
-      bench.interrupt_req = 15'h0;
+      bench.cpu_uut.timers.prog_timer.factor_flags = 1;
 
       bench.run_until_complete();
       #1;
       // Should take 12 cycles from start of interrupt assertion to completion
       bench.assert_cycle_length(cycle_time + 12);
-      bench.assert_pc(13'h110F);
+      bench.assert_pc(13'h110C);
     end
 
     `TEST_CASE("Interrupt should take exactly 13 cycles when asserted during halt") begin
@@ -99,20 +103,21 @@ module interrupt_tb;
       // Wait a long time for halt
       #30;
 
-      bench.interrupt_req = 15'h0040;
+      bench.cpu_uut.stopwatch_mask = 2'h2;
+      bench.cpu_uut.timers.stopwatch.factor_flags = 2'h2;
       #1;
       cycle_time = bench.cycle_count; // Save cycle count
 
       #6;
       // Unassert interrupt
-      bench.interrupt_req = 15'h0;
+      bench.cpu_uut.timers.stopwatch.factor_flags = 2'h0;
 
       // bench.run_until_complete();
       bench.run_until_complete();
       #1;
       // Should take 13 cycles from start of interrupt assertion to completion
       bench.assert_cycle_length(cycle_time + 13);
-      bench.assert_pc(13'h1107);
+      bench.assert_pc(13'h1104);
 
       bench.assert_ram(bench.prev_sp - 1, 4'h2);
       bench.assert_ram(bench.prev_sp - 2, 4'h3);
@@ -128,7 +133,7 @@ module interrupt_tb;
 
       // Wait some time for instruction to start
       #2;
-      bench.interrupt_req = 15'h0001;
+      bench.cpu_uut.input_lines.factor_flags = 2'h1;
 
       bench.run_until_complete();
       #1;
@@ -142,10 +147,10 @@ module interrupt_tb;
       bench.run_until_complete();
       #1;
       // Unassert interrupt
-      bench.interrupt_req = 15'h0;
+      bench.cpu_uut.input_lines.factor_flags = 2'h0;
 
       bench.assert_cycle_length(12 + 5);
-      bench.assert_pc(13'h1101);
+      bench.assert_pc(13'h1106);
       bench.assert_ram(bench.prev_sp - 1, 4'h2);
       bench.assert_ram(bench.prev_sp - 2, 4'h3);
       bench.assert_ram(bench.prev_sp - 3, 4'h5);

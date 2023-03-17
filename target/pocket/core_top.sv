@@ -325,12 +325,19 @@ module core_top (
   end
 
   always @(posedge clk_74a) begin
+    if (reset_delay > 0) begin
+      reset_delay <= reset_delay - 1;
+    end
+
     if (reset_turbo_s) begin
       turbo_speed <= 0;
     end
 
     if (bridge_wr) begin
       casex (bridge_addr)
+        32'h0: begin
+          reset_delay <= 32'h100000;
+        end
         32'h10: begin
           disable_sound <= bridge_wr_data[0];
         end
@@ -471,7 +478,7 @@ module core_top (
   wire [31:0] ss_bus_in;
   wire [31:0] ss_bus_addr;
   wire ss_bus_wren;
-  wire ss_bus_reset_n;
+  wire ss_bus_reset;
   wire [31:0] ss_bus_out;
 
   wire ss_ready;
@@ -484,7 +491,7 @@ module core_top (
       .clk_74a(clk_74a),
       .clk_sys(clk_sys_117_964),
 
-      .reset_n(reset_n_s),
+      .reset(~reset_n_s),
 
       // APF
       .bridge_wr(bridge_wr),
@@ -511,7 +518,7 @@ module core_top (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out),
 
       .ss_ready(ss_ready),
@@ -654,12 +661,16 @@ module core_top (
   reg reset_turbo = 0;
 
   // Settings
+  reg [31:0] reset_delay = 0;
+  wire external_reset = reset_delay > 0;
+
   reg disable_sound = 0;
   reg [1:0] turbo_speed = 0;
   reg cancel_turbo_on_event = 0;
 
   // Synced settings
   wire reset_n_s;
+  wire external_reset_s;
   wire [15:0] cont1_key_s;
 
   wire disable_sound_s;
@@ -675,10 +686,10 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(5)
+      .WIDTH(6)
   ) settings_s (
-      {cancel_turbo_on_event, turbo_speed, disable_sound, reset_n},
-      {cancel_turbo_on_event_s, turbo_speed_s, disable_sound_s, reset_n_s},
+      {cancel_turbo_on_event, turbo_speed, disable_sound, external_reset, reset_n},
+      {cancel_turbo_on_event_s, turbo_speed_s, disable_sound_s, external_reset_s, reset_n_s},
       clk_sys_117_964
   );
 
@@ -698,7 +709,7 @@ module core_top (
       .clk_en(clk_en_32_768khz && ~ss_halt),
       .clk_2x_en(clk_en_65_536khz && ~ss_halt),
 
-      .reset_n(~(~reset_n_s || ss_reset)),
+      .reset(~reset_n_s || external_reset_s || ss_reset),
 
       // Left, middle, right
       .input_k0({1'b0, ~cont1_key_s[7], ~cont1_key_s[5], ~cont1_key_s[4]}),
@@ -716,7 +727,7 @@ module core_top (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset || external_reset_s),
       .ss_bus_out(ss_bus_out),
 
       .ss_ready(ss_ready)

@@ -117,6 +117,8 @@ module input_interrupt_tb;
       input_k0[r] = d;
       input_k0_next[r] = ~d;
 
+      #3;
+
       bench.input_k0 = input_k0;
       bench.cpu_uut.input_relation_k0 = relation;
       bench.cpu_uut.input_k0_mask = 4'hF;

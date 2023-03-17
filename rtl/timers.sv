@@ -2,7 +2,7 @@ module timers (
     input wire clk,
     input wire clk_en,
 
-    input wire reset_n,
+    input wire reset,
 
     input wire input_k03,
     input wire [2:0] prog_timer_clock_selection,
@@ -38,7 +38,7 @@ module timers (
     input wire [31:0] ss_bus_in,
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
-    input wire ss_bus_reset_n,
+    input wire ss_bus_reset,
     output wire [31:0] ss_bus_out
 );
   wire timer_256_tick;
@@ -53,7 +53,7 @@ module timers (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .reset_clock_timer(reset_clock_timer),
 
@@ -72,7 +72,7 @@ module timers (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_clock)
   );
 
@@ -80,9 +80,9 @@ module timers (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
-      .reset(reset_stopwatch),
+      .mem_reset(reset_stopwatch),
       .enable(enable_stopwatch),
       .timer_256_tick(timer_256_tick),
 
@@ -96,7 +96,7 @@ module timers (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_stopwatch)
   );
 
@@ -104,11 +104,11 @@ module timers (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .input_k03(input_k03),
 
-      .reset(reset_prog_timer),
+      .mem_reset(reset_prog_timer),
       .enable(enable_prog_timer),
       .clock_selection(prog_timer_clock_selection),
       .counter_reload(prog_timer_reload),
@@ -122,7 +122,7 @@ module timers (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_prog_timer)
   );
 endmodule

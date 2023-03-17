@@ -5,7 +5,7 @@ module cpu (
     input wire clk_en,
     input wire clk_2x_en,
 
-    input wire reset_n,
+    input wire reset,
 
     output wire [12:0] rom_addr,
     input  wire [11:0] rom_data,
@@ -22,7 +22,7 @@ module cpu (
     input wire [31:0] ss_bus_in,
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
-    input wire ss_bus_reset_n,
+    input wire ss_bus_reset,
     output wire [31:0] ss_bus_out,
 
     output wire ss_ready
@@ -43,8 +43,6 @@ module cpu (
   decode decoder (
       .clk(clk),
       .clk_2x_en(is_last_cycle_step && clk_en),
-
-      .reset_n(reset_n),
 
       .opcode(rom_data),
 
@@ -84,7 +82,7 @@ module cpu (
       .clk_en(clk_en),
       .clk_2x_en(clk_2x_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .zero(flag_zero),
       .carry(flag_carry),
@@ -145,7 +143,7 @@ module cpu (
       .clk_en(clk_en),
       .clk_2x_en(clk_2x_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .current_cycle(current_cycle),
 
@@ -180,7 +178,7 @@ module cpu (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out)
   );
 endmodule

@@ -6,7 +6,7 @@ module cpu_6s46 (
     input wire clk_en,
     input wire clk_2x_en,
 
-    input wire reset_n,
+    input wire reset,
 
     input wire [3:0] input_k0,
     input wire [3:0] input_k1,
@@ -28,7 +28,7 @@ module cpu_6s46 (
     input wire [31:0] ss_bus_in,
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
-    input wire ss_bus_reset_n,
+    input wire ss_bus_reset,
     output wire [31:0] ss_bus_out,
 
     output wire ss_ready
@@ -69,7 +69,7 @@ module cpu_6s46 (
       .clk_en(clk_en),
       .clk_2x_en(clk_2x_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .rom_addr(rom_addr),
       .rom_data(rom_data),
@@ -86,7 +86,7 @@ module cpu_6s46 (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_core),
 
       .ss_ready(ss_ready)
@@ -129,7 +129,7 @@ module cpu_6s46 (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .input_k03(input_k0[3]),
       .prog_timer_clock_selection(prog_timer_clock_selection),
@@ -165,7 +165,7 @@ module cpu_6s46 (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_timers)
   );
 
@@ -180,7 +180,7 @@ module cpu_6s46 (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       // Clock
       .timer_32hz(timer_32hz),
@@ -206,7 +206,7 @@ module cpu_6s46 (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_interrupt)
   );
 
@@ -216,7 +216,7 @@ module cpu_6s46 (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .input_k0(input_k0),
       .input_k1(input_k1),
@@ -232,7 +232,7 @@ module cpu_6s46 (
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out_input)
   );
 
@@ -243,7 +243,7 @@ module cpu_6s46 (
       .clk(clk),
       .clk_en(clk_en),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .buzzer_enabled  (~buzzer_output_control[3]),
       .buzzer_frequency(buzzer_frequency_selection[2:0]),
@@ -353,7 +353,7 @@ module cpu_6s46 (
   wire [31:0] ss_new_data3;
 
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (reset) begin
       reset_clock_factor <= 0;
       reset_clock_timer <= 0;
       reset_stopwatch <= 0;
@@ -749,7 +749,7 @@ module cpu_6s46 (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out1),
 
       .current_data(ss_current_data1),
@@ -766,7 +766,7 @@ module cpu_6s46 (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out2),
 
       .current_data(ss_current_data2),
@@ -783,7 +783,7 @@ module cpu_6s46 (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out3),
 
       .current_data(ss_current_data3),
@@ -800,7 +800,7 @@ module cpu_6s46 (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out_main_ram),
 
       .mem_addr(ss_main_ram_addr),
@@ -820,7 +820,7 @@ module cpu_6s46 (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out_video_ram),
 
       .mem_addr(ss_video_ram_addr),

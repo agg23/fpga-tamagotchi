@@ -3,6 +3,14 @@
     "magic": "APF_VER_1",
     "variables": [
       {
+        "name": "Reset core",
+        "id": 0,
+        "type": "action",
+        "enabled": true,
+        "address": "0x0",
+        "value": 1
+      },
+      {
         "name": "Disable Sound",
         "id": 16,
         "type": "check",

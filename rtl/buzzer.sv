@@ -2,7 +2,7 @@ module buzzer (
     input wire clk,
     input wire clk_en,
 
-    input wire reset_n,
+    input wire reset,
 
     input wire buzzer_enabled,
     input wire [2:0] buzzer_frequency,
@@ -35,7 +35,7 @@ module buzzer (
   endfunction
 
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (reset) begin
       divider <= 4;
 
       buzzer_output <= 0;

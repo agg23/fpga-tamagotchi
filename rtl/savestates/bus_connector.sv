@@ -13,7 +13,7 @@ module bus_connector #(
     /// If set, write this data
     input wire bus_wren,
     /// If set, restore the default value to this register selection
-    input wire bus_reset_n,
+    input wire bus_reset,
     /// The data being output at this bus address
     output reg [SS_DATA_WIDTH-1:0] bus_out,
 
@@ -38,7 +38,7 @@ module bus_connector #(
   end
 
   always @(posedge clk) begin
-    if (~bus_reset_n) begin
+    if (bus_reset) begin
       buffer <= DEFAULT_VALUE;
     end else if (bus_wren && matching_address) begin
       buffer <= bus_in;

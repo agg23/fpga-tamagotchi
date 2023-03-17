@@ -15,7 +15,7 @@ module bus_memory #(
     /// If set, write this data
     input wire bus_wren,
     /// If set, restore the default value to this register selection
-    input wire bus_reset_n,
+    input wire bus_reset,
     /// The data being output at this bus address
     output reg [SS_DATA_WIDTH-1:0] bus_out,
 

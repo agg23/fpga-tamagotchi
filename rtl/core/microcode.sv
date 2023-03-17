@@ -5,7 +5,7 @@ module microcode (
     input wire clk_en,
     input wire clk_2x_en,
 
-    input wire reset_n,
+    input wire reset,
 
     // Reg
     input wire zero,
@@ -99,7 +99,7 @@ module microcode (
   int interrupt_req_i;
 
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (reset) begin
       stage <= STEP6_2;
 
       queued_interrupt <= 0;
@@ -163,7 +163,7 @@ module microcode (
   always @(posedge clk) begin
     reg [8:0] microcode_addr;
 
-    if (~reset_n) begin
+    if (reset) begin
       microcode_tick <= 0;
       micro_pc <= 0;
 

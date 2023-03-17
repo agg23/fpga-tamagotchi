@@ -8,7 +8,7 @@ module regs (
 
     input microcode_cycle current_cycle,
 
-    input wire reset_n,
+    input wire reset,
 
     input reg_type bus_input_selector,
     input reg_type bus_output_selector,
@@ -43,7 +43,7 @@ module regs (
     input wire [31:0] ss_bus_in,
     input wire [7:0] ss_bus_addr,
     input wire ss_bus_wren,
-    input wire ss_bus_reset_n,
+    input wire ss_bus_reset,
     output wire [31:0] ss_bus_out
 );
   // Registers
@@ -100,7 +100,7 @@ module regs (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out1),
 
       .current_data(ss_current_data1),
@@ -115,7 +115,7 @@ module regs (
       .bus_in(ss_bus_in),
       .bus_addr(ss_bus_addr),
       .bus_wren(ss_bus_wren),
-      .bus_reset_n(ss_bus_reset_n),
+      .bus_reset(ss_bus_reset),
       .bus_out(ss_bus_out2),
 
       .current_data(ss_current_data2),
@@ -157,7 +157,7 @@ module regs (
 
   // Write bus output
   always @(posedge clk) begin
-    if (~reset_n) begin
+    if (reset) begin
       {np, pc, a, b, interrupt, decimal, zero, carry} <= ss_new_data1[29:0];
       {x, y, sp} <= ss_new_data2;
     end else if (clk_en) begin

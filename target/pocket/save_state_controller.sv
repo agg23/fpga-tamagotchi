@@ -4,7 +4,7 @@ module save_state_controller (
     input wire clk_74a,
     input wire clk_sys,
 
-    input wire reset_n,
+    input wire reset,
 
     // APF
     input wire bridge_wr,
@@ -31,7 +31,7 @@ module save_state_controller (
     output wire [31:0] bus_in,
     output reg [7:0] bus_addr = 0,
     output reg bus_wren = 0,
-    output reg bus_reset_n = 0,
+    output reg bus_reset = 0,
     input wire [31:0] bus_out,
 
     input  wire ss_ready,
@@ -164,21 +164,21 @@ module save_state_controller (
   reg [3:0] state = STATE_INIT;
 
   always @(posedge clk_sys) begin
-    if (~reset_n) begin
-      bus_addr <= 0;
-      bus_wren <= 0;
+    if (reset) begin
+      bus_addr  <= 0;
+      bus_wren  <= 0;
       // Set low to initialize all registers with their expected defaults
-      bus_reset_n <= 0;
+      bus_reset <= 1;
 
-      ss_halt <= 0;
-      ss_reset <= 0;
+      ss_halt   <= 0;
+      ss_reset  <= 0;
     end else begin
       case (state)
         STATE_INIT: begin
-          ss_halt <= 0;
-          ss_reset <= 0;
-          bus_reset_n <= 1;
-          bus_addr <= 0;
+          ss_halt   <= 0;
+          ss_reset  <= 0;
+          bus_reset <= 0;
+          bus_addr  <= 0;
 
           if (savestate_start_s) begin
             // Start savestate

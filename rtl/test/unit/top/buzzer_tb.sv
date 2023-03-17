@@ -5,6 +5,7 @@ module buzzer_tb;
 
   task test_buzzer_frequencies(reg [2:0] clock_selection, int duration);
     bench.initialize(12'hFFF); // NOP7
+    #3;
     bench.cpu_uut.buzzer_frequency_selection = {1'b1, clock_selection};
 
     #1;

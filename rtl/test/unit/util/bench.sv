@@ -4,7 +4,7 @@ module bench;
   reg clk = 0;
   reg clk_2x = 1;
 
-  reg reset_n = 0;
+  reg reset = 1;
 
   wire [12:0] rom_addr;
   reg [11:0] rom_data = 0;
@@ -21,16 +21,15 @@ module bench;
   reg [31:0] ss_bus_in = 0;
   reg [7:0] ss_bus_addr = 0;
   reg ss_bus_wren = 0;
-  reg ss_bus_reset_n = 0;
+  reg ss_bus_reset = 1;
   wire [31:0] ss_bus_out;
 
   cpu_6s46 cpu_uut (
       .clk(clk_2x),
       .clk_en(clk),
       .clk_2x_en(clk_2x),
-      .clk_vid(1'b0),
 
-      .reset_n(reset_n),
+      .reset(reset),
 
       .input_k0(input_k0),
       .input_k1(input_k1),
@@ -50,7 +49,7 @@ module bench;
       .ss_bus_in(ss_bus_in),
       .ss_bus_addr(ss_bus_addr),
       .ss_bus_wren(ss_bus_wren),
-      .ss_bus_reset_n(ss_bus_reset_n),
+      .ss_bus_reset(ss_bus_reset),
       .ss_bus_out(ss_bus_out)
   );
 
@@ -86,7 +85,7 @@ module bench;
   reg [7:0] cycle_count;
 
   always @(posedge clk) begin
-    if (reset_n) begin
+    if (~reset) begin
       cycle_count <= cycle_count + 1;
     end
   end
@@ -127,8 +126,8 @@ module bench;
 
     #2;
 
-    bench.reset_n = 1;
-    bench.ss_bus_reset_n = 1;
+    bench.reset = 0;
+    bench.ss_bus_reset = 0;
 
     // Set default values for tests
     cpu_uut.core.regs.a = 0;
