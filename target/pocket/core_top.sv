@@ -483,7 +483,7 @@ module core_top (
 
   wire ss_ready;
   wire ss_halt;
-  wire ss_reset;
+  wire ss_begin_reset;
 
   wire [31:0] save_state_bridge_read_data;
 
@@ -522,8 +522,8 @@ module core_top (
       .bus_out(ss_bus_out),
 
       .ss_ready(ss_ready),
-      .ss_halt (ss_halt),
-      .ss_reset(ss_reset)
+      .ss_halt(ss_halt),
+      .ss_begin_reset(ss_begin_reset)
   );
 
   wire ioctl_rom_wr;
@@ -695,12 +695,25 @@ module core_top (
 
   wire buzzer;
 
+  reg [2:0] savestate_reset_tick_count = 0;
+
+  wire ss_reset = savestate_reset_tick_count > 0;
+
   always @(posedge clk_sys_117_964) begin
     reset_turbo <= 0;
 
     if (cancel_turbo_on_event_s && buzzer) begin
       // Reset turbo
       reset_turbo <= 1;
+    end
+
+    if (ss_begin_reset) begin
+      // Savestate reset started. Wait for 4 clk_2x_en to occur
+      savestate_reset_tick_count <= 3'h4;
+    end
+
+    if (savestate_reset_tick_count > 0 && clk_en_65_536khz) begin
+      savestate_reset_tick_count <= savestate_reset_tick_count - 1;
     end
   end
 

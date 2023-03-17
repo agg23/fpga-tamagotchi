@@ -158,18 +158,24 @@ module microcode (
 
   reg microcode_tick = 0;
   microcode_stage prev_stage = STEP6_2;
+
+  // Comb
   reg cycle_second_step;
 
   always @(posedge clk) begin
     reg [8:0] microcode_addr;
 
     if (reset) begin
+      prev_stage <= STEP6_2;
+
       microcode_tick <= 0;
       micro_pc <= 0;
+      instruction_big_endian <= 0;
 
       bus_input_selector <= REG_ALU;
       bus_output_selector <= REG_ALU;
       increment_selector <= REG_NONE;
+      temp_override_bus_input_selector <= REG_ALU;
 
       halt <= 0;
       disable_increment <= 0;

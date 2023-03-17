@@ -36,7 +36,7 @@ module save_state_controller (
 
     input  wire ss_ready,
     output reg  ss_halt = 0,
-    output reg  ss_reset = 0
+    output reg  ss_begin_reset = 0
 );
   // Syncing
   wire savestate_load_s;
@@ -169,13 +169,13 @@ module save_state_controller (
 
   always @(posedge clk_sys) begin
     if (reset) begin
-      bus_addr  <= 0;
-      bus_wren  <= 0;
+      bus_addr <= 0;
+      bus_wren <= 0;
       // Set high to initialize all registers with their expected defaults
       bus_reset <= 1;
 
-      ss_halt   <= 0;
-      ss_reset  <= 0;
+      ss_halt <= 0;
+      ss_begin_reset <= 0;
 
       apf_delay <= 0;
     end else begin
@@ -185,10 +185,10 @@ module save_state_controller (
 
       case (state)
         STATE_INIT: begin
-          ss_halt   <= 0;
-          ss_reset  <= 0;
+          ss_halt <= 0;
+          ss_begin_reset <= 0;
           bus_reset <= 0;
-          bus_addr  <= 0;
+          bus_addr <= 0;
 
           if (savestate_start_s) begin
             // Start savestate
@@ -306,7 +306,7 @@ module save_state_controller (
             savestate_start_ok <= 0;
             savestate_start_err <= 0;
 
-            ss_reset <= 1;
+            ss_begin_reset <= 1;
           end
         end
         STATE_LOAD_BUSY_APF: begin
