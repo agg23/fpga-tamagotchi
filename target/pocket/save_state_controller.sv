@@ -152,27 +152,37 @@ module save_state_controller (
   localparam STATE_INIT = 0;
 
   localparam STATE_SAVE_BUSY = 1;
-  localparam STATE_SAVE_DATA = 2;
-  localparam STATE_SAVE_WAIT_READ = 3;
+  localparam STATE_SAVE_WAIT_READY = 2;
+  localparam STATE_SAVE_DATA = 3;
+  localparam STATE_SAVE_WAIT_READ = 4;
 
-  localparam STATE_LOAD_DATA = 4;
-  localparam STATE_LOAD_DELAY = 5;
-  localparam STATE_LOAD_WAIT_APF = 6;
-  localparam STATE_LOAD_BUSY_APF = 7;
-  localparam STATE_LOAD_DONE_APF = 8;
+  localparam STATE_LOAD_DATA = 5;
+  localparam STATE_LOAD_DELAY = 6;
+  localparam STATE_LOAD_WAIT_APF = 7;
+  localparam STATE_LOAD_BUSY_APF = 8;
+  localparam STATE_LOAD_DONE_APF = 9;
 
   reg [3:0] state = STATE_INIT;
+
+  // Used to delay transitions between APF savestate states. Higher clock speeds require waiting longer than a 74MHz tick
+  reg [1:0] apf_delay = 0;
 
   always @(posedge clk_sys) begin
     if (reset) begin
       bus_addr  <= 0;
       bus_wren  <= 0;
-      // Set low to initialize all registers with their expected defaults
+      // Set high to initialize all registers with their expected defaults
       bus_reset <= 1;
 
       ss_halt   <= 0;
       ss_reset  <= 0;
+
+      apf_delay <= 0;
     end else begin
+      if (apf_delay > 0) begin
+        apf_delay <= apf_delay - 2'h1;
+      end
+
       case (state)
         STATE_INIT: begin
           ss_halt   <= 0;
@@ -183,6 +193,7 @@ module save_state_controller (
           if (savestate_start_s) begin
             // Start savestate
             state <= STATE_SAVE_BUSY;
+            apf_delay <= 2'h3;
 
             savestate_start_ack <= 1;
             savestate_start_ok <= 0;
@@ -204,13 +215,20 @@ module save_state_controller (
 
         // Saving
         STATE_SAVE_BUSY: begin
-          savestate_start_ack  <= 0;
-          savestate_start_busy <= 1;
+          if (apf_delay == 0) begin
+            state <= STATE_SAVE_WAIT_READY;
+            apf_delay <= 2'h3;
 
+            savestate_start_ack <= 0;
+            savestate_start_busy <= 1;
+          end
+        end
+        STATE_SAVE_WAIT_READY: begin
           // Wait for savestate halt
-          if (ss_ready) begin
+          if (ss_ready && apf_delay == 0) begin
             // We're ready to start downloading the savestate
             state <= STATE_SAVE_DATA;
+
             bus_addr <= 0;
             ss_halt <= 1;
             cycle_count <= 0;
@@ -278,6 +296,7 @@ module save_state_controller (
           // Wait for APF to send load signal
           if (savestate_load_s) begin
             state <= STATE_LOAD_BUSY_APF;
+            apf_delay <= 2'h3;
 
             savestate_load_ack <= 1;
             savestate_load_ok <= 0;
@@ -291,16 +310,21 @@ module save_state_controller (
           end
         end
         STATE_LOAD_BUSY_APF: begin
-          state <= STATE_LOAD_DONE_APF;
+          if (apf_delay == 0) begin
+            state <= STATE_LOAD_DONE_APF;
+            apf_delay <= 2'h3;
 
-          savestate_load_ack <= 0;
-          savestate_load_busy <= 1;
+            savestate_load_ack <= 0;
+            savestate_load_busy <= 1;
+          end
         end
         STATE_LOAD_DONE_APF: begin
-          state <= STATE_INIT;
+          if (apf_delay == 0) begin
+            state <= STATE_INIT;
 
-          savestate_load_busy <= 0;
-          savestate_load_ok <= 1;
+            savestate_load_busy <= 0;
+            savestate_load_ok <= 1;
+          end
         end
       endcase
     end

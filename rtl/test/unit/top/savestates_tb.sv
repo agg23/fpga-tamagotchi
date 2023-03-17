@@ -594,6 +594,48 @@ module savestates_tb;
         bench.assert_ss_bus_out(write_value);
       end
     end
+
+    `TEST_CASE("RAM bridge should not output when not active address") begin
+      bench.initialize(12'hFFF); // NOP7
+
+      // Reinitialize all process blocks
+      bench.reset = 1;
+
+      // Write to video RAM
+      bench.ss_bus_wren = 1;
+      
+
+      // Write 8 addresses from 0x60-0x68
+      for (int i = 0; i < 8; i++) begin
+        bench.ss_bus_addr = 8'h60 + i;
+        bench.ss_bus_in = 32'hFFFF_FF00 | i;
+
+        #(9 * 2);
+      end
+
+      bench.reset = 0;
+      bench.ss_bus_wren = 0;
+
+      #10;
+
+      // Read back written data
+      for (int i = 0; i < 8; i++) begin
+        bench.ss_bus_addr = 8'h60 + i;
+
+        #(10 * 2);
+
+        bench.assert_ss_bus_out(32'hFFFF_FF00 | i);
+      end
+
+      // Walk through other parts of the bus, that should be empty
+      for (int i = 0; i < 8; i++) begin
+        bench.ss_bus_addr = 8'h75 + i;
+
+        #(10 * 2);
+
+        bench.assert_ss_bus_out(0);
+      end
+    end
   end;
 
   // The watchdog macro is optional, but recommended. If present, it

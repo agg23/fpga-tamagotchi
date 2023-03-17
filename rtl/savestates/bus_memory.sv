@@ -17,7 +17,7 @@ module bus_memory #(
     /// If set, restore the default value to this register selection
     input wire bus_reset,
     /// The data being output at this bus address
-    output reg [SS_DATA_WIDTH-1:0] bus_out,
+    output wire [SS_DATA_WIDTH-1:0] bus_out,
 
     output wire [MEM_ADDR_WIDTH-1:0] mem_addr,
     input wire [MEM_DATA_WIDTH-1:0] mem_current_data,
@@ -45,7 +45,7 @@ module bus_memory #(
 
   assign mem_addr = {base_ss_address, word_offset[WORDS_ADDR_WIDTH-1:0]};
 
-  assign bus_out = buffer;
+  assign bus_out = mem_active ? buffer : 0;
   assign mem_new_data = buffer[MEM_DATA_WIDTH-1:0];
 
   always @(posedge clk) begin
