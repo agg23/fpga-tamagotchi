@@ -23,6 +23,7 @@ module reg_mux (
     input wire [11:0] y,
 
     input wire [7:0] sp,
+    input wire [7:0] sp_inc,
 
     input wire [7:0] immed,
 
@@ -52,7 +53,7 @@ module reg_mux (
         use_memory  = 1;
       end
       REG_MSP_INC: begin
-        memory_addr = sp + 8'h1;
+        memory_addr = sp_inc;
         use_memory  = 1;
       end
       REG_Mn: begin

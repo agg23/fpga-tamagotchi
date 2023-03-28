@@ -67,6 +67,25 @@ module ret_tb;
 
       bench.assert_sp(8'h47);
     end
+
+    `TEST_CASE("RET with SP at 0xFE should wrap to data at 0x00") begin
+      bench.initialize(12'hFDF); // RET
+      bench.cpu_uut.core.regs.sp = 8'hFE;
+      bench.cpu_uut.ram.memory[12'h0] = 4'h1;
+      bench.cpu_uut.ram.memory[12'h1] = 4'hF;
+      bench.cpu_uut.ram.memory[12'hFE] = 4'h3;
+      bench.cpu_uut.ram.memory[12'hFF] = 4'h2;
+      bench.cpu_uut.ram.memory[12'h100] = 4'hF;
+      bench.cpu_uut.ram.memory[12'h101] = 4'hF;
+      bench.cpu_uut.ram.memory[12'h102] = 4'hF;
+
+      bench.update_prevs();
+
+      bench.run_until_complete();
+      #1;
+      bench.assert_pc(13'h0123);
+    end
+
   end;
 
   // The watchdog macro is optional, but recommended. If present, it

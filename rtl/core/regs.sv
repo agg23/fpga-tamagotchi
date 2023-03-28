@@ -146,6 +146,7 @@ module regs (
       .y(y),
 
       .sp(sp),
+      .sp_inc(sp_inc),
 
       .immed(immed),
 

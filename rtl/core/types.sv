@@ -34,7 +34,7 @@ package types;
     REG_MX,
     REG_MY,
     REG_MSP,
-    REG_MSP_INC,  // M(SP + 1)
+    REG_MSP_INC,  // M(SP + 1) - Only used in RETEND
     REG_MSP_DEC,  // M(SP - 1)
     REG_Mn,
     REG_PCSL,

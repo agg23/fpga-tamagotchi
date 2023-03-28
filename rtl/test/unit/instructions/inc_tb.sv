@@ -4,14 +4,16 @@ module inc_tb;
   bench bench();
 
   parameter i = 0;
+  parameter decimal = 0;
 
   `TEST_SUITE begin
-    `TEST_CASE("GENi INC Mn should increment Mn and update flags") begin
+    `TEST_CASE("GENid INC Mn should increment Mn and update flags") begin
       reg [3:0] result;
       reg carry;
       int j;
 
       bench.initialize(12'hF60 | i); // INC Mn
+      bench.cpu_uut.core.regs.decimal = decimal;
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
         bench.cpu_uut.ram.memory[j] = j + 2;
@@ -31,12 +33,13 @@ module inc_tb;
       bench.assert_zero(result == 4'h0);
     end
 
-    `TEST_CASE("GENi DEC Mn should decrement Mn and update flags") begin
+    `TEST_CASE("GENid DEC Mn should decrement Mn and update flags") begin
       reg [3:0] result;
       reg carry;
       int j;
 
       bench.initialize(12'hF70 | i); // DEC Mn
+      bench.cpu_uut.core.regs.decimal = decimal;
       for (j = 0; j < 16; j = j + 1) begin
         // Offset from immediate to prevent logic depending on it
         bench.cpu_uut.ram.memory[j] = j + 2;
@@ -56,8 +59,9 @@ module inc_tb;
       bench.assert_zero(result == 4'h0);
     end
 
-    `TEST_CASE("DEC SP should decrement SP") begin
+    `TEST_CASE("GENd DEC SP should decrement SP") begin
       bench.initialize(12'hFCB); // DEC SP
+      bench.cpu_uut.core.regs.decimal = decimal;
 
       bench.run_until_complete();
       #1;
@@ -66,8 +70,9 @@ module inc_tb;
       bench.assert_cycle_length(5);
     end
 
-    `TEST_CASE("INC SP should increment SP") begin
+    `TEST_CASE("GENd INC SP should increment SP") begin
       bench.initialize(12'hFDB); // INC SP
+      bench.cpu_uut.core.regs.decimal = decimal;
 
       bench.run_until_complete();
       #1;

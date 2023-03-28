@@ -40,10 +40,21 @@ def run_vunit(test_glob):
           test.add_config("d 0 r %x" % (r), generics=dict(decimal=0, r=r))
           test.add_config("d 1 r %x" % (r), generics=dict(decimal=1, r=r))
 
+      elif test.name.startswith("GENd"):
+        # Add configs for decimal
+        test.add_config("d 0", generics=dict(decimal=0))
+        test.add_config("d 1", generics=dict(decimal=1))
+
       elif test.name.startswith("GENr"):
         # Add configs for r 0-3
         for r in range(4):
           test.add_config("r %x" % (r), generics=dict(r=r))
+
+      elif test.name.startswith("GENid"):
+        # Add configs for decimal, i 0-15
+        for i in range(16):
+          test.add_config("d 0 i %x" % (i), generics=dict(decimal=0, i=i))
+          test.add_config("d 1 i %x" % (i), generics=dict(decimal=1, i=i))
 
       elif test.name.startswith("GENip"):
         # Add configs for i, p 0-15

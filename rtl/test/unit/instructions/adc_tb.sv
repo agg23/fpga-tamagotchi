@@ -97,7 +97,7 @@ module adc_tb;
   endtask
 
   `TEST_SUITE begin
-    `TEST_CASE("ADC XH i should load with 4 bit immediate") begin
+    `TEST_CASE("GENd ADC XH i should load with 4 bit immediate") begin
       bench.initialize(12'hA0F); // ADC XH, i
 
       bench.run_until_complete();
@@ -110,7 +110,7 @@ module adc_tb;
       bench.assert_zero(0);
     end
 
-    `TEST_CASE("ADC XL i should load with 4 bit immediate") begin
+    `TEST_CASE("GENd ADC XL i should load with 4 bit immediate") begin
       bench.initialize(12'hA1E); // ADC XL, i
 
       bench.run_until_complete();
@@ -123,7 +123,7 @@ module adc_tb;
       bench.assert_zero(1);
     end
 
-    `TEST_CASE("ADC YH i should load with 4 bit immediate") begin
+    `TEST_CASE("GENd ADC YH i should load with 4 bit immediate") begin
       bench.initialize(12'hA27); // ADC YH, i
 
       bench.run_until_complete();
@@ -136,7 +136,7 @@ module adc_tb;
       bench.assert_zero(0);
     end
 
-    `TEST_CASE("ADC YL i should load with 4 bit immediate") begin
+    `TEST_CASE("GENd ADC YL i should load with 4 bit immediate") begin
       bench.initialize(12'hA3D); // ADC YL, i
 
       bench.run_until_complete();
@@ -177,28 +177,28 @@ module adc_tb;
       test_adc_rq(opcode, 1, 1, 4'h7);
     end
 
-    `TEST_CASE("GENrd ACPX MX r should add MX to r and store into MX without carry") begin
+    `TEST_CASE("GENrd ACPX MX r should add MX to r and store into MX without carry and increment X") begin
       reg [11:0] opcode;
       opcode = 12'hF28 | r; // ACPX MX, r
 
       test_acp(opcode, 1, 0);
     end
 
-    `TEST_CASE("GENrd ACPX MX r should add MX to r and store into MX with carry") begin
+    `TEST_CASE("GENrd ACPX MX r should add MX to r and store into MX with carry and increment X") begin
       reg [11:0] opcode;
       opcode = 12'hF28 | r; // ACPX MX, r
 
       test_acp(opcode, 1, 1);
     end
 
-    `TEST_CASE("GENrd ACPY MY r should add MY to r and store into MY without carry") begin
+    `TEST_CASE("GENrd ACPY MY r should add MY to r and store into MY without carry and increment Y") begin
       reg [11:0] opcode;
       opcode = 12'hF2C | r; // ACPY MY, r
 
       test_acp(opcode, 0, 0);
     end
 
-    `TEST_CASE("GENrd ACPY MY r should add MY to r and store into MY with carry") begin
+    `TEST_CASE("GENrd ACPY MY r should add MY to r and store into MY with carry and increment Y") begin
       reg [11:0] opcode;
       opcode = 12'hF2C | r; // ACPY MY, r
 
