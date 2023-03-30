@@ -56,8 +56,14 @@ def run_vunit(test_glob):
           test.add_config("d 0 i %x" % (i), generics=dict(decimal=0, i=i))
           test.add_config("d 1 i %x" % (i), generics=dict(decimal=1, i=i))
 
+      elif test.name.startswith("GENipd"):
+        # Add configs for decimal, i/p 0-15
+        for (i, p) in product(range(16), range(16)):
+          test.add_config("d 0 i %x p %x" % (i, p), generics=dict(decimal=0, i=i, p=p))
+          test.add_config("d 1 i %x p %x" % (i, p), generics=dict(decimal=1, i=i, p=p))
+
       elif test.name.startswith("GENip"):
-        # Add configs for i, p 0-15
+        # Add configs for i/p 0-15
         for (i, p) in product(range(16), range(16)):
           test.add_config("i %x p %x" % (i, p), generics=dict(i=i, p=p))
 
