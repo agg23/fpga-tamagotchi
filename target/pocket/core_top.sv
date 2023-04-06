@@ -538,6 +538,18 @@ module core_top (
   wire background_download = dataslot_requestwrite_id == 10;
   wire spritesheet_download = dataslot_requestwrite_id == 11;
 
+  wire rom_download_s;
+  wire background_download_s;
+  wire spritesheet_download_s;
+
+  synch_3 #(
+      .WIDTH(3)
+  ) download_s (
+      {rom_download, background_download, spritesheet_download},
+      {rom_download_s, background_download_s, spritesheet_download_s},
+      clk_sys_117_964
+  );
+
   data_loader #(
       .ADDRESS_MASK_UPPER_4(4'h1),
       .ADDRESS_SIZE(18),
@@ -652,7 +664,7 @@ module core_top (
 
   always @(posedge clk_sys_117_964) begin
     // ROM initialization
-    if (ioctl_rom_wr && rom_download) begin
+    if (ioctl_rom_wr && rom_download_s) begin
       // Word addressing
       rom[ioctl_rom_addr[13:1]] <= ioctl_rom_dout_reversed;
     end
@@ -776,7 +788,7 @@ module core_top (
 
     if (ioctl_image_wr) begin
       image_pixel_high <= ioctl_image_dout[15:8];
-      write_spritesheet_high <= spritesheet_download;
+      write_spritesheet_high <= spritesheet_download_s;
     end
   end
 
@@ -789,11 +801,11 @@ module core_top (
       .video_addr(video_addr),
       .video_data(video_data),
 
-      .background_write_en(ioctl_image_wr && background_download),
-      .spritesheet_write_en((ioctl_image_wr || write_spritesheet_high) && spritesheet_download),
+      .background_write_en(ioctl_image_wr && background_download_s),
+      .spritesheet_write_en((ioctl_image_wr || write_spritesheet_high) && spritesheet_download_s),
       // Top bit is used to determine which memory it goes to
-      .image_write_addr(spritesheet_download ? spritesheet_write_addr : ioctl_image_addr[17:1]),
-      .image_write_data(spritesheet_download ? spritesheet_write_data : ioctl_image_dout_reversed),
+      .image_write_addr(spritesheet_download_s ? spritesheet_write_addr : ioctl_image_addr[17:1]),
+      .image_write_data(spritesheet_download_s ? spritesheet_write_data : ioctl_image_dout_reversed),
 
       .vsync(vsync),
       .hsync(hsync),
