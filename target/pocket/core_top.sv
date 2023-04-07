@@ -644,17 +644,20 @@ module core_top (
     clk_en_32_768khz <= 0;
     clk_en_65_536khz <= 0;
 
-    clock_div <= clock_div - 12'h1;
+    if (~ss_halt) begin
+      // If halted from savestate, no internal clocks run
+      clock_div <= clock_div - 12'h1;
 
-    if (clock_div == 0) begin
-      clock_div <= clock_div_reset_value;
-      // The halfway point value needs to be latched to prevent skipping or doubling clock ticks
-      clock_div_half_reset_value <= clock_div_reset_value == 12'd1 ? 12'd1 : clock_div_reset_value / 2;
+      if (clock_div == 0) begin
+        clock_div <= clock_div_reset_value;
+        // The halfway point value needs to be latched to prevent skipping or doubling clock ticks
+        clock_div_half_reset_value <= clock_div_reset_value == 12'd1 ? 12'd1 : clock_div_reset_value / 2;
 
-      clk_en_32_768khz <= 1;
-      clk_en_65_536khz <= 1;
-    end else if (clock_div == clock_div_half_reset_value) begin
-      clk_en_65_536khz <= 1;
+        clk_en_32_768khz <= 1;
+        clk_en_65_536khz <= 1;
+      end else if (clock_div == clock_div_half_reset_value) begin
+        clk_en_65_536khz <= 1;
+      end
     end
   end
 
@@ -746,7 +749,7 @@ module core_top (
       end
     end
 
-    if (cancel_turbo_on_event_s && buzzer && next_suppress_turbo_counter == 0) begin
+    if ((cancel_turbo_on_event_s && buzzer && next_suppress_turbo_counter == 0) || ss_halt) begin
       // Reset turbo
       reset_turbo <= 1;
     end
@@ -770,8 +773,8 @@ module core_top (
 
   cpu_6s46 tamagotchi (
       .clk(clk_sys_117_964),
-      .clk_en(clk_en_32_768khz && ~ss_halt),
-      .clk_2x_en(clk_en_65_536khz && ~ss_halt),
+      .clk_en(clk_en_32_768khz),
+      .clk_2x_en(clk_en_65_536khz),
 
       .reset(~reset_n_s || external_reset_s || ss_reset),
 
