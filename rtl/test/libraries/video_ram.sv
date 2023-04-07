@@ -1,14 +1,16 @@
-module video_ram (
+module video_ram #(
+    parameter SIM_TYPE = "modelsim"
+) (
     input wire clock,
 
     input wire [7:0] address_a,
     input wire [3:0] data_a,
-    output reg [3:0] q_a,
+    output reg [3:0] q_a = 0,
     input wire wren_a,
 
     input wire [7:0] address_b,
     input wire [3:0] data_b,
-    output reg [3:0] q_b,
+    output reg [3:0] q_b = 0,
     input wire wren_b
 );
   reg [3:0] memory[256];
@@ -43,6 +45,13 @@ module video_ram (
 
   // TODO: Which way should this be to accurately simulate an unregistered output?
   // ModelSim and Verilator don't seem to agree
-  assign q_a = memory[stored_addr_a];
-  assign q_b = memory[stored_addr_b];
+  generate
+    if (SIM_TYPE == "verilator") begin
+      assign q_a = memory[address_a];
+      assign q_b = memory[address_b];
+    end else begin
+      assign q_a = memory[stored_addr_a];
+      assign q_b = memory[stored_addr_b];
+    end
+  endgenerate
 endmodule

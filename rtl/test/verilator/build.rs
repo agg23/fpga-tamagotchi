@@ -12,6 +12,9 @@ fn main() {
     // Can't use glob because Verilator wants the imports to be ordered
     let rtl_files = [
         "top.sv",
+        "../../savestates/ss_addresses.sv",
+        "../../savestates/bus_connector.sv",
+        "../../savestates/bus_memory.sv",
         "../../core/types.sv",
         "../../core/alu.sv",
         "../../core/decode.sv",

@@ -57,13 +57,25 @@ module top (
   wire lcd_all_off_setting;
   wire lcd_all_on_setting;
 
-  cpu_6s46 tamagotchi (
+  reg ss_bus_reset = 1;
+
+  wire [31:0] ss_bus_out;
+  wire ss_ready;
+
+  always @(posedge clk) begin
+    if (clk_en_32_768khz) begin
+      ss_bus_reset <= 0;
+    end
+  end
+
+  cpu_6s46 #(
+      .SIM_TYPE("verilator")
+  ) tamagotchi (
       .clk(clk),
       .clk_en(clk_en_32_768khz),
       .clk_2x_en(clk_en_65_536khz),
-      .clk_vid(clk),
 
-      .reset_n(reset_n),
+      .reset(~reset_n),
 
       // Left, middle, right
       .input_k0({1'b0, ~left_button, ~middle_button, ~right_button}),
@@ -79,7 +91,16 @@ module top (
 
       // Settings
       .lcd_all_off_setting(lcd_all_off_setting),
-      .lcd_all_on_setting (lcd_all_on_setting)
+      .lcd_all_on_setting (lcd_all_on_setting),
+
+      // Savestates
+      .ss_bus_in(0),
+      .ss_bus_addr(0),
+      .ss_bus_wren(0),
+      .ss_bus_reset(ss_bus_reset),
+      .ss_bus_out(ss_bus_out),
+
+      .ss_ready(ss_ready)
   );
 
   video video (
@@ -92,10 +113,6 @@ module top (
       .spritesheet_write_en(0),
       .image_write_addr(0),
       .image_write_data(0),
-
-      // Settings
-      .lcd_all_off_setting(lcd_all_off_setting),
-      .lcd_all_on_setting (lcd_all_on_setting),
 
       .vsync(vsync),
       .hsync(hsync),

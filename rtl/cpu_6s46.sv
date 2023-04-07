@@ -1,6 +1,8 @@
 import ss_addresses::*;
 
-module cpu_6s46 (
+module cpu_6s46 #(
+    parameter SIM_TYPE = "modelsim"
+) (
     input wire clk,
 
     input wire clk_en,
@@ -283,7 +285,9 @@ module cpu_6s46 (
   wire [7:0] combined_video_addr = ss_video_ram_active ? ss_video_ram_addr : (video_addr < 8'hA0 ? video_addr : 8'h0);
 
   // Sys and video RAM split out and not inferred due to massive synthesis size improvement using Quartus
-  video_ram video_ram (
+  video_ram #(
+      .SIM_TYPE(SIM_TYPE)
+  ) video_ram (
       .clock(clk),
 
       .address_a(cpu_video_addr),
