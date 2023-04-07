@@ -49,7 +49,7 @@ module video #(
 
   alpha_blend sprite_alpha_blend (
       .background_pixel(background_pixel_with_lcd),
-      .forground_pixel(active_sprite_pixel ? {24'b0, sprite_alpha_pixel} : 0),
+      .foreground_pixel(active_sprite_pixel ? {24'b0, sprite_alpha_pixel} : 0),
       .output_pixel(rgb)
   );
 

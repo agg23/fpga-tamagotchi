@@ -347,6 +347,9 @@ module core_top (
         32'h104: begin
           cancel_turbo_on_event <= bridge_wr_data[0];
         end
+        32'h108: begin
+          suppress_turbo_after_activation <= bridge_wr_data[0];
+        end
       endcase
     end
   end
@@ -641,19 +644,19 @@ module core_top (
     clk_en_32_768khz <= 0;
     clk_en_65_536khz <= 0;
 
-      clock_div <= clock_div - 12'h1;
+    clock_div <= clock_div - 12'h1;
 
-      if (clock_div == 0) begin
-        clock_div <= clock_div_reset_value;
+    if (clock_div == 0) begin
+      clock_div <= clock_div_reset_value;
       // The halfway point value needs to be latched to prevent skipping or doubling clock ticks
       clock_div_half_reset_value <= clock_div_reset_value == 12'd1 ? 12'd1 : clock_div_reset_value / 2;
 
-        clk_en_32_768khz <= 1;
-        clk_en_65_536khz <= 1;
+      clk_en_32_768khz <= 1;
+      clk_en_65_536khz <= 1;
     end else if (clock_div == clock_div_half_reset_value) begin
-        clk_en_65_536khz <= 1;
-      end
+      clk_en_65_536khz <= 1;
     end
+  end
 
   always @(posedge clk_sys_117_964) begin
     // ROM access
@@ -677,6 +680,7 @@ module core_top (
   reg disable_sound = 0;
   reg [1:0] turbo_speed = 0;
   reg cancel_turbo_on_event = 0;
+  reg suppress_turbo_after_activation = 0;
 
   // Synced settings
   wire reset_n_s;
@@ -686,6 +690,7 @@ module core_top (
   wire disable_sound_s;
   wire [1:0] turbo_speed_s;
   wire cancel_turbo_on_event_s;
+  wire suppress_turbo_after_activation_s;
 
   synch_3 #(
       .WIDTH(32)
@@ -696,26 +701,62 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(6)
+      .WIDTH(7)
   ) settings_s (
-      {cancel_turbo_on_event, turbo_speed, disable_sound, external_reset, reset_n},
-      {cancel_turbo_on_event_s, turbo_speed_s, disable_sound_s, external_reset_s, reset_n_s},
+      {
+        suppress_turbo_after_activation,
+        cancel_turbo_on_event,
+        turbo_speed,
+        disable_sound,
+        external_reset,
+        reset_n
+      },
+      {
+        suppress_turbo_after_activation_s,
+        cancel_turbo_on_event_s,
+        turbo_speed_s,
+        disable_sound_s,
+        external_reset_s,
+        reset_n_s
+      },
       clk_sys_117_964
   );
 
   wire buzzer;
 
   reg [2:0] savestate_reset_tick_count = 0;
+  reg prev_turbo_speed_zero = 0;
+  reg [19:0] suppress_turbo_counter = 0;
 
   wire ss_reset = savestate_reset_tick_count > 0;
 
   always @(posedge clk_sys_117_964) begin
-    reset_turbo <= 0;
+    reg [19:0] next_suppress_turbo_counter;
 
-    if (cancel_turbo_on_event_s && buzzer) begin
+    next_suppress_turbo_counter = suppress_turbo_counter;
+
+    reset_turbo <= 0;
+    prev_turbo_speed_zero <= turbo_speed_s == 0;
+
+    if (turbo_speed_s > 0 && prev_turbo_speed_zero) begin
+      // Turbo was newly activated
+      if (suppress_turbo_after_activation_s) begin
+        // 5 seconds at 32kHz
+        next_suppress_turbo_counter = 20'h2_8000;
+      end
+    end
+
+    if (cancel_turbo_on_event_s && buzzer && next_suppress_turbo_counter == 0) begin
       // Reset turbo
       reset_turbo <= 1;
     end
+
+    if (clk_en_32_768khz && suppress_turbo_counter > 0) begin
+      // Count in "core" time
+      next_suppress_turbo_counter = next_suppress_turbo_counter - 20'h1;
+    end
+
+    suppress_turbo_counter <= next_suppress_turbo_counter;
 
     if (ss_begin_reset) begin
       // Savestate reset started. Wait for 4 clk_2x_en to occur
@@ -813,7 +854,7 @@ module core_top (
 
   ///////////////////////////////////////////////
 
-  wire [14:0] audio_l = ~disable_sound_s ? {2'b0, {13{buzzer}}} : 0;
+  wire [14:0] audio_l = ~disable_sound_s && turbo_speed_s < 2 ? {2'b0, {13{buzzer}}} : 0;
 
   sound_i2s #(
       .CHANNEL_WIDTH(15)

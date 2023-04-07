@@ -59,6 +59,17 @@
         "writeonly": true,
         "defaultval": 1,
         "value": 1
+      },
+      {
+        "name": "Skip Evt on Turbo",
+        "id": 42,
+        "type": "check",
+        "enabled": true,
+        "address": "0x108",
+        "persist": true,
+        "writeonly": true,
+        "defaultval": 1,
+        "value": 1
       }
     ],
     "messages": []
