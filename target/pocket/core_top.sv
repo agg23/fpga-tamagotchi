@@ -628,34 +628,32 @@ module core_top (
       1: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd4;
       // 50x
       2: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd50;
-      3: clock_div_reset_value = 12'd0;
+      // Fullspeed. Special value
+      3: clock_div_reset_value = 12'd1;
     endcase
   end
 
   reg [11:0] clock_div = BASE_CLOCK_DIV_COUNT;
+  reg [11:0] clock_div_half_reset_value = BASE_CLOCK_DIV_COUNT / 2;
 
   // Clock divider
   always @(posedge clk_sys_117_964) begin
     clk_en_32_768khz <= 0;
     clk_en_65_536khz <= 0;
 
-    if (clock_div_reset_value == 12'd0) begin
-      // Special case. Full speed
-      clk_en_32_768khz <= ~clk_en_32_768khz;
-      clk_en_65_536khz <= 1;
-    end else begin
       clock_div <= clock_div - 12'h1;
 
       if (clock_div == 0) begin
         clock_div <= clock_div_reset_value;
+      // The halfway point value needs to be latched to prevent skipping or doubling clock ticks
+      clock_div_half_reset_value <= clock_div_reset_value == 12'd1 ? 12'd1 : clock_div_reset_value / 2;
 
         clk_en_32_768khz <= 1;
         clk_en_65_536khz <= 1;
-      end else if (clock_div == clock_div_reset_value / 2) begin
+    end else if (clock_div == clock_div_half_reset_value) begin
         clk_en_65_536khz <= 1;
       end
     end
-  end
 
   always @(posedge clk_sys_117_964) begin
     // ROM access
