@@ -27,6 +27,8 @@ module video #(
   localparam LCD_X_OFFSET = (WIDTH - 32 * LCD_PIXEL_SIZE) / 2;
   localparam LCD_Y_OFFSET = (HEIGHT - 16 * LCD_PIXEL_SIZE) / 2;
 
+  localparam HORIZONTAL_TOTAL = WIDTH + HBLANK_LEN;
+
   wire [15:0] background_pixel_rgb565;
   wire [23:0] background_pixel_rgb888;
 
@@ -53,13 +55,16 @@ module video #(
       .output_pixel(rgb)
   );
 
+  wire [9:0] video_fetch_x = video_x == HORIZONTAL_TOTAL - 1 ? 0 : video_x + 10'h1;
+  wire [9:0] video_fetch_y = video_x == HORIZONTAL_TOTAL - 1 ? video_y > HEIGHT ? 0 : video_y + 10'h1 : video_y;
+
   sprites #(
       .WIDTH(WIDTH)
   ) sprites (
       .clk(clk),
 
-      .video_x(video_x),
-      .video_y(video_y),
+      .video_x(video_fetch_x),
+      .video_y(video_fetch_y),
 
       .sprite_enable_status(sprite_enable_status),
 
@@ -82,8 +87,8 @@ module video #(
       .clk(clk),
 
       .sprite(0),
-      .x(video_x),
-      .y(video_y),
+      .x(video_fetch_x),
+      .y(video_fetch_y),
 
       .image_write_en  (background_write_en),
       .image_write_addr(image_write_addr),
@@ -103,8 +108,8 @@ module video #(
   ) lcd (
       .clk(clk),
 
-      .video_x(video_x),
-      .video_y(video_y),
+      .video_x(video_fetch_x),
+      .video_y(video_fetch_y),
       .lcd_segment_row(lcd_segment_row),
 
       .video_data(lcd_video_data),

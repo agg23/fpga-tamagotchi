@@ -29,7 +29,7 @@ module video_gen #(
   localparam HBLANK_TIME = WIDTH + HBLANK_OFFSET;
 
   localparam MAX_X = WIDTH + HBLANK_LEN;
-  localparam MAX_Y = WIDTH + VBLANK_LEN;
+  localparam MAX_Y = HEIGHT + VBLANK_LEN;
 
   initial begin
     $display("VBLANK at: %d, HBLANK at: %d", VBLANK_TIME, HBLANK_TIME);
@@ -40,20 +40,14 @@ module video_gen #(
   reg [4:0] pixel_count_x = 0;
   reg [4:0] pixel_count_y = 0;
 
-  // wire [9:0] lcd_x_base = x - 16;
-  // wire [9:0] lcd_y_base = y - 104;
-  // wire [4:0] lcd_x = lcd_x_base[9:5];
-  // wire [4:0] lcd_y = lcd_y_base[9:5];
   reg [4:0] lcd_x = 0;
   reg [3:0] lcd_y = 0;
 
   assign lcd_segment_row = lcd_y[1:0];
 
-  // reg [4:0] test_lcd_x = 0  /* synthesis noprune */;
-  // reg [4:0] test_lcd_y = 0  /* synthesis noprune */;
-
   assign de = x < WIDTH && y < HEIGHT;
 
+  // Map from an LCD X coordinate to the actual column of memory used
   function [5:0] lcd_column_addr(reg [5:0] x_coord);
     // const reverse_map = [
     //       0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 36, 35, 34, 33,
@@ -140,8 +134,6 @@ module video_gen #(
     y <= next_y;
     next_lcd_x = lcd_x;
     next_lcd_y = lcd_y;
-    // test_lcd_x <= next_lcd_x;
-    // test_lcd_y <= next_lcd_y;
 
     if (next_x >= LCD_X_OFFSET && next_x < WIDTH - LCD_X_OFFSET && next_y >= LCD_Y_OFFSET && next_y < HEIGHT - LCD_Y_OFFSET) begin
       pixel_count_x <= pixel_count_x + 5'b1;
