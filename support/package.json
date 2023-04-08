@@ -12,7 +12,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "get-pixels": "^3.3.3",
-    "glob": "^9.2.1"
+    "get-pixels": "^3.3.3"
   }
 }

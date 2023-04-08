@@ -4,7 +4,7 @@ import { argv } from "process";
 if (argv.length != 5) {
   console.log(`Received ${argv.length - 2} arguments. Expected 3\n`);
   console.log(
-    "Usage: node modelsim.js [input.asm] [output.sim] [# of nibbles per line]"
+    "Usage: node modelsim.js [input.bin] [output.hex] [# of nibbles per line (you probably want 4)]"
   );
 
   process.exit(1);
