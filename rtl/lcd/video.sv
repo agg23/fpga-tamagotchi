@@ -120,6 +120,8 @@ module video #(
       .LCD_X_OFFSET(LCD_X_OFFSET),
       .LCD_Y_OFFSET(LCD_Y_OFFSET)
   ) lcd (
+      .clk(clk),
+
       .video_x(video_fetch_x),
       .video_y(video_fetch_y),
 

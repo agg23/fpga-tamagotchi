@@ -5,6 +5,8 @@ module lcd #(
     parameter LCD_X_OFFSET = 10'd0,
     parameter LCD_Y_OFFSET = 10'd0
 ) (
+    input wire clk,
+
     input wire [9:0] video_x,
     input wire [9:0] video_y,
 
@@ -24,9 +26,13 @@ module lcd #(
   // Comb
   reg lcd_active;
 
-  wire render_grid_divider = show_pixel_dividers && (lcd_subpixel_x == 0 || lcd_subpixel_y == 0);
+  // Buffered Settings
+  reg show_pixel_dividers_buf;
+  reg show_pixel_grid_background_buf;
 
-  wire [31:0] lcd_background_color = show_pixel_grid_background ? 32'h0A0A0A_1F : 0;
+  wire render_grid_divider = show_pixel_dividers_buf && (lcd_subpixel_x == 0 || lcd_subpixel_y == 0);
+
+  wire [31:0] lcd_background_color = show_pixel_grid_background_buf ? 32'h0A0A0A_1F : 0;
 
   // Color of current pixel when on/off, including alpha
   wire [31:0] lcd_on_off_pixel = lcd_active ? 32'h0A0A0A_FF : lcd_background_color;
@@ -41,6 +47,12 @@ module lcd #(
       // Horizontal and vertical range of main LCD
       lcd_active = video_data[lcd_segment_row];
     end
+  end
+
+  always @(posedge clk) begin
+    // Buffer settings to prevent a long comb chain from the settings synch all the way to the video DDIO
+    show_pixel_dividers_buf <= show_pixel_dividers;
+    show_pixel_grid_background_buf <= show_pixel_grid_background;
   end
 
 endmodule

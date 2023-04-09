@@ -350,6 +350,9 @@ module core_top (
         32'h108: begin
           suppress_turbo_after_activation <= bridge_wr_data[0];
         end
+        32'h200: begin
+          lcd_mode <= bridge_wr_data[1:0];
+        end
       endcase
     end
   end
@@ -685,6 +688,8 @@ module core_top (
   reg cancel_turbo_on_event = 0;
   reg suppress_turbo_after_activation = 0;
 
+  reg [1:0] lcd_mode = 0;
+
   // Synced settings
   wire reset_n_s;
   wire external_reset_s;
@@ -695,6 +700,8 @@ module core_top (
   wire cancel_turbo_on_event_s;
   wire suppress_turbo_after_activation_s;
 
+  wire [1:0] lcd_mode_s;
+
   synch_3 #(
       .WIDTH(32)
   ) cont1_s (
@@ -704,9 +711,10 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(7)
+      .WIDTH(9)
   ) settings_s (
       {
+        lcd_mode,
         suppress_turbo_after_activation,
         cancel_turbo_on_event,
         turbo_speed,
@@ -715,6 +723,7 @@ module core_top (
         reset_n
       },
       {
+        lcd_mode_s,
         suppress_turbo_after_activation_s,
         cancel_turbo_on_event_s,
         turbo_speed_s,
@@ -848,6 +857,10 @@ module core_top (
       // Top bit is used to determine which memory it goes to
       .image_write_addr(spritesheet_download_s ? spritesheet_write_addr : ioctl_image_addr[17:1]),
       .image_write_data(spritesheet_download_s ? spritesheet_write_data : ioctl_image_dout_reversed),
+
+      // Settings
+      .show_pixel_dividers(lcd_mode_s > 0),
+      .show_pixel_grid_background(lcd_mode_s == 2),
 
       .vsync(vsync),
       .hsync(hsync),
