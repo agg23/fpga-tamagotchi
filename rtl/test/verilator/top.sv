@@ -114,6 +114,10 @@ module top (
       .image_write_addr(0),
       .image_write_data(0),
 
+      // Settings
+      .show_pixel_dividers(1),
+      .show_pixel_grid_background(1),
+
       .vsync(vsync),
       .hsync(hsync),
       .de(de),

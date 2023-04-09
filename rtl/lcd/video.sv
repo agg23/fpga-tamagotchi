@@ -19,6 +19,10 @@ module video #(
     input wire [16:0] image_write_addr,
     input wire [15:0] image_write_data,
 
+    // Settings
+    input wire show_pixel_dividers,
+    input wire show_pixel_grid_background,
+
     output wire vsync,
     output wire hsync,
     output wire de,
@@ -36,17 +40,24 @@ module video #(
   wire [9:0] video_y;
   wire [1:0] lcd_segment_row;
 
-  wire lcd_active;
+  wire [31:0] lcd_pixel;
+
   wire active_sprite_pixel;
   wire [7:0] sprite_alpha_pixel;
 
-  wire [23:0] background_pixel_with_lcd = lcd_active ? 24'h0A0A0A : background_pixel_rgb888;
+  wire [23:0] background_pixel_with_lcd;
 
   wire [7:0] sprite_enable_status;
 
   rgb565_to_rgb888 background_color_conversion (
       .rgb565(background_pixel_rgb565),
       .rgb888(background_pixel_rgb888)
+  );
+
+  alpha_blend lcd_alpha_blend (
+      .background_pixel(background_pixel_rgb888),
+      .foreground_pixel(lcd_pixel),
+      .output_pixel(background_pixel_with_lcd)
   );
 
   alpha_blend sprite_alpha_blend (
@@ -97,6 +108,9 @@ module video #(
       .pixel(background_pixel_rgb565)
   );
 
+  wire [4:0] lcd_subpixel_x;
+  wire [4:0] lcd_subpixel_y;
+
   wire [7:0] lcd_video_addr;
   wire [3:0] lcd_video_data;
 
@@ -106,15 +120,20 @@ module video #(
       .LCD_X_OFFSET(LCD_X_OFFSET),
       .LCD_Y_OFFSET(LCD_Y_OFFSET)
   ) lcd (
-      .clk(clk),
-
       .video_x(video_fetch_x),
       .video_y(video_fetch_y),
-      .lcd_segment_row(lcd_segment_row),
 
+      .lcd_subpixel_x(lcd_subpixel_x),
+      .lcd_subpixel_y(lcd_subpixel_y),
+
+      .lcd_segment_row(lcd_segment_row),
       .video_data(lcd_video_data),
 
-      .lcd_active(lcd_active)
+      // Settings
+      .show_pixel_dividers(show_pixel_dividers),
+      .show_pixel_grid_background(show_pixel_grid_background),
+
+      .pixel(lcd_pixel)
   );
 
   frame_ram frame_ram (
@@ -148,6 +167,9 @@ module video #(
 
       .x(video_x),
       .y(video_y),
+
+      .lcd_subpixel_x(lcd_subpixel_x),
+      .lcd_subpixel_y(lcd_subpixel_y),
 
       .lcd_segment_row(lcd_segment_row),
 

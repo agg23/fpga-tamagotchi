@@ -19,6 +19,9 @@ module video_gen #(
     output reg [9:0] x = 0,
     output reg [9:0] y = 0,
 
+    output wire [4:0] lcd_subpixel_x,
+    output wire [4:0] lcd_subpixel_y,
+
     output wire [1:0] lcd_segment_row,
 
     output reg  vsync = 0,
@@ -42,6 +45,9 @@ module video_gen #(
 
   reg [4:0] lcd_x = 0;
   reg [3:0] lcd_y = 0;
+
+  assign lcd_subpixel_x = pixel_count_x;
+  assign lcd_subpixel_y = pixel_count_y;
 
   assign lcd_segment_row = lcd_y[1:0];
 
