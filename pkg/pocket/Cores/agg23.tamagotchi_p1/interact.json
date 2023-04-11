@@ -26,7 +26,7 @@
         "id": 40,
         "type": "list",
         "enabled": true,
-        "persist": true,
+        "persist": false,
         "writeonly": false,
         "address": "0x100",
         "defaultval": 0,
