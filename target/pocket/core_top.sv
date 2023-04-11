@@ -324,13 +324,64 @@ module core_top (
     endcase
   end
 
+  localparam TURBO_BUTTON_DELAY = {25{1'b1}};
+  reg [24:0] turbo_button_counter = 0;
+
+  localparam TURBO_UI_DELAY = {27{1'b1}};
+  reg [26:0] turbo_ui_counter = 0;
+
   always @(posedge clk_74a) begin
+    reg did_use_turbo_button;
+    did_use_turbo_button = 0;
+
     if (reset_delay > 0) begin
       reset_delay <= reset_delay - 1;
     end
 
+    if (turbo_ui_counter > 0) begin
+      turbo_ui_counter <= turbo_ui_counter - 27'h1;
+    end else begin
+      turbo_via_button <= 0;
+    end
+
     if (reset_turbo_s) begin
+      // Reset speed
+      // Indicate turbo value changed in UI and add button delay
+      did_use_turbo_button = 1;
+
       turbo_speed <= 0;
+    end
+
+    if (turbo_button_counter > 0) begin
+      turbo_button_counter <= turbo_button_counter - 25'h1;
+    end else begin
+      if (cont1_key[8]) begin
+        // Left trigger
+        did_use_turbo_button = 1;
+
+        if (turbo_speed > 0) begin
+          turbo_speed <= turbo_speed - 2'h1;
+        end
+      end else if (cont1_key[9]) begin
+        // Right trigger
+        did_use_turbo_button = 1;
+
+        if (turbo_speed < 3) begin
+          turbo_speed <= turbo_speed + 2'h1;
+        end
+      end
+    end
+
+    if (did_use_turbo_button) begin
+      turbo_button_counter <= TURBO_BUTTON_DELAY;
+
+      turbo_via_button <= 1;
+      turbo_ui_counter <= TURBO_UI_DELAY;
+    end
+
+    if (~cont1_key[8] && ~cont1_key[9]) begin
+      // Neither L or R pressed, so reset button timer
+      turbo_button_counter <= 0;
     end
 
     if (bridge_wr) begin
@@ -685,6 +736,8 @@ module core_top (
 
   reg disable_sound = 0;
   reg [1:0] turbo_speed = 0;
+  // Represents the turbo value being changed by a "core" mechanic - button press or event reset
+  reg turbo_via_button = 0;
   reg cancel_turbo_on_event = 0;
   reg suppress_turbo_after_activation = 0;
 
@@ -697,6 +750,7 @@ module core_top (
 
   wire disable_sound_s;
   wire [1:0] turbo_speed_s;
+  wire turbo_via_button_s;
   wire cancel_turbo_on_event_s;
   wire suppress_turbo_after_activation_s;
 
@@ -711,13 +765,14 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(9)
+      .WIDTH(10)
   ) settings_s (
       {
         lcd_mode,
         suppress_turbo_after_activation,
         cancel_turbo_on_event,
         turbo_speed,
+        turbo_via_button,
         disable_sound,
         external_reset,
         reset_n
@@ -727,6 +782,7 @@ module core_top (
         suppress_turbo_after_activation_s,
         cancel_turbo_on_event_s,
         turbo_speed_s,
+        turbo_via_button_s,
         disable_sound_s,
         external_reset_s,
         reset_n_s
@@ -861,6 +917,9 @@ module core_top (
       // Settings
       .show_pixel_dividers(lcd_mode_s > 0),
       .show_pixel_grid_background(lcd_mode_s == 2),
+
+      .show_turbo_ui(turbo_via_button_s),
+      .turbo_speed  (turbo_speed_s),
 
       .vsync(vsync),
       .hsync(hsync),

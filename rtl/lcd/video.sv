@@ -23,6 +23,9 @@ module video #(
     input wire show_pixel_dividers,
     input wire show_pixel_grid_background,
 
+    input wire show_turbo_ui,
+    input wire [1:0] turbo_speed,
+
     output wire vsync,
     output wire hsync,
     output wire de,
@@ -60,10 +63,16 @@ module video #(
       .output_pixel(background_pixel_with_lcd)
   );
 
+  wire [23:0] ui_rgb;
+  wire [23:0] main_rgb;
+  wire ui_active;
+
+  assign rgb = show_turbo_ui && ui_active ? ui_rgb : main_rgb;
+
   alpha_blend sprite_alpha_blend (
       .background_pixel(background_pixel_with_lcd),
       .foreground_pixel(active_sprite_pixel ? {24'b0, sprite_alpha_pixel} : 0),
-      .output_pixel(rgb)
+      .output_pixel(main_rgb)
   );
 
   wire [9:0] video_fetch_x = video_x == HORIZONTAL_TOTAL - 1 ? 0 : video_x + 10'h1;
@@ -150,6 +159,19 @@ module video #(
       .cpu_video_data(video_data),
 
       .vsync(vsync)
+  );
+
+  ui ui (
+      .clk(clk),
+
+      .video_fetch_x(video_fetch_x),
+      .video_fetch_y(video_fetch_y),
+
+      // Settings
+      .turbo_speed(turbo_speed),
+
+      .active (ui_active),
+      .vid_out(ui_rgb)
   );
 
   video_gen #(
