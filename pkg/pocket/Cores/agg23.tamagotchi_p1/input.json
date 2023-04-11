@@ -7,43 +7,28 @@
         "mappings": [
           {
             "id": 0,
-            "name": "A Button",
-            "key": "pad_btn_a"
+            "name": "Select",
+            "key": "pad_btn_y"
           },
           {
             "id": 1,
-            "name": "B Button",
+            "name": "Execute",
             "key": "pad_btn_b"
           },
           {
             "id": 2,
-            "name": "X Button",
-            "key": "pad_btn_x"
-          },
-          {
-            "id": 3,
-            "name": "Y Button",
-            "key": "pad_btn_y"
+            "name": "Cancel",
+            "key": "pad_btn_a"
           },
           {
             "id": 10,
-            "name": "L Button",
-            "key": "pad_btn_l"
+            "name": "Decrease Turbo",
+            "key": "pad_trig_l"
           },
           {
             "id": 11,
-            "name": "R Button",
-            "key": "pad_btn_r"
-          },
-          {
-            "id": 20,
-            "name": "Start",
-            "key": "pad_btn_start"
-          },
-          {
-            "id": 21,
-            "name": "Select",
-            "key": "pad_btn_select"
+            "name": "Increase Turbo",
+            "key": "pad_trig_r"
           }
         ]
       }
