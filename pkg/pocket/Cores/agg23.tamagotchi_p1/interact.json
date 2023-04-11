@@ -33,18 +33,22 @@
         "options": [
           {
             "value": 0,
-            "name": "Normal"
+            "name": "1x"
           },
           {
             "value": 1,
-            "name": "4x"
+            "name": "2x"
           },
           {
             "value": 2,
-            "name": "50x"
+            "name": "4x"
           },
           {
             "value": 3,
+            "name": "50x"
+          },
+          {
+            "value": 4,
             "name": "Max"
           }
         ]

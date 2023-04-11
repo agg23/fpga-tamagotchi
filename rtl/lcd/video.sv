@@ -24,7 +24,7 @@ module video #(
     input wire show_pixel_grid_background,
 
     input wire show_turbo_ui,
-    input wire [1:0] turbo_speed,
+    input wire [2:0] turbo_speed,
 
     output wire vsync,
     output wire hsync,

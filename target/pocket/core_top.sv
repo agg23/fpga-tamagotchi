@@ -324,6 +324,8 @@ module core_top (
     endcase
   end
 
+  localparam TURBO_VALUE_COUNT = 4;
+
   localparam TURBO_BUTTON_DELAY = {25{1'b1}};
   reg [24:0] turbo_button_counter = 0;
 
@@ -344,7 +346,7 @@ module core_top (
       turbo_via_button <= 0;
     end
 
-    if (reset_turbo_s) begin
+    if (reset_turbo_s && turbo_speed != 0) begin
       // Reset speed
       // Indicate turbo value changed in UI and add button delay
       did_use_turbo_button = 1;
@@ -366,7 +368,7 @@ module core_top (
         // Right trigger
         did_use_turbo_button = 1;
 
-        if (turbo_speed < 3) begin
+        if (turbo_speed < TURBO_VALUE_COUNT) begin
           turbo_speed <= turbo_speed + 2'h1;
         end
       end
@@ -393,7 +395,7 @@ module core_top (
           disable_sound <= bridge_wr_data[0];
         end
         32'h100: begin
-          turbo_speed <= bridge_wr_data[1:0];
+          turbo_speed <= bridge_wr_data[2:0];
         end
         32'h104: begin
           cancel_turbo_on_event <= bridge_wr_data[0];
@@ -681,12 +683,14 @@ module core_top (
     case (turbo_speed_s)
       // 1x
       0: clock_div_reset_value = BASE_CLOCK_DIV_COUNT;
+      // 2x
+      1: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd2;
       // 4x
-      1: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd4;
+      2: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd4;
       // 50x
-      2: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd50;
-      // Fullspeed. Special value
-      3: clock_div_reset_value = 12'd1;
+      3: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd50;
+      // 4. Fullspeed. Special value
+      default: clock_div_reset_value = 12'd1;
     endcase
   end
 
@@ -735,7 +739,7 @@ module core_top (
   wire external_reset = reset_delay > 0;
 
   reg disable_sound = 0;
-  reg [1:0] turbo_speed = 0;
+  reg [2:0] turbo_speed = 0;
   // Represents the turbo value being changed by a "core" mechanic - button press or event reset
   reg turbo_via_button = 0;
   reg cancel_turbo_on_event = 0;
@@ -749,7 +753,7 @@ module core_top (
   wire [15:0] cont1_key_s;
 
   wire disable_sound_s;
-  wire [1:0] turbo_speed_s;
+  wire [2:0] turbo_speed_s;
   wire turbo_via_button_s;
   wire cancel_turbo_on_event_s;
   wire suppress_turbo_after_activation_s;
@@ -765,7 +769,7 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(10)
+      .WIDTH(11)
   ) settings_s (
       {
         lcd_mode,

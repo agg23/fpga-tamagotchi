@@ -7,7 +7,7 @@ module ui (
     input wire [9:0] video_fetch_y,
 
     // Settings
-    input wire [1:0] turbo_speed,
+    input wire [2:0] turbo_speed,
 
     output wire active,
     output reg [23:0] vid_out
