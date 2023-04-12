@@ -427,10 +427,17 @@ module core_top (
   wire [31:0] cmd_bridge_rd_data;
 
   wire pll_core_locked_s;
+  wire pll_core_locked_sys_s;
   synch_3 s01 (
       pll_core_locked,
       pll_core_locked_s,
       clk_74a
+  );
+
+  synch_3 s02 (
+      pll_core_locked,
+      pll_core_locked_sys_s,
+      clk_sys_117_964
   );
 
   // bridge host commands
@@ -476,9 +483,9 @@ module core_top (
 
   // bridge data slot access
 
-  wire [9:0] datatable_addr;
-  wire datatable_wren;
-  wire [31:0] datatable_data;
+  reg [9:0] datatable_addr;
+  reg datatable_wren;
+  reg [31:0] datatable_data;
   wire [31:0] datatable_q;
 
   core_bridge_cmd icb (
@@ -550,7 +557,7 @@ module core_top (
       .clk_74a(clk_74a),
       .clk_sys(clk_sys_117_964),
 
-      .reset(~reset_n_s),
+      .reset(~pll_core_locked_sys_s),
 
       // APF
       .bridge_wr(bridge_wr),
@@ -561,13 +568,13 @@ module core_top (
       .save_state_bridge_read_data(save_state_bridge_read_data),
 
       // APF Savestates
-      .savestate_load(savestate_load),
+      .savestate_load(savestate_load || restore_savestate_load),
       .savestate_load_ack_s(savestate_load_ack),
       .savestate_load_busy_s(savestate_load_busy),
       .savestate_load_ok_s(savestate_load_ok),
       .savestate_load_err_s(savestate_load_err),
 
-      .savestate_start(savestate_start),
+      .savestate_start(savestate_start || savestate_upload),
       .savestate_start_ack_s(savestate_start_ack),
       .savestate_start_busy_s(savestate_start_busy),
       .savestate_start_ok_s(savestate_start_ok),
@@ -585,6 +592,26 @@ module core_top (
       .ss_begin_reset(ss_begin_reset)
   );
 
+  reg restore_savestate_load = 0;
+  reg did_restore_savestate = 0;
+  reg prev_reset_n = 0;
+
+  always @(posedge clk_74a) begin
+    prev_reset_n <= reset_n;
+    restore_savestate_load <= 0;
+
+    if (bridge_wr && bridge_addr[31:28] == 4'h4) begin
+      did_restore_savestate <= 1;
+    end
+
+    if (reset_n && ~prev_reset_n) begin
+      // Reset ended
+      did_restore_savestate  <= 0;
+
+      restore_savestate_load <= did_restore_savestate;
+    end
+  end
+
   wire ioctl_rom_wr;
   wire [20:0] ioctl_rom_addr;
   wire [15:0] ioctl_rom_dout;
@@ -596,6 +623,10 @@ module core_top (
   wire rom_download = dataslot_requestwrite_id == 0;
   wire background_download = dataslot_requestwrite_id == 10;
   wire spritesheet_download = dataslot_requestwrite_id == 11;
+
+  // These are for the core power on/off savestates
+  // wire savestate_download = dataslot_requestwrite_id == 20;
+  wire savestate_upload = dataslot_requestread_id == 20;
 
   wire rom_download_s;
   wire background_download_s;
@@ -627,6 +658,7 @@ module core_top (
       .write_data(ioctl_rom_dout)
   );
 
+  // Image loader exists because of writes to clk_vid_13_107 domain
   data_loader #(
       .ADDRESS_MASK_UPPER_4(4'h2),
       .ADDRESS_SIZE(18),
@@ -645,25 +677,22 @@ module core_top (
       .write_data(ioctl_image_dout)
   );
 
+  always @(posedge clk_74a or negedge pll_core_locked) begin
+    if (~pll_core_locked) begin
+      datatable_addr <= 0;
+      datatable_data <= 0;
+      datatable_wren <= 0;
+    end else begin
+      // Write sram size half of the time
+      datatable_wren <= 1;
+      datatable_data <= savestate_size;
+      // Data slot index 3, not id 3
+      datatable_addr <= 3 * 2 + 1;
+    end
+  end
+
   wire [15:0] ioctl_rom_dout_reversed = {ioctl_rom_dout[7:0], ioctl_rom_dout[15:8]};
   wire [15:0] ioctl_image_dout_reversed = {ioctl_image_dout[7:0], ioctl_image_dout[15:8]};
-
-  //   data_unloader #(
-  //       .ADDRESS_MASK_UPPER_4(4'h2),
-  //       .ADDRESS_SIZE(25)
-  //   ) data_unloader (
-  //       .clk_74a(clk_74a),
-  //       .clk_memory(clk_sys_21_48),
-
-  //       .bridge_rd(bridge_rd),
-  //       .bridge_endian_little(bridge_endian_little),
-  //       .bridge_addr(bridge_addr),
-  //       .bridge_rd_data(sd_read_data),
-
-  //       .read_en  (sd_rd),
-  //       .read_addr(sd_buff_addr_out),
-  //       .read_data(sd_buff_din)
-  //   );
 
   reg clk_en_32_768khz = 0;
   reg clk_en_65_536khz = 0;
@@ -748,7 +777,6 @@ module core_top (
   reg [1:0] lcd_mode = 0;
 
   // Synced settings
-  wire reset_n_s;
   wire external_reset_s;
   wire [15:0] cont1_key_s;
 
@@ -769,7 +797,7 @@ module core_top (
   );
 
   synch_3 #(
-      .WIDTH(11)
+      .WIDTH(10)
   ) settings_s (
       {
         lcd_mode,
@@ -778,8 +806,7 @@ module core_top (
         turbo_speed,
         turbo_via_button,
         disable_sound,
-        external_reset,
-        reset_n
+        external_reset
       },
       {
         lcd_mode_s,
@@ -788,8 +815,7 @@ module core_top (
         turbo_speed_s,
         turbo_via_button_s,
         disable_sound_s,
-        external_reset_s,
-        reset_n_s
+        external_reset_s
       },
       clk_sys_117_964
   );
@@ -845,7 +871,7 @@ module core_top (
       .clk_en(clk_en_32_768khz),
       .clk_2x_en(clk_en_65_536khz),
 
-      .reset(~reset_n_s || external_reset_s || ss_reset),
+      .reset(~pll_core_locked_sys_s || external_reset_s || ss_reset),
 
       // Left, middle, right
       .input_k0({1'b0, ~cont1_key_s[7], ~cont1_key_s[5], ~cont1_key_s[4]}),
