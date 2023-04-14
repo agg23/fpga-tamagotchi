@@ -159,6 +159,8 @@ module microcode (
   reg microcode_tick = 0;
   microcode_stage prev_stage = STEP6_2;
 
+  reg [8:0] last_microcode_addr = 0;
+
   // Comb
   reg cycle_second_step;
 
@@ -171,6 +173,7 @@ module microcode (
       microcode_tick <= 0;
       micro_pc <= 0;
       instruction_big_endian <= 0;
+      last_microcode_addr <= 0;
 
       bus_input_selector <= REG_ALU;
       bus_output_selector <= REG_ALU;
@@ -342,9 +345,13 @@ module microcode (
         endcase
       end
 
-      // Switch from big endian to little
-      instruction_big_endian <= rom[microcode_addr];
+      last_microcode_addr <= microcode_addr;
     end
+
+    // TODO: This could be cleaned up. Quartus fails to infer this as a RAM unless the fetch always occurs
+    // but we have this long comb chain (not really that long) from the variable `microcode_addr` feeding it
+    // Switch from big endian to little
+    instruction_big_endian <= rom[clk_2x_en?microcode_addr : last_microcode_addr];
   end
 
   always_comb begin
