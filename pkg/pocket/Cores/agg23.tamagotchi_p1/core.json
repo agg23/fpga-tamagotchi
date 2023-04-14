@@ -7,8 +7,8 @@
       "description": "The Tamagotchi that started it all",
       "author": "agg23",
       "url": "https://github.com/agg23/fpga-tamagotchi",
-      "version": "0.1.0",
-      "date_release": "2023-02-28"
+      "version": "1.0.0-beta1",
+      "date_release": "2023-04-14"
     },
     "framework": {
       "target_product": "Analogue Pocket",
@@ -27,7 +27,7 @@
       {
         "name": "default",
         "id": 0,
-        "filename": "bitstream.rbf_r"
+        "filename": "tamagotchi.rev"
       }
     ]
   }

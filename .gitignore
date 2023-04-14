@@ -8,8 +8,10 @@ bass/tama.*
 rtl/test/verilator/target
 node_modules
 
+*.zip
 *.hex
 *.rbf_r
+*.rev
 *.wlf
 *.vcd
 db
@@ -47,7 +49,6 @@ vip
 *.sopcinfo
 *.spd
 *.summary
-*.txt
 *.xml
 *~
 **/.DS_Store
