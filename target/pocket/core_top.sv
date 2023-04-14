@@ -550,6 +550,7 @@ module core_top (
   wire ss_ready;
   wire ss_halt;
   wire ss_begin_reset;
+  wire ss_turbo;
 
   wire [31:0] save_state_bridge_read_data;
 
@@ -574,7 +575,7 @@ module core_top (
       .savestate_load_ok_s(savestate_load_ok),
       .savestate_load_err_s(savestate_load_err),
 
-      .savestate_start(savestate_start || savestate_upload),
+      .savestate_start(savestate_start || trigger_savestate_upload),
       .savestate_start_ack_s(savestate_start_ack),
       .savestate_start_busy_s(savestate_start_busy),
       .savestate_start_ok_s(savestate_start_ok),
@@ -589,16 +590,20 @@ module core_top (
 
       .ss_ready(ss_ready),
       .ss_halt(ss_halt),
-      .ss_begin_reset(ss_begin_reset)
+      .ss_begin_reset(ss_begin_reset),
+      .ss_turbo(ss_turbo)
   );
 
   reg restore_savestate_load = 0;
   reg did_restore_savestate = 0;
   reg prev_reset_n = 0;
 
+  reg prev_savestate_upload = 0;
+
   always @(posedge clk_74a) begin
     prev_reset_n <= reset_n;
     restore_savestate_load <= 0;
+    prev_savestate_upload <= savestate_upload;
 
     if (bridge_wr && bridge_addr[31:28] == 4'h4) begin
       did_restore_savestate <= 1;
@@ -609,6 +614,12 @@ module core_top (
       did_restore_savestate  <= 0;
 
       restore_savestate_load <= did_restore_savestate;
+    end
+
+    trigger_savestate_upload <= 0;
+
+    if (savestate_upload && ~prev_savestate_upload) begin
+      trigger_savestate_upload <= 1;
     end
   end
 
@@ -627,6 +638,7 @@ module core_top (
   // These are for the core power on/off savestates
   // wire savestate_download = dataslot_requestwrite_id == 20;
   wire savestate_upload = dataslot_requestread_id == 20;
+  reg trigger_savestate_upload = 0;
 
   wire rom_download_s;
   wire background_download_s;
@@ -694,59 +706,27 @@ module core_top (
   wire [15:0] ioctl_rom_dout_reversed = {ioctl_rom_dout[7:0], ioctl_rom_dout[15:8]};
   wire [15:0] ioctl_image_dout_reversed = {ioctl_image_dout[7:0], ioctl_image_dout[15:8]};
 
-  reg clk_en_32_768khz = 0;
-  reg clk_en_65_536khz = 0;
+  wire clk_en_32_768khz;
+  wire clk_en_65_536khz;
+
+  clock_divider clock_divider (
+      .clk(clk_sys_117_964),
+
+      .turbo_speed(turbo_speed_s),
+
+      .ss_halt(ss_halt),
+      .ss_turbo(ss_turbo),
+      .ss_begin_reset(ss_begin_reset),
+
+      .clk_en_32_768khz(clk_en_32_768khz),
+      .clk_en_65_536khz(clk_en_65_536khz)
+  );
 
   wire [12:0] rom_addr;
   reg [11:0] rom_data = 0;
 
   // ROM is 16 bit
   reg [15:0] rom[8192];
-
-  localparam BASE_CLOCK_DIV_COUNT = 12'd3600;
-
-  // Comb
-  reg [11:0] clock_div_reset_value;
-
-  always_comb begin
-    case (turbo_speed_s)
-      // 1x
-      0: clock_div_reset_value = BASE_CLOCK_DIV_COUNT;
-      // 2x
-      1: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd2;
-      // 4x
-      2: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd4;
-      // 50x
-      3: clock_div_reset_value = BASE_CLOCK_DIV_COUNT / 12'd50;
-      // 4. Fullspeed. Special value
-      default: clock_div_reset_value = 12'd1;
-    endcase
-  end
-
-  reg [11:0] clock_div = BASE_CLOCK_DIV_COUNT;
-  reg [11:0] clock_div_half_reset_value = BASE_CLOCK_DIV_COUNT / 2;
-
-  // Clock divider
-  always @(posedge clk_sys_117_964) begin
-    clk_en_32_768khz <= 0;
-    clk_en_65_536khz <= 0;
-
-    if (~ss_halt) begin
-      // If halted from savestate, no internal clocks run
-      clock_div <= clock_div - 12'h1;
-
-      if (clock_div == 0) begin
-        clock_div <= clock_div_reset_value;
-        // The halfway point value needs to be latched to prevent skipping or doubling clock ticks
-        clock_div_half_reset_value <= clock_div_reset_value == 12'd1 ? 12'd1 : clock_div_reset_value / 2;
-
-        clk_en_32_768khz <= 1;
-        clk_en_65_536khz <= 1;
-      end else if (clock_div == clock_div_half_reset_value) begin
-        clk_en_65_536khz <= 1;
-      end
-    end
-  end
 
   always @(posedge clk_sys_117_964) begin
     // ROM access

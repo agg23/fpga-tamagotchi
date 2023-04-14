@@ -36,7 +36,8 @@ module save_state_controller (
 
     input  wire ss_ready,
     output reg  ss_halt = 0,
-    output reg  ss_begin_reset = 0
+    output reg  ss_begin_reset = 0,
+    output wire ss_turbo
 );
   // Syncing
   wire savestate_load_s;
@@ -167,6 +168,11 @@ module save_state_controller (
   // Used to delay transitions between APF savestate states. Higher clock speeds require waiting longer than a 74MHz tick
   reg [1:0] apf_delay = 0;
 
+  // Used for SS loading to trigger a halt as soon as ss_ready goes high
+  reg halt_when_possible = 0;
+
+  assign ss_turbo = halt_when_possible;
+
   always @(posedge clk_sys) begin
     if (reset) begin
       bus_addr <= 0;
@@ -181,6 +187,11 @@ module save_state_controller (
     end else begin
       if (apf_delay > 0) begin
         apf_delay <= apf_delay - 2'h1;
+      end
+
+      if (halt_when_possible && ss_ready) begin
+        halt_when_possible <= 0;
+        ss_halt <= 1;
       end
 
       case (state)
@@ -209,7 +220,7 @@ module save_state_controller (
 
             // Start at 255, so addr + 1 = 0;
             bus_addr <= 8'hFF;
-            ss_halt <= 1;
+            halt_when_possible <= 1;
           end
         end
 

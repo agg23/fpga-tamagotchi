@@ -13,7 +13,7 @@ module cpu (
     output wire memory_write_en,
     output wire memory_read_en,
     output wire [11:0] memory_addr,
-    output reg [3:0] memory_write_data,
+    output wire [3:0] memory_write_data,
     input wire [3:0] memory_read_data,
 
     input wire [14:0] interrupt_req,

@@ -175,6 +175,7 @@ module microcode (
       bus_input_selector <= REG_ALU;
       bus_output_selector <= REG_ALU;
       increment_selector <= REG_NONE;
+      alu_operation <= ALU_ADD;
       temp_override_bus_input_selector <= REG_ALU;
 
       halt <= 0;

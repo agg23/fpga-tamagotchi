@@ -161,6 +161,9 @@ module regs (
     if (reset) begin
       {np, pc, a, b, interrupt, decimal, zero, carry} <= ss_new_data1[29:0];
       {x, y, sp} <= ss_new_data2;
+
+      memory_write_en <= 0;
+      bus_output_memory_addr <= 0;
     end else if (clk_en) begin
       if (current_cycle != CYCLE_REG_WRITE) begin
         memory_write_en <= 0;
