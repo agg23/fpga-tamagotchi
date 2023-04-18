@@ -26,6 +26,9 @@ module video_gen #(
 
     output reg  vsync = 0,
     output reg  hsync = 0,
+    output wire vblank,
+    output wire hblank,
+
     output wire de
 );
   localparam VBLANK_TIME = HEIGHT + VBLANK_OFFSET;
@@ -52,6 +55,9 @@ module video_gen #(
   assign lcd_segment_row = lcd_y[1:0];
 
   assign de = x < WIDTH && y < HEIGHT;
+
+  assign vblank = y >= HEIGHT;
+  assign hblank = x >= WIDTH;
 
   // Map from an LCD X coordinate to the actual column of memory used
   function [5:0] lcd_column_addr(reg [5:0] x_coord);

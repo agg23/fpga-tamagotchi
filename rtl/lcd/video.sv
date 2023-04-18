@@ -28,6 +28,9 @@ module video #(
 
     output wire vsync,
     output wire hsync,
+    output wire vblank,
+    output wire hblank,
+
     output wire de,
     output wire [23:0] rgb
 );
@@ -197,8 +200,11 @@ module video #(
 
       .lcd_segment_row(lcd_segment_row),
 
-      .vsync(vsync),
-      .hsync(hsync),
+      .vsync (vsync),
+      .hsync (hsync),
+      .vblank(vblank),
+      .hblank(hblank),
+
       .de(de)
   );
 
