@@ -169,7 +169,9 @@ module data_loader #(
       read_state <= read_state + 6'h1;
     end else if (~mem_empty) begin
       // Start read
-      read_state <= READ_DELAY[5:0];
+      // TODO: Rewrite this controller
+      // read_state <= READ_DELAY[5:0];
+      read_state <= READ_WRITE;
       read_req   <= 1;
     end
 
@@ -179,6 +181,7 @@ module data_loader #(
         write_en <= 0;
       end
       READ_WRITE: begin
+        read_req   <= 0;
         //  Read data is available
         write_en   <= 1;
 

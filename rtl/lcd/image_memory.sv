@@ -1,10 +1,10 @@
 // Supports horizontal sprite sheets (or single images) only
 module image_memory #(
-    parameter MEM_WIDTH = 100,
-    parameter MEM_HEIGHT = 100,
-    parameter SPRITE_WIDTH = 100,
-    parameter SPRITE_HEIGHT = 100,
-    parameter PIXEL_BIT_COUNT = 32
+    parameter int MEM_WIDTH = 100,
+    parameter int MEM_HEIGHT = 100,
+    parameter int SPRITE_WIDTH = 100,
+    parameter int SPRITE_HEIGHT = 100,
+    parameter int PIXEL_BIT_COUNT = 32
 ) (
     input wire clk,
 

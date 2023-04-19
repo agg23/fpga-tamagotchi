@@ -100,10 +100,10 @@ module video #(
   );
 
   image_memory #(
-      .MEM_WIDTH(360),
-      .MEM_HEIGHT(360),
-      .SPRITE_WIDTH(360),
-      .SPRITE_HEIGHT(360),
+      .MEM_WIDTH(WIDTH),
+      .MEM_HEIGHT(HEIGHT),
+      .SPRITE_WIDTH(WIDTH),
+      .SPRITE_HEIGHT(HEIGHT),
       // No alpha needed
       .PIXEL_BIT_COUNT(16)
   ) background (
