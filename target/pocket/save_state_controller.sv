@@ -29,14 +29,14 @@ module save_state_controller (
 
     // Savestates
     output wire [31:0] bus_in,
-    output reg [7:0] bus_addr = 0,
-    output reg bus_wren = 0,
-    output reg bus_reset = 0,
+    output wire [7:0] bus_addr,
+    output wire bus_wren,
+    output wire bus_reset,
     input wire [31:0] bus_out,
 
     input  wire ss_ready,
-    output reg  ss_halt = 0,
-    output reg  ss_begin_reset = 0,
+    output wire ss_halt,
+    output wire ss_begin_reset,
     output wire ss_turbo
 );
   // Syncing
@@ -51,15 +51,15 @@ module save_state_controller (
       clk_sys
   );
 
-  reg savestate_load_ack = 0;
-  reg savestate_load_busy = 0;
-  reg savestate_load_ok = 0;
-  reg savestate_load_err = 0;
+  wire savestate_load_ack;
+  wire savestate_load_busy;
+  wire savestate_load_ok;
+  wire savestate_load_err;
 
-  reg savestate_start_ack = 0;
-  reg savestate_start_busy = 0;
-  reg savestate_start_ok = 0;
-  reg savestate_start_err = 0;
+  wire savestate_start_ack;
+  wire savestate_start_busy;
+  wire savestate_start_ok;
+  wire savestate_start_err;
 
   synch_3 #(
       .WIDTH(8)
@@ -87,10 +87,10 @@ module save_state_controller (
       clk_74a
   );
 
-  reg  fifo_load_read_en;
+  wire fifo_load_read_en;
   wire fifo_load_read_ready;
 
-  reg  fifo_save_write_en;
+  wire fifo_save_write_en;
   wire fifo_save_write_ready;
 
   dcfifo dcfifo_component (
@@ -148,197 +148,43 @@ module save_state_controller (
       .bridge_addr(bridge_addr)
   );
 
-  reg [3:0] cycle_count = 0;
+  savestate_machine savestate_machine (
+      .clk(clk_sys),
 
-  localparam STATE_INIT = 0;
+      .reset(reset),
 
-  localparam STATE_SAVE_BUSY = 1;
-  localparam STATE_SAVE_WAIT_READY = 2;
-  localparam STATE_SAVE_DATA = 3;
-  localparam STATE_SAVE_WAIT_READ = 4;
+      // Triggers
+      .start_savestate_create(savestate_start_s),
+      .start_savestate_load  (savestate_load_s),
 
-  localparam STATE_LOAD_DATA = 5;
-  localparam STATE_LOAD_DELAY = 6;
-  localparam STATE_LOAD_WAIT_APF = 7;
-  localparam STATE_LOAD_BUSY_APF = 8;
-  localparam STATE_LOAD_DONE_APF = 9;
+      // Flow control
+      .data_ready_savestate_load(~fifo_load_read_ready),
+      .data_consumed_savestate_create(fifo_save_write_ready),
 
-  reg [3:0] state = STATE_INIT;
+      // Flow requests
+      .req_read_savestate_load(fifo_load_read_en),
+      .req_write_savestate_create(fifo_save_write_en),
 
-  // Used to delay transitions between APF savestate states. Higher clock speeds require waiting longer than a 74MHz tick
-  reg [1:0] apf_delay = 0;
+      // APF signals
+      .savestate_load_ack (savestate_load_ack),
+      .savestate_load_busy(savestate_load_busy),
+      .savestate_load_ok  (savestate_load_ok),
+      .savestate_load_err (savestate_load_err),
 
-  // Used for SS loading to trigger a halt as soon as ss_ready goes high
-  reg halt_when_possible = 0;
+      .savestate_create_ack (savestate_start_ack),
+      .savestate_create_busy(savestate_start_busy),
+      .savestate_create_ok  (savestate_start_ok),
+      .savestate_create_err (savestate_start_err),
 
-  assign ss_turbo = halt_when_possible;
+      // Savestates
+      .bus_addr (bus_addr),
+      .bus_wren (bus_wren),
+      .bus_reset(bus_reset),
 
-  always @(posedge clk_sys) begin
-    if (reset) begin
-      bus_addr <= 0;
-      bus_wren <= 0;
-      // Set high to initialize all registers with their expected defaults
-      bus_reset <= 1;
-
-      ss_halt <= 0;
-      ss_begin_reset <= 0;
-
-      apf_delay <= 0;
-    end else begin
-      if (apf_delay > 0) begin
-        apf_delay <= apf_delay - 2'h1;
-      end
-
-      if (halt_when_possible && ss_ready) begin
-        halt_when_possible <= 0;
-        ss_halt <= 1;
-      end
-
-      case (state)
-        STATE_INIT: begin
-          ss_halt <= 0;
-          ss_begin_reset <= 0;
-          bus_reset <= 0;
-          bus_addr <= 0;
-
-          if (savestate_start_s) begin
-            // Start savestate
-            state <= STATE_SAVE_BUSY;
-            apf_delay <= 2'h3;
-
-            savestate_start_ack <= 1;
-            savestate_start_ok <= 0;
-            savestate_start_err <= 0;
-            savestate_start_busy <= 0;
-
-            savestate_load_ok <= 0;
-            savestate_load_err <= 0;
-          end else if (~fifo_load_read_ready) begin
-            // Load savestate
-            // Data has started to be written
-            state <= STATE_LOAD_DATA;
-
-            // Start at 255, so addr + 1 = 0;
-            bus_addr <= 8'hFF;
-            halt_when_possible <= 1;
-          end
-        end
-
-        // Saving
-        STATE_SAVE_BUSY: begin
-          if (apf_delay == 0) begin
-            state <= STATE_SAVE_WAIT_READY;
-            apf_delay <= 2'h3;
-
-            savestate_start_ack <= 0;
-            savestate_start_busy <= 1;
-          end
-        end
-        STATE_SAVE_WAIT_READY: begin
-          // Wait for savestate halt
-          if (ss_ready && apf_delay == 0) begin
-            // We're ready to start downloading the savestate
-            state <= STATE_SAVE_DATA;
-
-            bus_addr <= 0;
-            ss_halt <= 1;
-            cycle_count <= 0;
-
-            savestate_start_busy <= 0;
-            savestate_start_ok <= 1;
-          end
-        end
-        STATE_SAVE_DATA: begin
-          // Wait for 10 cycles to pass
-          fifo_save_write_en <= 0;
-
-          cycle_count <= cycle_count + 4'h1;
-
-          if (cycle_count == 9) begin
-            // Data should be ready
-            fifo_save_write_en <= 1;
-          end else if (cycle_count == 10) begin
-            // Halt until we're ready to write more
-            state <= STATE_SAVE_WAIT_READ;
-            cycle_count <= 0;
-
-            bus_addr <= bus_addr + 8'h1;
-
-            if (bus_addr == SS_VIDEO_RAM_END - 8'h1) begin
-              // Finished saving savestate
-              state <= STATE_INIT;
-            end
-          end
-        end
-        STATE_SAVE_WAIT_READ: begin
-          if (fifo_save_write_ready) begin
-            // Bridge has read data, we're ready for the next segment
-            state <= STATE_SAVE_DATA;
-          end
-        end
-
-        // Loading
-        STATE_LOAD_DATA: begin
-          bus_wren <= 0;
-
-          if (~fifo_load_read_ready) begin
-            // Data is in FIFO
-            state <= STATE_LOAD_DELAY;
-
-            fifo_load_read_en <= 1;
-          end
-
-          if (bus_addr == SS_VIDEO_RAM_END - 8'h1) begin
-            // Finished loading savestate
-            state <= STATE_LOAD_WAIT_APF;
-          end
-        end
-        STATE_LOAD_DELAY: begin
-          // Data should be loaded from FIFO
-          // Write data out to bus
-          state <= STATE_LOAD_DATA;
-
-          bus_addr <= bus_addr + 8'h1;
-
-          bus_wren <= 1;
-          fifo_load_read_en <= 0;
-        end
-        STATE_LOAD_WAIT_APF: begin
-          // Wait for APF to send load signal
-          if (savestate_load_s) begin
-            state <= STATE_LOAD_BUSY_APF;
-            apf_delay <= 2'h3;
-
-            savestate_load_ack <= 1;
-            savestate_load_ok <= 0;
-            savestate_load_err <= 0;
-            savestate_load_busy <= 0;
-
-            savestate_start_ok <= 0;
-            savestate_start_err <= 0;
-
-            ss_begin_reset <= 1;
-          end
-        end
-        STATE_LOAD_BUSY_APF: begin
-          if (apf_delay == 0) begin
-            state <= STATE_LOAD_DONE_APF;
-            apf_delay <= 2'h3;
-
-            savestate_load_ack <= 0;
-            savestate_load_busy <= 1;
-          end
-        end
-        STATE_LOAD_DONE_APF: begin
-          if (apf_delay == 0) begin
-            state <= STATE_INIT;
-
-            savestate_load_busy <= 0;
-            savestate_load_ok <= 1;
-          end
-        end
-      endcase
-    end
-  end
+      .ss_ready(ss_ready),
+      .ss_halt(ss_halt),
+      .ss_begin_reset(ss_begin_reset),
+      .ss_turbo(ss_turbo)
+  );
 
 endmodule
