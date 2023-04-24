@@ -99,16 +99,8 @@ module save_state_controller (
       .rdreq(fifo_load_read_en),
       .wrclk(clk_74a),
       .wrreq(bridge_wr && bridge_addr[31:28] == 4'h4 && bridge_addr[27:0] < 28'h1D0),
-      .q({
-        bus_in[3:0],
-        bus_in[7:4],
-        bus_in[11:8],
-        bus_in[15:12],
-        bus_in[19:16],
-        bus_in[23:20],
-        bus_in[27:24],
-        bus_in[31:28]
-      }),
+      // Pocket bridge sends big endian
+      .q({bus_in[7:0], bus_in[15:8], bus_in[23:16], bus_in[31:24]}),
       .rdempty(fifo_load_read_ready),
       .wrempty(),
       .aclr(),
@@ -132,16 +124,12 @@ module save_state_controller (
       .write_en(fifo_save_write_en),
       .data(bus_out),
       .write_empty(fifo_save_write_ready),
-      // Pocket bridge requires big endian, by nibble
+      // Pocket bridge requires big endian
       .data_s({
-        save_state_bridge_read_data[3:0],
-        save_state_bridge_read_data[7:4],
-        save_state_bridge_read_data[11:8],
-        save_state_bridge_read_data[15:12],
-        save_state_bridge_read_data[19:16],
-        save_state_bridge_read_data[23:20],
-        save_state_bridge_read_data[27:24],
-        save_state_bridge_read_data[31:28]
+        save_state_bridge_read_data[7:0],
+        save_state_bridge_read_data[15:8],
+        save_state_bridge_read_data[23:16],
+        save_state_bridge_read_data[31:24]
       }),
 
       .bridge_rd  (bridge_rd),
