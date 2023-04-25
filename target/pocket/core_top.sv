@@ -521,7 +521,7 @@ module core_top (
 
   wire [31:0] save_state_bridge_read_data;
 
-  save_state_controller save_state_controller (
+  savestate_controller savestate_controller (
       .clk_74a(clk_74a),
       .clk_sys(clk_sys_117_964),
 
@@ -764,6 +764,7 @@ module core_top (
 
   wire buzzer;
 
+  // TODO: Move into it's own component
   reg [2:0] savestate_reset_tick_count = 0;
 
   wire ss_reset = savestate_reset_tick_count > 0;

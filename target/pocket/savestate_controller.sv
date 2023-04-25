@@ -1,6 +1,6 @@
 import ss_addresses::*;
 
-module save_state_controller (
+module savestate_controller (
     input wire clk_74a,
     input wire clk_sys,
 
@@ -117,7 +117,7 @@ module save_state_controller (
       dcfifo_component.underflow_checking = "ON", dcfifo_component.use_eab = "ON",
       dcfifo_component.wrsync_delaypipe = 5;
 
-  save_state_read_fifo fifo_save (
+  savestate_read_fifo fifo_save (
       .clk_write(clk_sys),
       .clk_read (clk_74a),
 

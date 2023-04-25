@@ -1,4 +1,4 @@
-module save_state_read_fifo #(
+module savestate_read_fifo #(
     parameter WIDTH = 32
 ) (
     input wire clk_write,
