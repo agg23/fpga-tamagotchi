@@ -60,6 +60,8 @@ module video #(
       .rgb888(background_pixel_rgb888)
   );
 
+  wire is_lcd = video_x >= LCD_X_OFFSET && video_x <= WIDTH - LCD_X_OFFSET && video_y >= LCD_Y_OFFSET && video_y < HEIGHT - LCD_Y_OFFSET;
+
   alpha_blend lcd_alpha_blend (
       .background_pixel(background_pixel_rgb888),
       .foreground_pixel(lcd_pixel),
@@ -67,15 +69,18 @@ module video #(
   );
 
   wire [23:0] ui_rgb;
-  wire [23:0] main_rgb;
   wire ui_active;
 
+  // The LCD and the sprites never overlap, so produce their results in parallel, then choose which one to use later
+  wire [23:0] main_rgb = is_lcd ? background_pixel_with_lcd : background_pixel_with_sprite;
   assign rgb = show_turbo_ui && ui_active ? ui_rgb : main_rgb;
 
+  wire [23:0] background_pixel_with_sprite;
+
   alpha_blend sprite_alpha_blend (
-      .background_pixel(background_pixel_with_lcd),
+      .background_pixel(background_pixel_rgb888),
       .foreground_pixel(active_sprite_pixel ? {24'b0, sprite_alpha_pixel} : 0),
-      .output_pixel(main_rgb)
+      .output_pixel(background_pixel_with_sprite)
   );
 
   wire [9:0] video_fetch_x = video_x == HORIZONTAL_TOTAL - 1 ? 0 : video_x + 10'h1;
