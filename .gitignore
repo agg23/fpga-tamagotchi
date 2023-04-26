@@ -1,15 +1,16 @@
 sim/
 sim2/
+assets/*/*.hex
 bass/bass.exe
 bass/*.rom
 bass/tama.*
+bass/*.hex
 **/vunit_out
 **/__pycache__
 rtl/test/verilator/target
 node_modules
 
 *.zip
-*.hex
 *.rbf_r
 *.rev
 *.wlf
