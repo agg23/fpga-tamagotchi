@@ -10,6 +10,7 @@ The Tamagotchi ROM can be commonly found in the MAME zip `tama.zip`, and will be
 
 MD5: `3fce172403c27274e59723bbb9f6d8e9`
 
+----
 ### Analogue Pocket
 
 All files are in `/Assets/tamagotchi_p1/common/`
@@ -20,6 +21,7 @@ All files are in `/Assets/tamagotchi_p1/common/`
 
 The background and spritesheet can be replaced by the user. See the [image generation tools](tools.md#image-preparation-prepare_imagejs) for more information.
 
+----
 ### MiSTer
 
 All files are in `/games/Tamagotchi/`
@@ -41,6 +43,7 @@ I highly recommend the updater tools by [@mattpannella](https://github.com/mattp
 
 Any of these will allow you to automatically download and install openFPGA cores onto your Analogue Pocket. Go donate to the creators if you can
 
+----
 ### Manual Mode
 Visit [Releases](https://github.com/agg23/openfpga-wonderswan/releases) and download the latest version of the core by clicking on the file named `agg23...-Pocket.zip`.
 
