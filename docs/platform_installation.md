@@ -45,7 +45,7 @@ Any of these will allow you to automatically download and install openFPGA cores
 
 ----
 ### Manual Mode
-Visit [Releases](https://github.com/agg23/openfpga-wonderswan/releases) and download the latest version of the core by clicking on the file named `agg23...-Pocket.zip`.
+Visit [Releases](https://github.com/agg23/fpga-tamagotchi/releases) and download the latest version of the core by clicking on the file named `agg23...-Pocket.zip`.
 
 To install the core, copy the `Assets`, `Cores`, and `Platform` folders over to the root of your SD card. Please note that Finder on macOS automatically _replaces_ folders, rather than merging them like Windows does, so you have to manually merge the folders.
 
@@ -57,7 +57,7 @@ There is currently no integration with the MiSTer updater, and therefore the cor
 
 ### Manual Mode
 
-Visit [Releases](https://github.com/agg23/openfpga-wonderswan/releases) and download the latest version of the core by clicking on the file named `agg23...-MiSTer.zip`.
+Visit [Releases](https://github.com/agg23/fpga-tamagotchi/releases) and download the latest version of the core by clicking on the file named `agg23...-MiSTer.zip`.
 
 To install the core, copy the `_Other` and `games` folders over to the root of your SD card. Please note that Finder on macOS automatically _replaces_ folders, rather than merging them like Windows does, so you have to manually merge the folders.
 
