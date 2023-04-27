@@ -63,7 +63,9 @@ I've tried to be thorough with my design decisions and provide/update various su
 
 There are a lot of components to this project, and the licensing on them depends on where they came from and potentially how they're used.
 
-* For the main repo, all Tamagotchi core code, all tools and tests, and the documentation (other than the docs owned by Epson) - MIT licensed
-* All Pocket platform code, Pocket `core_top.sv`, and any Pocket specific components (unless otherwise noted) - MIT licensed
-* All MiMiC/MiSTer platform code, MiSTer `core_top.sv`, and any MiSTer specific components (unless otherwise noted) - GPLv3 licensed
-* All "sprite" activity icons and backgrounds - CC0 licensed
+| Contents                                                                                                                     | License       |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| The main repo, all Tamagotchi core code, all tools and tests, and the documentation (other than the docs owned by Epson) | MIT   |
+| All Pocket platform code, Pocket `core_top.sv`, and any Pocket specific components (unless otherwise noted)                  | MIT   |
+| All MiMiC/MiSTer platform code, MiSTer `core_top.sv`, and any MiSTer specific components (unless otherwise noted)            | GPLv3 |
+| All "sprite" activity icons and backgrounds                                                                                  | CC0   |
