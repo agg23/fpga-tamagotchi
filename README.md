@@ -55,11 +55,15 @@ This core supports custom backgrounds, and even ships with a Tamagotchi P2 backg
   * `Separate Pixels, No Background` - Pixels have a small gap between them; the off LCD pixels are transparent
   * `Separate Pixels, With Background` - Pixels have a small gap between them; the off LCD pixels are visible and dim the background beneath them
 
+## Core Docs
+
+I've tried to be thorough with my design decisions and provide/update various supporting documents through the process. See the `/docs` folder, or start looking at the [overview](docs/overview.md). There's documentation on the [tools I built](docs/tools.md), [how the microcode works](docs/microcode.md), [how to run tests](docs/tests.md), and more.
+
 ## Licensing
 
 There are a lot of components to this project, and the licensing on them depends on where they came from and potentially how they're used.
 
 * For the main repo, all Tamagotchi core code, all tools and tests, and the documentation (other than the docs owned by Epson) - MIT licensed
-* All Pocket platform code, `core_top.sv`, and any Pocket specific components (unless otherwise noted) - MIT licensed
-* All MiSTer platform code, `tamagotchi.sv` top file, and any MiSTer specific components (unless otherwise noted) - GPLv3 licensed
-* All "sprite" activity icons and backgrounds - CC0
+* All Pocket platform code, Pocket `core_top.sv`, and any Pocket specific components (unless otherwise noted) - MIT licensed
+* All MiMiC/MiSTer platform code, MiSTer `core_top.sv`, and any MiSTer specific components (unless otherwise noted) - GPLv3 licensed
+* All "sprite" activity icons and backgrounds - CC0 licensed

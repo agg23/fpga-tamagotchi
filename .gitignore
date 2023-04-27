@@ -7,6 +7,8 @@ bass/tama.*
 bass/*.hex
 **/vunit_out
 **/__pycache__
+pkg/mimic/games/Tamagotchi/*.rom
+pkg/pocket/Assets/tamagotchi_p1/common/*.bin
 rtl/test/verilator/target
 node_modules
 
