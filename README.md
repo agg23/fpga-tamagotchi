@@ -1,4 +1,4 @@
-# Tamagotchi P1
+# Tamagotchi P1 for FPGAs
 
 ![Promo Image](../assets/promo.jpg)
 
