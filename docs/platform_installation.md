@@ -1,5 +1,9 @@
 # Platform-Specific Installation
 
+* [ROMs](#roms)
+* [Analogue Pocket](#analogue-pocket-1)
+* [MiSTer](#mister-1)
+
 ## ROMs
 
 The Tamagotchi ROM can be commonly found in the MAME zip `tama.zip`, and will be named `tama.b` inside that zip. I will not tell you how to obtain this ROM
