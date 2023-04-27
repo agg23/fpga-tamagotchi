@@ -1,0 +1,16 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  github-releases-to-discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Github Releases To Discord
+        uses: kludge-cs/gitcord-release-changelogger@v3.0.0
+        with:
+          webhook-url: ${{ secrets.WEBHOOK_URL }}
+          release-name: ${{ format('Tamagotchi Release{0} {1}', ':', github.event.release.name) }}
+          release-body: ${{ format('# [Get it here]({0}). {1}', github.event.release.html_url, github.event.release.body) }}
+          avatar-url: "https://cdn.discordapp.com/avatars/160419937825980416/20250cea9ac0e8ce154572c511605d40.png"
+          username: "agg23"
