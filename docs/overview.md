@@ -43,4 +43,4 @@ For unimplemented segments of memory mapped registers, the read and write operat
 
 ### Optimization
 
-* Memory/register map - In the initial implementation, some debugging revealed that the inferred memory blocks, and the design of my memory map, was resulting in massive resource usage (around 10% extra of the Pocket). These changes were slowly tested to find the best combination of changes: https://github.com/agg23/fpga-tamagotchi/commit/10c12cedcc141cafae4bc94c1fd8f9371dc6ee0e
+* Memory/register map - In the initial implementation, some debugging revealed that the inferred memory blocks, and the design of my memory map, was resulting in massive resource usage (around 10% extra of the Pocket). These changes were slowly tested to find the best combination of changes: [10c12cedcc141cafae4bc94c1fd8f9371dc6ee0e](https://github.com/agg23/fpga-tamagotchi/commit/10c12cedcc141cafae4bc94c1fd8f9371dc6ee0e)

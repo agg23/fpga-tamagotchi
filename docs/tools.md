@@ -21,7 +21,7 @@ The core uses two image formats:
 * Background: 16 bit RGB565
 * Sprites: 8 bit alphas
 
-This tool converts PNGs to either of those, using the input image dimentions.
+This tool converts PNGs to either of those, using the input image dimentions. Expected dimensions are 360x360 for the background, and 400x50 for the spritesheet.
 
 To convert a background:
 
