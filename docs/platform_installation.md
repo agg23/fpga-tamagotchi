@@ -36,7 +36,7 @@ The background and spritesheet can be replaced by the user. See the [image gener
 
 ### Easy Mode
 
-I highly recommend the updater tools by [@mattpannella](https://github.com/mattpannella), [@RetroDriven](https://github.com/RetroDriven), and [@](https://github.com/neil-morrison44). Choose one of the following updaters:
+I highly recommend the updater tools by [@mattpannella](https://github.com/mattpannella), [@RetroDriven](https://github.com/RetroDriven), and [@neil-morrison44](https://github.com/neil-morrison44). Choose one of the following updaters:
 * [Pocket Updater](https://github.com/RetroDriven/Pocket_Updater) - Windows only
 * [Pocket Sync](https://github.com/neil-morrison44/pocket-sync) - Cross platform
 * [Pocket Updater Utility](https://github.com/mattpannella/pocket-updater-utility) - Cross platform, command line only
