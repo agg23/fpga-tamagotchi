@@ -2,7 +2,7 @@
 
 ![Promo Image](../assets/promo.jpg)
 
-This core is an original creation by [@agg23](https://github.com/agg23) over the course of 3 months. It is based strongly on the original documentation for the Tamagotchi CPU (see [Documentation Overview](docs/overview.md)), but also takes some learnings from [tamatool](https://github.com/jcrona/tamatool), and is inspired by [Mazamars312](https://github.com/Mazamars312), [Andrew Wilson](https://github.com/AEW2015), and [Robert Piep](https://github.com/RobertPeip), who gave me helpful advice along the way. [The amazing backgrounds](https://github.com/bmarvo/tamagotchi-backgrounds) were recreated from source material by [@bmarvo](https://github.com/bmarvo), and the Pocket platform icon was created by me. See [Licensing](#licensing) for more information.
+This core is an original creation by [@agg23](https://github.com/agg23) over the course of 3 months. It is based strongly on the original documentation for the Tamagotchi CPU (see [Documentation Overview](docs/overview.md)), but also takes some learnings from [tamatool](https://github.com/jcrona/tamatool), and is inspired by [@Mazamars312](https://github.com/Mazamars312), [Andrew Wilson](https://github.com/AEW2015), and [Robert Piep](https://github.com/RobertPeip), who gave me helpful advice along the way. [The amazing backgrounds](https://github.com/bmarvo/tamagotchi-backgrounds) were recreated from source material by [@bmarvo](https://github.com/bmarvo), and the Pocket platform icon was created by me. See [Licensing](#licensing) for more information.
 
 Currently supported platforms are the Analogue Pocket and MiSTer.
 
@@ -58,6 +58,12 @@ This core supports custom backgrounds, and even ships with a Tamagotchi P2 backg
 ## Core Docs
 
 I've tried to be thorough with my design decisions and provide/update various supporting documents through the process. See the `/docs` folder, or start looking at the [overview](docs/overview.md). There's documentation on the [tools I built](docs/tools.md), [how the microcode works](docs/microcode.md), [how to run tests](docs/tests.md), and more.
+
+## FAQ
+
+| Issue                                                  | Solution                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I see a corrupted screen, often blank or all pixels on | Open the core settings and choose `Reset`. If you attempted to boot the core without the correct ROM, or you accidentially chose a different file as the ROM, this is expected. Otherwise, [please file an issue](https://github.com/agg23/fpga-tamagotchi/issues/). |
 
 ## Licensing
 
