@@ -10,6 +10,10 @@ Currently supported platforms are the Analogue Pocket and MiSTer.
 
 See [Platform Installation Instructions](docs/platform_installation.md) for platform-specific instructions on how to install the core. It also contains information on what ROMs you need.
 
+## Manual
+
+If you've forgotten how to use the Tamagotchi in the nearly 30 years since it's release, [check out the official manual](https://www.bandai.com/wp-content/uploads/TamaIS_Gen1_pg1.pdf).
+
 ## Features
 
 ### Savestates/Sleep + Wake
