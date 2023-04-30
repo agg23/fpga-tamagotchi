@@ -6,7 +6,9 @@
 
 ## ROMs
 
-The Tamagotchi ROM can be commonly found in the MAME zip `tama.zip`, and will be named `tama.b` inside that zip. I will not tell you how to obtain this ROM
+The Tamagotchi ROM can be commonly found in the MAME zip `tama.zip`, and will be named `tama.b` inside that zip. I will not tell you how to obtain this ROM.
+
+For both Pocket and MiSTer, rename `tama.b` to `rom.bin`. More information about where the file should be placed is available below
 
 MD5: `3fce172403c27274e59723bbb9f6d8e9`
 
