@@ -36,7 +36,7 @@ Additionally, [there are several settings](#turbo-settings) that configure the t
 
 ### Custom Backgrounds
 
-This core supports custom backgrounds, and even ships with a Tamagotchi P2 background as an example. See the [Installation Instructions](docs/platform_installation.md) and the [Image Generation Tools](tools.md#image-preparation-prepare_imagejs) pages for more information.
+This core supports custom backgrounds, and even ships with a Tamagotchi P2 background as an example. See the [Installation Instructions](docs/platform_installation.md) and the [Image Generation Tools](docs/tools.md#image-preparation-prepare_imagejs) pages for more information.
 
 ## Settings
 
