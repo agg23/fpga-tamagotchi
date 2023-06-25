@@ -55,7 +55,19 @@ See [ROMs](#roms) to install the correct ROMs and have a booting core.
 
 ## MiSTer
 
-There is currently no integration with the MiSTer updater, and therefore the core must be installed manually.
+### Easy Mode
+
+You can use the built in [MiSTer Downloader](https://github.com/MiSTer-devel/Downloader_MiSTer) script to automatically fetch all of my cores on release.
+
+To start receiving my cores, simply paste the following snippet at the bottom of your `downloader.ini`. This will add my database to the list of locations MiSTer Downloader checks for updates from:
+
+```
+; This allows you to continue to receive main MiSTer downloads
+[distribution_mister]
+
+[agg23_db]
+db_url = 'https://github.com/agg23/mister-repository/raw/db/manifest.json'
+```
 
 ### Manual Mode
 
